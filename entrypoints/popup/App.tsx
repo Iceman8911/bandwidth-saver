@@ -28,7 +28,7 @@ function App() {
 				<button
 					type="button"
 					onClick={() => setCount((count) => count + 1)}
-					class="rounded-lg border border-transparent px-5 py-2.5 text-base font-medium font-inherit bg-[#1a1a1a] cursor-pointer transition-colors duration-250 hover:border-[#646cff] focus:outline-4 focus:outline-[-webkit-focus-ring-color] focus-visible:outline-4 focus-visible:outline-[-webkit-focus-ring-color] dark:bg-[#1a1a1a] light:bg-[#f9f9f9]"
+					class="btn btn-primary btn-soft"
 				>
 					count is {count()}
 				</button>
