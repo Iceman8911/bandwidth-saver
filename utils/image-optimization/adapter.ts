@@ -1,5 +1,6 @@
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
 import { ImageCompressorEndpoint } from "@/shared/constants";
+import { convertBlobToBase64 } from "../blob";
 
 export const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
@@ -15,7 +16,7 @@ export const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return response;
+	return convertBlobToBase64(await response.blob());
 };
 
 export const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
@@ -30,5 +31,5 @@ export const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return response;
+	return convertBlobToBase64(await response.blob());
 };
