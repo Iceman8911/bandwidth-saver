@@ -13,6 +13,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	const urlParams = new URLSearchParams();
 	urlParams.append("url", `${url}`);
 	urlParams.append("q", `${quality}`);
+	urlParams.append("output", `webp`);
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
 
