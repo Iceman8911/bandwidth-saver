@@ -15,7 +15,8 @@
 		"postinstall": "wxt prepare"
 	},
 	"dependencies": {
-		"solid-js": "^1.9.9"
+		"solid-js": "^1.9.9",
+		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
 		"@tailwindcss/vite": "^4.1.17",
