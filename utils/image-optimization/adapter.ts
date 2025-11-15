@@ -42,3 +42,26 @@ export const IMAGE_COMPRESSION_ADAPTERS = [
 	imageCompressionAdapterWsrvNl,
 	imageCompressionAdapterAlpacaCdn,
 ] as const satisfies ImageCompressionAdapter[];
+
+/**
+ * Attempts to compress an image using available adapters with fallback.
+ * Tries each adapter sequentially until one succeeds.
+ *
+ * @param url - The image URL to compress
+ * @param quality - Optional quality parameter (0-100)
+ * @returns Compressed image or the original image url if all adapters fail
+ */
+export async function compressImageWithFallback(
+	...args: Parameters<ImageCompressionAdapter>
+): Promise<string> {
+	for (const adapter of IMAGE_COMPRESSION_ADAPTERS) {
+		try {
+			const result = await adapter(...args);
+			if (result) return result;
+		} catch (error) {
+			console.warn(`Image compression adapter failed for ${args[0]}:`, error);
+		}
+	}
+
+	return `${args[0]}`;
+}
