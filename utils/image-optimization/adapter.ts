@@ -5,7 +5,7 @@ import { fetchWithTimeout } from "../fetch";
 
 const REQUEST_TIMEOUT = 3000;
 
-export const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
+const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
 	quality = 75,
 ) => {
@@ -22,7 +22,7 @@ export const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	return convertBlobToBase64(await response.blob());
 };
 
-export const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
+const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 	url,
 ) => {
 	const urlParams = new URLSearchParams();
@@ -36,3 +36,8 @@ export const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	return convertBlobToBase64(await response.blob());
 };
+
+export const IMAGE_COMPRESSION_ADAPTERS = [
+	imageCompressionAdapterWsrvNl,
+	imageCompressionAdapterAlpacaCdn,
+] as const satisfies ImageCompressionAdapter[];
