@@ -10,10 +10,11 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
 	quality = 75,
 ) => {
-	const urlParams = new URLSearchParams();
-	urlParams.append("url", `${url}`);
-	urlParams.append("q", `${quality}`);
-	urlParams.append("output", `webp`);
+	const urlParams = new URLSearchParams({
+		url: `${url}`,
+		q: `${quality}`,
+		output: "webp",
+	});
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
 
@@ -27,8 +28,9 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 	url,
 ) => {
-	const urlParams = new URLSearchParams();
-	urlParams.append("url", `${url}`);
+	const urlParams = new URLSearchParams({
+		url: `${url}`,
+	});
 
 	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}?${urlParams}`;
 
