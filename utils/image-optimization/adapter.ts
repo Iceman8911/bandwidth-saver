@@ -54,7 +54,7 @@ export const IMAGE_COMPRESSION_ADAPTERS = [
  */
 export async function getCompressedImageUrlWithFallback(
 	...args: Parameters<ImageCompressionAdapter>
-): Promise<string> {
+): Promise<UrlSchema> {
 	for (const adapter of IMAGE_COMPRESSION_ADAPTERS) {
 		try {
 			const result = await adapter(...args);
@@ -64,5 +64,5 @@ export async function getCompressedImageUrlWithFallback(
 		}
 	}
 
-	return `${args[0]}`;
+	return v.parse(UrlSchema, `${args[0]}`);
 }
