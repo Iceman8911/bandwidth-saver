@@ -1,5 +1,6 @@
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
 import { ImageCompressorEndpoint } from "@/shared/constants";
+import { getRandomElementInArray } from "../array";
 import { convertBlobToBase64 } from "../blob";
 import { fetchWithTimeout } from "../fetch";
 
@@ -41,3 +42,6 @@ export const IMAGE_COMPRESSION_ADAPTERS = [
 	imageCompressionAdapterWsrvNl,
 	imageCompressionAdapterAlpacaCdn,
 ] as const satisfies ImageCompressionAdapter[];
+
+export const getRandomImageCompressionAdapter = () =>
+	getRandomElementInArray(IMAGE_COMPRESSION_ADAPTERS);
