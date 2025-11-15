@@ -1,7 +1,7 @@
+import * as v from "valibot";
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
+import { UrlSchema } from "@/models/shared";
 import { ImageCompressorEndpoint } from "@/shared/constants";
-
-import { convertBlobToDataUrl } from "../blob";
 import { fetchWithTimeout } from "../fetch";
 
 const REQUEST_TIMEOUT = 3000;
@@ -20,7 +20,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return convertBlobToDataUrl(await response.blob());
+	return v.parse(UrlSchema, newUrl);
 };
 
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
@@ -35,7 +35,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return convertBlobToDataUrl(await response.blob());
+	return v.parse(UrlSchema, newUrl);
 };
 
 export const IMAGE_COMPRESSION_ADAPTERS = [
@@ -44,14 +44,12 @@ export const IMAGE_COMPRESSION_ADAPTERS = [
 ] as const satisfies ImageCompressionAdapter[];
 
 /**
- * Attempts to compress an image using available adapters with fallback.
+ * Attempts to obtain the compressed image's url using available adapters with fallback.
  * Tries each adapter sequentially until one succeeds.
  *
- * @param url - The image URL to compress
- * @param quality - Optional quality parameter (0-100)
- * @returns Compressed image or the original image url if all adapters fail
+ * @returns Compressed image's url or the original image url if all adapters fail
  */
-export async function compressImageWithFallback(
+export async function getCompressedImageUrlWithFallback(
 	...args: Parameters<ImageCompressionAdapter>
 ): Promise<string> {
 	for (const adapter of IMAGE_COMPRESSION_ADAPTERS) {
