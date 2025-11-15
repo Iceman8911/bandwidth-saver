@@ -1,7 +1,7 @@
 {
 	"extends": "./.wxt/tsconfig.json",
 	"compilerOptions": {
-		"lib": ["ESNext", "WebWorker"],
+		"lib": ["ESNext", "WebWorker", "DOM"],
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js"
 	}
