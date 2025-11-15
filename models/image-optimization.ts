@@ -1,6 +1,6 @@
-import type { Base64Schema } from "./shared";
+import type { DataUrlSchema } from "./shared";
 
 export type ImageCompressionAdapter = (
 	originalUrl: string | URL,
 	quality?: number,
-) => Promise<Base64Schema | null>;
+) => Promise<DataUrlSchema | null>;

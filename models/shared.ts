@@ -12,5 +12,10 @@ export type NumberBetween1and100Inclusively = v.InferOutput<
 export const UrlSchema = v.pipe(v.string(), v.url(), v.brand("url"));
 export type UrlSchema = v.InferOutput<typeof UrlSchema>;
 
-export const Base64Schema = v.pipe(v.string(), v.base64(), v.brand("base64"));
-export type Base64Schema = v.InferOutput<typeof Base64Schema>;
+export const DataUrlSchema = v.pipe(
+	v.string(),
+	v.regex(/^data:[^;]*;base64,/),
+	v.brand("dataUrl"),
+);
+
+export type DataUrlSchema = v.InferOutput<typeof DataUrlSchema>;

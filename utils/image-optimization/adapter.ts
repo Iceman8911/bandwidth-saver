@@ -1,7 +1,7 @@
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
 import { ImageCompressorEndpoint } from "@/shared/constants";
 import { getRandomElementInArray } from "../array";
-import { convertBlobToBase64 } from "../blob";
+import { convertBlobToDataUrl } from "../blob";
 import { fetchWithTimeout } from "../fetch";
 
 const REQUEST_TIMEOUT = 3000;
@@ -20,7 +20,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return convertBlobToBase64(await response.blob());
+	return convertBlobToDataUrl(await response.blob());
 };
 
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
@@ -35,7 +35,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	if (!response.ok) return null;
 
-	return convertBlobToBase64(await response.blob());
+	return convertBlobToDataUrl(await response.blob());
 };
 
 export const IMAGE_COMPRESSION_ADAPTERS = [
