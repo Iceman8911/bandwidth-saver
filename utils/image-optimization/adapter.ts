@@ -19,7 +19,7 @@ const validateUrlViaBackground = async (url: string): Promise<boolean> => {
 	try {
 		const response = await browser.runtime.sendMessage(
 			v.parse(RuntimeMessageSchema, {
-				type: MessageType.VALIDATE_COMPRESSION_URL,
+				type: MessageType.VALIDATE_URL,
 				url,
 			}),
 		);

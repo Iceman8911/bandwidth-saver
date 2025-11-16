@@ -4,7 +4,7 @@ import { UrlSchema } from "./shared";
 
 const ValidateCompressedUrlMessageSchema = v.pipe(
 	v.object({
-		type: v.literal(MessageType.VALIDATE_COMPRESSION_URL),
+		type: v.literal(MessageType.VALIDATE_URL),
 		/** The url to the compressed remote  */
 		url: UrlSchema,
 	}),

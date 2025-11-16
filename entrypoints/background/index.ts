@@ -36,7 +36,7 @@ function checkIfCompressionUrlFromContentScriptIsValid() {
 	browser.runtime.onMessage.addListener((message, _, sendResponse) => {
 		const parsedMessage = v.parse(RuntimeMessageSchema, message);
 
-		if (parsedMessage.type === MessageType.VALIDATE_COMPRESSION_URL) {
+		if (parsedMessage.type === MessageType.VALIDATE_URL) {
 			checkIfUrlReturnsValidResponse(parsedMessage.url)
 				.then(sendResponse)
 				.catch((error) => sendResponse({ error: error.message }));

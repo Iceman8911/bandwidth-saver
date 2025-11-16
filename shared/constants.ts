@@ -5,5 +5,6 @@ export enum ImageCompressorEndpoint {
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
 
 export enum MessageType {
-	VALIDATE_COMPRESSION_URL,
+	/** Check if the url returns a valid response code */
+	VALIDATE_URL,
 }
