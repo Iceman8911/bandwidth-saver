@@ -1,7 +1,8 @@
 {
 	"dependencies": {
 		"@bandwidth-saver/shared": "workspace:*",
-		"elysia": "latest"
+		"elysia": "latest",
+		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
 		"bun-types": "latest"
