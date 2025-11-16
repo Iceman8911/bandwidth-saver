@@ -7,12 +7,9 @@ function appendSaveDataToAllRequests() {
 	const ADD_SAVE_DATA_HEADER_RULE_ID = 1;
 
 	browser.declarativeNetRequest.updateDynamicRules({
-		removeRuleIds: [ADD_SAVE_DATA_HEADER_RULE_ID], // Remove existing rule if present
 		addRules: [
 			{
-				id: ADD_SAVE_DATA_HEADER_RULE_ID,
 				action: {
-					type: "modifyHeaders",
 					requestHeaders: [
 						{
 							header: "Save-Data",
@@ -20,15 +17,18 @@ function appendSaveDataToAllRequests() {
 							value: "on",
 						},
 					],
+					type: "modifyHeaders",
 				},
 				condition: {
-					urlFilter: "*",
 					resourceTypes: Object.values(
 						browser.declarativeNetRequest.ResourceType,
 					),
+					urlFilter: "*",
 				},
+				id: ADD_SAVE_DATA_HEADER_RULE_ID,
 			},
 		],
+		removeRuleIds: [ADD_SAVE_DATA_HEADER_RULE_ID], // Remove existing rule if present
 	});
 }
 

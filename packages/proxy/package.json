@@ -1,16 +1,16 @@
 {
-	"name": "@bandwidth-saver/proxy",
 	"dependencies": {
-		"elysia": "latest",
-		"@bandwidth-saver/shared": "workspace:*"
-	},
-	"version": "1.0.50",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "bun run --watch src/index.ts"
+		"@bandwidth-saver/shared": "workspace:*",
+		"elysia": "latest"
 	},
 	"devDependencies": {
 		"bun-types": "latest"
 	},
-	"module": "src/index.js"
+	"module": "src/index.js",
+	"name": "@bandwidth-saver/proxy",
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"version": "1.0.50"
 }

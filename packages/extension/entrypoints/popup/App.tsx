@@ -6,29 +6,29 @@ function App() {
 	const [count, setCount] = createSignal(0);
 
 	return (
-		<div class="max-w-7xl mx-auto px-8 text-center">
+		<div class="mx-auto max-w-7xl px-8 text-center">
 			<div class="flex justify-center">
-				<a href="https://wxt.dev" target="_blank" rel="noopener">
+				<a href="https://wxt.dev" rel="noopener" target="_blank">
 					<img
-						src={wxtLogo}
-						class="h-24 px-6 will-change-[filter] transition-[filter] duration-300 hover:drop-shadow-[0_0_2em_rgba(84,188,74,0.88)]"
 						alt="WXT logo"
+						class="h-24 px-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_rgba(84,188,74,0.88)]"
+						src={wxtLogo}
 					/>
 				</a>
-				<a href="https://solidjs.com" target="_blank" rel="noopener">
+				<a href="https://solidjs.com" rel="noopener" target="_blank">
 					<img
-						src={solidLogo}
-						class="h-24 px-6 will-change-[filter] transition-[filter] duration-300 hover:drop-shadow-[0_0_2em_rgba(97,218,251,0.67)]"
 						alt="Solid logo"
+						class="h-24 px-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_rgba(97,218,251,0.67)]"
+						src={solidLogo}
 					/>
 				</a>
 			</div>
 			<h1 class="text-5xl leading-tight">WXT + Solid</h1>
 			<div class="p-8">
 				<button
-					type="button"
-					onClick={() => setCount((count) => count + 1)}
 					class="btn btn-primary btn-soft"
+					onClick={() => setCount((count) => count + 1)}
+					type="button"
 				>
 					count is {count()}
 				</button>

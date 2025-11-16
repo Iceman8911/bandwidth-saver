@@ -15,9 +15,6 @@ function patchWindowFetchToUseCompression() {
 }
 
 export default defineContentScript({
-	matches: ["<all_urls>"],
-	runAt: "document_start",
-
 	main() {
 		const processedImages = new WeakSet<HTMLImageElement>();
 		const pendingCompressions = new Map<string, Promise<string>>();
@@ -91,4 +88,6 @@ export default defineContentScript({
 			subtree: true,
 		});
 	},
+	matches: ["<all_urls>"],
+	runAt: "document_start",
 });

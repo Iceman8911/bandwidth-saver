@@ -1,11 +1,11 @@
 {
-	"name": "@bandwidth-saver/shared",
-	"version": "0.0.0",
-	"type": "module",
+	"devDependencies": {
+		"typescript": "^5.3.0"
+	},
 	"exports": {
 		".": "./src/index.ts"
 	},
-	"devDependencies": {
-		"typescript": "^5.3.0"
-	}
+	"name": "@bandwidth-saver/shared",
+	"type": "module",
+	"version": "0.0.0"
 }
