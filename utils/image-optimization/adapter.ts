@@ -20,6 +20,9 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
 	quality = 75,
 ) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
 	const urlParams = new URLSearchParams({
 		url: `${url}`,
 		q: `${quality}`,
@@ -38,6 +41,9 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 	url,
 ) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
 	const urlParams = new URLSearchParams({
 		url: `${url}`,
 	});
