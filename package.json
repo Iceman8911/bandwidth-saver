@@ -1,34 +1,13 @@
 {
-	"name": "wxt-solid-starter",
-	"description": "manifest.json description",
+	"name": "bandwidth-saver-monorepo",
 	"private": true,
-	"version": "0.0.0",
-	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "wxt",
-		"dev:firefox": "wxt -b firefox",
-		"build": "wxt build",
-		"build:firefox": "wxt build -b firefox",
-		"zip": "wxt zip",
-		"zip:firefox": "wxt zip -b firefox",
-		"compile": "tsc --noEmit",
-		"postinstall": "wxt prepare"
-	},
-	"dependencies": {
-		"ky": "^1.14.0",
-		"solid-js": "^1.9.9",
-		"valibot": "^1.1.0"
-	},
-	"devDependencies": {
-		"@tailwindcss/vite": "^4.1.17",
-		"@wxt-dev/module-solid": "^1.1.3",
-		"daisyui": "^5.5.5",
-		"tailwindcss": "^4.1.17",
-		"typescript": "^5.9.2",
-		"unplugin-inline-enum": "^0.6.2",
-		"wxt": "^0.20.6"
-	},
-	"trustedDependencies": [
-		"spawn-sync"
-	]
+		"dev:extension": "bun --cwd packages/extension dev",
+		"dev:proxy": "bun --cwd packages/proxy dev",
+		"build": "bun run --filter '*' build",
+		"test": "bun run --filter '*' test"
+	}
 }

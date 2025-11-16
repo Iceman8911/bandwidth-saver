@@ -1,0 +1,6 @@
+{
+	"name": "@bandwidth-saver/proxy",
+	"dependencies": {
+		"@bandwidth-saver/shared": "workspace:*"
+	}
+}

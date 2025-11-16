@@ -1,8 +1,9 @@
+import { ImageCompressorEndpoint } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
 import { RuntimeMessageSchema } from "@/models/message";
 import { UrlSchema } from "@/models/shared";
-import { ImageCompressorEndpoint, MessageType } from "@/shared/constants";
+import { MessageType } from "@/shared/constants";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
