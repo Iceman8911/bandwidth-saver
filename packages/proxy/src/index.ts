@@ -1,7 +1,29 @@
+import {
+	getCompressedImageUrlWithFallback,
+	ProxyImageCompressionPayloadSchema,
+} from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+export const elysiaApp = new Elysia()
+	.get(
+		"/compress-image/",
+		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
+		async ({ query, redirect ,status}) => {
+		try {
+			const redirectedUrl = await getCompressedImageUrlWithFallback(
+				query.url,
+				query.quality,
+			);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+			return redirect(redirectedUrl);
+		} catch  {
+			return status(400, {
+				message: "Failed to compress image",
+			});
+		}
+		},
+		{
+			query: ProxyImageCompressionPayloadSchema,
+		},
+	)
+	.listen(3000);
