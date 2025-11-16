@@ -4,7 +4,7 @@ import {
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 
-export const elysiaApp = new Elysia()
+const app = new Elysia()
 	.get(
 		"/compress-image/",
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
@@ -27,3 +27,5 @@ export const elysiaApp = new Elysia()
 		},
 	)
 	.listen(3000);
+
+export type ElysiaApp = typeof app
