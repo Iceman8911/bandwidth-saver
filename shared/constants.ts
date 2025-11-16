@@ -3,3 +3,7 @@ export enum ImageCompressorEndpoint {
 	ALPACA_CDN = "https://spitting.alpacacdn.com/",
 }
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
+
+export enum MessageType {
+	VALIDATE_COMPRESSION_URL,
+}
