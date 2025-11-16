@@ -9,6 +9,7 @@ export default defineConfig({
 		permissions: [
 			"declarativeNetRequest",
 			"declarativeNetRequestWithHostAccess",
+			"storage",
 		],
 	},
 	modules: ["@wxt-dev/module-solid"],
