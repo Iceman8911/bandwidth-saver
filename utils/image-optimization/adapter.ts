@@ -1,10 +1,20 @@
+import ky, { type Options as KyOptions } from "ky";
 import * as v from "valibot";
 import type { ImageCompressionAdapter } from "@/models/image-optimization";
 import { UrlSchema } from "@/models/shared";
 import { ImageCompressorEndpoint } from "@/shared/constants";
-import { fetchWithTimeout } from "../fetch";
 
-const REQUEST_TIMEOUT = 3000;
+const fetchOptions = { retry: 0, timeout: 5000 } as const satisfies KyOptions;
+
+const isUrlAlreadyRedirectedToCompressionEndpoint = (
+	url: string | URL,
+): boolean => {
+	for (const endpoint of Object.values(ImageCompressorEndpoint)) {
+		if (`${url}`.startsWith(endpoint)) return true;
+	}
+
+	return false;
+};
 
 const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
@@ -18,7 +28,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
 
-	const response = await fetchWithTimeout(REQUEST_TIMEOUT, newUrl);
+	const response = await ky.post(newUrl, fetchOptions);
 
 	if (!response.ok) return null;
 
@@ -34,7 +44,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}?${urlParams}`;
 
-	const response = await fetchWithTimeout(REQUEST_TIMEOUT, newUrl);
+	const response = await ky.post(newUrl, fetchOptions);
 
 	if (!response.ok) return null;
 
