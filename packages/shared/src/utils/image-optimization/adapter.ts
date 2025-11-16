@@ -1,9 +1,8 @@
 import { ImageCompressorEndpoint } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import type { ImageCompressionAdapter } from "@/models/image-optimization";
-import { RuntimeMessageSchema } from "@/models/message";
-import { UrlSchema } from "@/models/shared";
-import { MessageType } from "@/shared/constants";
+import type { ImageCompressionAdapter } from "../../models/image-optimization";
+import { UrlSchema } from "../../models/shared";
+import { checkIfUrlReturnsValidResponse } from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
@@ -13,21 +12,6 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	}
 
 	return false;
-};
-
-/** Since the content script is subject to CORS */
-const validateUrlViaBackground = async (url: string): Promise<boolean> => {
-	try {
-		const response = await browser.runtime.sendMessage(
-			v.parse(RuntimeMessageSchema, {
-				type: MessageType.VALIDATE_URL,
-				url,
-			}),
-		);
-		return response.success === true;
-	} catch {
-		return false;
-	}
 };
 
 const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
@@ -45,7 +29,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
 
-	const isValid = await validateUrlViaBackground(newUrl);
+	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
 
 	return v.parse(UrlSchema, newUrl);
@@ -63,7 +47,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}?${urlParams}`;
 
-	const isValid = await validateUrlViaBackground(newUrl);
+	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
 
 	return v.parse(UrlSchema, newUrl);

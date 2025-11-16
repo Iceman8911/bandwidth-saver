@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { MessageType } from "@/shared/constants";
-import { UrlSchema } from "./shared";
+import { UrlSchema } from "../../shared/src/models/shared";
 
 const ValidateCompressedUrlMessageSchema = v.pipe(
 	v.object({
