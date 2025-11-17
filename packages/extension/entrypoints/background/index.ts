@@ -3,9 +3,9 @@ import * as v from "valibot";
 import { RuntimeMessageSchema } from "@/models/message";
 import { MessageType } from "@/shared/constants";
 
-function appendSaveDataToAllRequests() {
-	const ADD_SAVE_DATA_HEADER_RULE_ID = 1;
+const ADD_SAVE_DATA_HEADER_RULE_ID = 1;
 
+function appendSaveDataToAllRequests() {
 	browser.declarativeNetRequest.updateDynamicRules({
 		addRules: [
 			{
