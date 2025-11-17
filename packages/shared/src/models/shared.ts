@@ -19,3 +19,9 @@ export const DataUrlSchema = v.pipe(
 );
 
 export type DataUrlSchema = v.InferOutput<typeof DataUrlSchema>;
+
+export type AnyValibotSchema = v.BaseSchema<
+	unknown,
+	unknown,
+	v.BaseIssue<unknown>
+>;
