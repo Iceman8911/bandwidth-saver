@@ -17,6 +17,7 @@ const CompressionSettingsSchema = v.object({
 	format: v.optional(v.picklist(["webp", "avif", "jpeg"]), "webp"),
 	mode: v.optional(v.enum(CompressionMode), CompressionMode.SIMPLE),
 	quality: v.optional(NumberBetween1and100Inclusively, 60),
+	preserveAnim: v.optional(v.boolean(), false)
 });
 
 const ProxySettingsSchema = v.object({
@@ -76,6 +77,7 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		format: "webp",
 		mode: CompressionMode.SIMPLE,
 		quality: 60,
+		preserveAnim:false
 	},
 	[StorageKey.SETTINGS_PROXY]: {
 		enabled: false,

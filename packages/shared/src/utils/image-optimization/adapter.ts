@@ -17,6 +17,7 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	url,
 	quality = 75,
+	preserveAnim = false
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
@@ -25,6 +26,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 		output: "webp",
 		q: `${quality}`,
 		url: `${url}`,
+		n: preserveAnim ? "-1" : "1"
 	});
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
