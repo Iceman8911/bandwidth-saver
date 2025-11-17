@@ -38,7 +38,7 @@ function appendSaveDataToAllRequests() {
 }
 
 async function redirectToFirstCompressorEndpointIfPossible() {
-	const { enabled, mode, quality, format } =
+	const { enabled, mode, quality, format, preserveAnim } =
 		await compressionSettingsStorageItem.getValue();
 
 	if (!enabled || mode !== CompressionMode.SIMPLE) {
@@ -50,7 +50,9 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 	}
 
 	const host = ImageCompressorEndpoint.DEFAULT;
-	const hostWithoutProtocol = host.replace(/^https?:\/\//, "");
+	const hostWithoutProtocol = host
+		.replace(/^https?:\/\//, "")
+		.replace(/\/$/, "");
 	const scheme = host.startsWith("http://") ? "http" : "https";
 
 	await browser.declarativeNetRequest.updateDynamicRules({
@@ -58,35 +60,15 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 			{
 				action: {
 					redirect: {
-						transform: {
-							host: hostWithoutProtocol,
-							path: "/",
-							queryTransform: {
-								addOrReplaceParams: [
-									{
-										key: "url",
-										value: "{url}",
-									},
-									{
-										key: "q",
-										value: `${quality}`,
-									},
-									{
-										key: "output",
-										value: format,
-									},
-								],
-							},
-							scheme,
-						},
+						regexSubstitution: `${scheme}://${hostWithoutProtocol}/?url=\\0&q=${quality}&output=${format}&n=${preserveAnim ? "-1": "1"}`,
 					},
 					type: "redirect",
 				},
 				condition: {
 					excludedInitiatorDomains: [hostWithoutProtocol],
 					excludedRequestDomains: [hostWithoutProtocol],
+					regexFilter: "^https?://.*\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)([?#].*)?$",
 					resourceTypes: ["image"],
-					urlFilter: "*",
 				},
 				id: REDIRECT_TO_SIMPLE_COMPRESSION_PROXY_RULE_ID,
 			},
@@ -97,7 +79,9 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 
 function watchCompressionSettingsChanges() {
 	compressionSettingsStorageItem.watch(() => {
-		redirectToFirstCompressorEndpointIfPossible();
+		redirectToFirstCompressorEndpointIfPossible().catch((error) => {
+			console.error("Failed to update compression redirect rule:", error);
+		});
 	});
 }
 
