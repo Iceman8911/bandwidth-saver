@@ -1,31 +1,34 @@
 import {
 	getCompressedImageUrlWithFallback,
+	getProxyEnv,
 	ProxyImageCompressionPayloadSchema,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
+
+const env = getProxyEnv();
 
 const app = new Elysia()
 	.get(
 		"/compress-image/",
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
-		async ({ query, redirect ,status}) => {
-		try {
-			const redirectedUrl = await getCompressedImageUrlWithFallback(
-				query.url,
-				query.quality,
-			);
+		async ({ query, redirect, status }) => {
+			try {
+				const redirectedUrl = await getCompressedImageUrlWithFallback(
+					query.url,
+					query.quality,
+				);
 
-			return redirect(redirectedUrl);
-		} catch  {
-			return status(400, {
-				message: "Failed to compress image",
-			});
-		}
+				return redirect(redirectedUrl);
+			} catch {
+				return status(400, {
+					message: "Failed to compress image",
+				});
+			}
 		},
 		{
 			query: ProxyImageCompressionPayloadSchema,
 		},
 	)
-	.listen(3000);
+	.listen(env.VITE_SERVER_PORT);
 
-export type ElysiaApp = typeof app
+export type ElysiaApp = typeof app;
