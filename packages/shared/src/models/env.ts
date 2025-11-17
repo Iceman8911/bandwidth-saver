@@ -36,7 +36,6 @@ export const ExtensionEnvSchema = v.looseObject({
 		"development",
 	),
 	VITE_PROD: v.optional(v.boolean(), false),
-	VITE_PROXY_BASE_URL: v.pipe(v.string(), v.url()),
 });
 
 export type ProxyEnv = v.InferOutput<typeof ProxyEnvSchema>;
