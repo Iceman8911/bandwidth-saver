@@ -37,6 +37,20 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	return v.parse(UrlSchema, newUrl);
 };
 
+const imageCompressionAdapterFlyImgIo: ImageCompressionAdapter = async (
+	url, quality
+) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
+	const newUrl = `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality}/${url}`;
+
+	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
+	if (!isValid) return null;
+
+	return v.parse(UrlSchema, newUrl);
+};
+
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 	url,
 ) => {
@@ -57,6 +71,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 
 export const IMAGE_COMPRESSION_ADAPTERS = [
 	imageCompressionAdapterWsrvNl,
+	imageCompressionAdapterFlyImgIo,
 	imageCompressionAdapterAlpacaCdn,
 ] as const satisfies ImageCompressionAdapter[];
 
