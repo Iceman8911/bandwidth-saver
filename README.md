@@ -8,15 +8,15 @@ Assets like videos, audios, fonts and images can be optionally blocked depending
 
 ### Modes
 
-There are four different modes of compressing assets at the moment; **simple redirect**, ~~**MV2 webRequestBlocking redirect**~~, **client-side monkey-patching** and **server-side proxying**:
+There are four different modes of compressing assets at the moment; **simple redirect**, **MV2 webRequestBlocking redirect**, **client-side monkey-patching** and **server-side proxying**:
 
 #### Simple Redirect
 
 The simplest implementation that redirects all relevant requests to a single public compressor endpoint.
 
-#### ~~MV2 WebRequest Redirect (Blocking)~~
+#### MV2 WebRequest Redirect (Blocking)
 
-~~Only available in browsers that still support `webRequest` with the blocking privilege, every relevant request is intercepted and redirected to a valid compression service, if available, else, it falls back to the original url.~~
+Only available in browsers that still support `webRequest` with the blocking privilege, every relevant request is intercepted and redirected to a valid compression service, if available, else, it falls back to the original url.
 
 #### Client-side Monkey-patching
 
@@ -28,11 +28,11 @@ Simply redirects all relevant requests to a remote / self-hosted proxy that retu
 
 #### Comparison
 
-| S/N                                   | Simple Redirect | ~~MV2 WebRequest Redirect~~ | Client-side Monkey-patching | Server-side Proxy |
+| S/N                                   | Simple Redirect | MV2 WebRequest Redirect | Client-side Monkey-patching | Server-side Proxy |
 | ------------------------------------- | --------------- | ----------------------- | --------------------------- | ----------------- |
-| MV3 Support                           | Yes             | ~~No~~                      | Yes                         | Yes               |
-| No Server Costs                       | Yes             | ~~Yes~~                     | Yes                         | No                |
-| Fallback on failure                   | No              | ~~Yes~~                     | Yes                         | Yes               |
-| Easy implementation                   | Yes             | ~~Yes~~                     | No                          | Yes               |
-| Can use the original url as reference | No              | ~~Yes~~                     | Yes                         | Yes               |
-| Intercepts requests                   | Yes             | ~~Yes~~                     | No                          | Yes               |
+| MV3 Support                           | Yes             | No                      | Yes                         | Yes               |
+| No Server Costs                       | Yes             | Yes                     | Yes                         | No                |
+| Fallback on failure                   | No              | Yes                     | Yes                         | Yes               |
+| Easy implementation                   | Yes             | Yes                     | No                          | Yes               |
+| Can use the original url as reference | No              | Yes                     | Yes                         | Yes               |
+| Intercepts requests                   | Yes             | Yes                     | No                          | Yes               |
