@@ -14,8 +14,7 @@ const app = new Elysia()
 		async ({ query, redirect, status }) => {
 			try {
 				const redirectedUrl = await getCompressedImageUrlWithFallback(
-					query.url,
-					query.quality,
+					query,
 				);
 
 				return redirect(redirectedUrl);

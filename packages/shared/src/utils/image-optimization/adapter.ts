@@ -15,9 +15,9 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 };
 
 const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
-	url,
-	quality = 75,
-	preserveAnim = false
+	{url,
+	quality = 60,
+	preserveAnim = false}
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
@@ -38,7 +38,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 };
 
 const imageCompressionAdapterFlyImgIo: ImageCompressionAdapter = async (
-	url, quality
+	{url, quality = 60}
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
@@ -52,7 +52,7 @@ const imageCompressionAdapterFlyImgIo: ImageCompressionAdapter = async (
 };
 
 const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
-	url,
+	{url}
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
