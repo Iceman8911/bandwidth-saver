@@ -51,7 +51,6 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 	const host = preferredEndpoint
 	const hostWithoutProtocol = host
 		.replace(/^https?:\/\//, "")
-		.replace(/\/$/, "");
 	const scheme = host.startsWith("http://") ? "http" : "https";
 
 	await browser.declarativeNetRequest.updateDynamicRules({

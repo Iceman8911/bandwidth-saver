@@ -34,7 +34,7 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 		format === "avif" ? { output: "webp" } : { } )
 	});
 
-	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
+	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}/?${urlParams}`;
 
 	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
@@ -66,7 +66,7 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 		url: `${url}`,
 	});
 
-	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}?${urlParams}`;
+	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}/?${urlParams}`;
 
 	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
