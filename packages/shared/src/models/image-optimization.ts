@@ -9,12 +9,12 @@ export type ImageCompressionAdapter = (
 	preserveAnim?: boolean
 ) => Promise<UrlSchema | null>;
 
-export const ProxyImageCompressionPayloadSchema = v.object({
+export const ImageCompressionPayloadSchema = v.object({
 	quality: v.optional(v.pipe(v.string(), v.transform(Number), NumberBetween1and100Inclusively)),
 	url: UrlSchema,
 	/** If false, animated webp and gif assets will be reduced to their first frame */
 	preserveAnim: v.boolean()
 });
-export type ProxyImageCompressionPayloadSchema = v.InferOutput<
-	typeof ProxyImageCompressionPayloadSchema
+export type ImageCompressionPayloadSchema = v.InferOutput<
+	typeof ImageCompressionPayloadSchema
 >;

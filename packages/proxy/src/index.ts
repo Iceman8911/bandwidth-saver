@@ -1,7 +1,7 @@
 import {
 	getCompressedImageUrlWithFallback,
 	getProxyEnv,
-	ProxyImageCompressionPayloadSchema,
+	ImageCompressionPayloadSchema,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 
@@ -26,7 +26,7 @@ const app = new Elysia()
 			}
 		},
 		{
-			query: ProxyImageCompressionPayloadSchema,
+			query: ImageCompressionPayloadSchema,
 		},
 	)
 	.listen(env.VITE_SERVER_PORT);
