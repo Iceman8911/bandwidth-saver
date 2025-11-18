@@ -1,6 +1,5 @@
 import {
-	checkIfUrlReturnsValidResponse,
-	ImageCompressorEndpoint,
+	checkIfUrlReturnsValidResponse
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { RuntimeMessageSchema } from "@/models/message";
@@ -38,7 +37,7 @@ function appendSaveDataToAllRequests() {
 }
 
 async function redirectToFirstCompressorEndpointIfPossible() {
-	const { enabled, mode, quality, format, preserveAnim } =
+	const { enabled, mode, quality, format, preserveAnim, preferredEndpoint } =
 		await compressionSettingsStorageItem.getValue();
 
 	if (!enabled || mode !== CompressionMode.SIMPLE) {
@@ -49,7 +48,7 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 		return;
 	}
 
-	const host = ImageCompressorEndpoint.DEFAULT;
+	const host = preferredEndpoint
 	const hostWithoutProtocol = host
 		.replace(/^https?:\/\//, "")
 		.replace(/\/$/, "");

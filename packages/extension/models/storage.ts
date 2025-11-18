@@ -1,5 +1,6 @@
 import {
 	type AnyValibotSchema,
+	ImageCompressorEndpoint,
 	ImageFormatSchema,
 	NumberBetween1and100Inclusively,
 	UrlSchema,
@@ -19,7 +20,10 @@ const CompressionSettingsSchema = v.object({
 	format: v.optional(ImageFormatSchema, "auto"),
 	mode: v.optional(v.enum(CompressionMode), CompressionMode.SIMPLE),
 	quality: v.optional(NumberBetween1and100Inclusively, 60),
-	preserveAnim: v.optional(v.boolean(), false)
+	preserveAnim: v.optional(v.boolean(), false),
+
+	/** Used in `simple` mode since we can't dynamically calculate the one to use */
+	preferredEndpoint: v.optional(v.enum(ImageCompressorEndpoint), ImageCompressorEndpoint.WSRV_NL)
 });
 
 const ProxySettingsSchema = v.object({
@@ -79,7 +83,8 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		format: "webp",
 		mode: CompressionMode.SIMPLE,
 		quality: 60,
-		preserveAnim:false
+		preserveAnim: false,
+		preferredEndpoint: ImageCompressorEndpoint.WSRV_NL
 	},
 	[StorageKey.SETTINGS_PROXY]: {
 		enabled: false,
