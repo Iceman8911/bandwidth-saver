@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { NumberBetween1and100Inclusively, UrlSchema } from "./shared";
 
-export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpeg"])
+export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"])
 export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>
 
 export const ImageCompressionPayloadSchema = v.object({
