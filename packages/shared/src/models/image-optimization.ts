@@ -8,7 +8,8 @@ export const ImageCompressionPayloadSchema = v.object({
 	quality: v.pipe(v.string(), v.transform(Number), NumberBetween1and100Inclusively),
 	url: UrlSchema,
 	/** If false, animated webp and gif assets will be reduced to their first frame */
-	preserveAnim: v.boolean()
+	preserveAnim: v.boolean(),
+	format: v.optional(ImageFormatSchema, "auto")
 });
 export type ImageCompressionPayloadSchema = v.InferOutput<
 	typeof ImageCompressionPayloadSchema

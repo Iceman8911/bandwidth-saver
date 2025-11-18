@@ -16,17 +16,22 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 
 const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	{url,
-	quality = 60,
-	preserveAnim = false}
+	quality,
+	preserveAnim, format}
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
 
 	const urlParams = new URLSearchParams({
-		output: "webp",
 		q: `${quality}`,
 		url: `${url}`,
-		n: preserveAnim ? "-1" : "1"
+		n: preserveAnim ? "-1" : "1",
+		...(format !== "auto"
+		// Avif is not yet supported
+		&& format !== "avif" ? {
+		output: format,} :
+		// Fall back to webp since it's the next best thing.
+		format === "avif" ? { output: "webp" } : { } )
 	});
 
 	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}?${urlParams}`;
@@ -38,12 +43,12 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 };
 
 const imageCompressionAdapterFlyImgIo: ImageCompressionAdapter = async (
-	{url, quality = 60}
+	{url, quality, format}
 ) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
 
-	const newUrl = `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality}/${url}`;
+	const newUrl = `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}`;
 
 	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
