@@ -74,11 +74,11 @@ const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
 	return v.parse(UrlSchema, newUrl);
 };
 
-export const IMAGE_COMPRESSION_ADAPTERS = [
-	imageCompressionAdapterWsrvNl,
-	imageCompressionAdapterFlyImgIo,
-	imageCompressionAdapterAlpacaCdn,
-] as const satisfies ImageCompressionAdapter[];
+export const IMAGE_COMPRESSION_ADAPTERS = {
+ [ImageCompressorEndpoint.WSRV_NL]: imageCompressionAdapterWsrvNl,
+ [ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionAdapterFlyImgIo,
+ [ImageCompressorEndpoint.ALPACA_CDN]: imageCompressionAdapterAlpacaCdn,
+} as const satisfies Record<ImageCompressorEndpoint, ImageCompressionAdapter>
 
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
@@ -89,7 +89,7 @@ export const IMAGE_COMPRESSION_ADAPTERS = [
 export async function getCompressedImageUrlWithFallback(
 	...args: Parameters<ImageCompressionAdapter>
 ): Promise<UrlSchema> {
-	for (const adapter of IMAGE_COMPRESSION_ADAPTERS) {
+	for (const adapter of Object.values(IMAGE_COMPRESSION_ADAPTERS)) {
 		try {
 			const result = await adapter(...args);
 			if (result) return result;
