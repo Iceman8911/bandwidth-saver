@@ -1,5 +1,6 @@
 import {
 	type AnyValibotSchema,
+	getExtensionEnv,
 	ImageCompressorEndpoint,
 	ImageFormatSchema,
 	NumberBetween1and100Inclusively,
@@ -78,6 +79,8 @@ const storageSchemaEntries = {
 export const STORAGE_SCHEMA = v.object(storageSchemaEntries);
 export type STORAGE_SCHEMA = v.InferOutput<typeof STORAGE_SCHEMA>;
 
+const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv()
+
 export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 	[StorageKey.SETTINGS_COMPRESSION]: {
 		enabled: true,
@@ -89,8 +92,8 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 	},
 	[StorageKey.SETTINGS_PROXY]: {
 		enabled: false,
-		host: "localhost",
-		port: 3000,
+		host: VITE_SERVER_HOST,
+		port: VITE_SERVER_PORT,
 	},
 	[StorageKey.SETTINGS_BLOCK]: {
 		audio: { enabled: false, minSize: 100 },
