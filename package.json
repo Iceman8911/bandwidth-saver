@@ -5,6 +5,7 @@
 		"build": "bun run --filter '*' build",
 		"dev:extension": "bun --cwd packages/extension dev",
 		"dev:proxy": "bun --cwd packages/proxy dev",
+		"dev:all": "bun dev:extension & bun dev:proxy",
 		"test": "bun run --filter '*' test"
 	},
 	"workspaces": [
