@@ -1,5 +1,6 @@
 import {
 	type AnyValibotSchema,
+	ImageFormatSchema,
 	NumberBetween1and100Inclusively,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
@@ -14,7 +15,8 @@ const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
 
 const CompressionSettingsSchema = v.object({
 	...EnabledSettingsSchema.entries,
-	format: v.optional(v.picklist(["webp", "avif", "jpeg"]), "webp"),
+	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
+	format: v.optional(ImageFormatSchema, "auto"),
 	mode: v.optional(v.enum(CompressionMode), CompressionMode.SIMPLE),
 	quality: v.optional(NumberBetween1and100Inclusively, 60),
 	preserveAnim: v.optional(v.boolean(), false)
