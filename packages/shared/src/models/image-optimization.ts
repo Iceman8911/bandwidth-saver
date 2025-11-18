@@ -2,7 +2,7 @@ import * as v from "valibot";
 import { NumberBetween1and100Inclusively, UrlSchema } from "./shared";
 
 export const ImageCompressionPayloadSchema = v.object({
-	quality: v.optional(v.pipe(v.string(), v.transform(Number), NumberBetween1and100Inclusively)),
+	quality: v.pipe(v.string(), v.transform(Number), NumberBetween1and100Inclusively),
 	url: UrlSchema,
 	/** If false, animated webp and gif assets will be reduced to their first frame */
 	preserveAnim: v.boolean()
