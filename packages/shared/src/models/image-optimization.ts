@@ -16,7 +16,7 @@ export type ImageCompressionPayloadSchema = v.InferOutput<
 >;
 
 /** Simply constructs a url to the compression service for possible compression */
-export type ImageCompressionUrlConstructor = (arg:ImageCompressionPayloadSchema) => UrlSchema
+export type ImageCompressionUrlConstructor = (payload: ImageCompressionPayloadSchema) => UrlSchema
 
 /** Validates the url provided by `ImageCompressionUrlConstructor` so that only a valid url or null is returned */
-export type ImageCompressionAdapter = (arg: ImageCompressionPayloadSchema) => Promise<UrlSchema | null>;
+export type ImageCompressionAdapter = (payload: ImageCompressionPayloadSchema, urlConstructor: ImageCompressionUrlConstructor) => Promise<UrlSchema | null>;

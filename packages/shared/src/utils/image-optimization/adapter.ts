@@ -1,6 +1,6 @@
 import { ImageCompressorEndpoint } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import type { ImageCompressionAdapter } from "../../models/image-optimization";
+import type { ImageCompressionAdapter, ImageCompressionPayloadSchema, ImageCompressionUrlConstructor } from "../../models/image-optimization";
 import { UrlSchema } from "../../models/shared";
 import { checkIfUrlReturnsValidResponse } from "../fetch";
 
@@ -14,27 +14,53 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	return false;
 };
 
-const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
-	{url,
+const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
+	url,
 	quality,
-	preserveAnim, format}
-) => {
+	preserveAnim,
+	format
+}) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
 
-	const urlParams = new URLSearchParams({
-		q: `${quality}`,
-		url: `${url}`,
-		n: preserveAnim ? "-1" : "1",
-		...(format !== "auto"
-		// Avif is not yet supported
-		&& format !== "avif" ? {
-		output: format,} :
-		// Fall back to webp since it's the next best thing.
-		format === "avif" ? { output: "webp" } : { } )
-	});
+	// Check if this is a regex substitution placeholder
+	const n = preserveAnim ? "-1" : "1";
 
-	const newUrl = `${ImageCompressorEndpoint.WSRV_NL}/?${urlParams}`;
+	let result = `${ImageCompressorEndpoint.WSRV_NL}/?url=${url}&q=${quality}&n=${n}`;
+
+	// Add output format if specified
+	if (format !== "auto" && format !== "avif") {
+		result += `&output=${format}`;
+	} else if (format === "avif") {
+		// Fall back to webp since avif is not yet supported
+		result += "&output=webp";
+	}
+
+	return v.parse(UrlSchema, result);
+};
+
+const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor = ({
+	url,
+	quality,
+	format
+}) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
+	return v.parse(UrlSchema, `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}`);
+};
+
+const imageCompressionUrlConstructorAlpacaCdn: ImageCompressionUrlConstructor = ({
+	url
+}) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
+	return v.parse(UrlSchema, `${ImageCompressorEndpoint.ALPACA_CDN}/?url=${url}`);
+};
+
+const imageCompressionAdapter: ImageCompressionAdapter = async (payload, urlConstructor) => {
+	const newUrl = urlConstructor(payload);
 
 	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
 	if (!isValid) return null;
@@ -42,61 +68,29 @@ const imageCompressionAdapterWsrvNl: ImageCompressionAdapter = async (
 	return v.parse(UrlSchema, newUrl);
 };
 
-const imageCompressionAdapterFlyImgIo: ImageCompressionAdapter = async (
-	{url, quality, format}
-) => {
-	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-		return v.parse(UrlSchema, url);
-
-	const newUrl = `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}`;
-
-	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
-	if (!isValid) return null;
-
-	return v.parse(UrlSchema, newUrl);
-};
-
-const imageCompressionAdapterAlpacaCdn: ImageCompressionAdapter = async (
-	{url}
-) => {
-	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-		return v.parse(UrlSchema, url);
-
-	const urlParams = new URLSearchParams({
-		url: `${url}`,
-	});
-
-	const newUrl = `${ImageCompressorEndpoint.ALPACA_CDN}/?${urlParams}`;
-
-	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
-	if (!isValid) return null;
-
-	return v.parse(UrlSchema, newUrl);
-};
-
-export const IMAGE_COMPRESSION_ADAPTERS = {
- [ImageCompressorEndpoint.WSRV_NL]: imageCompressionAdapterWsrvNl,
- [ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionAdapterFlyImgIo,
- [ImageCompressorEndpoint.ALPACA_CDN]: imageCompressionAdapterAlpacaCdn,
-} as const satisfies Record<ImageCompressorEndpoint, ImageCompressionAdapter>
+export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
+	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
+	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
+	[ImageCompressorEndpoint.ALPACA_CDN]: imageCompressionUrlConstructorAlpacaCdn,
+} as const satisfies Record<ImageCompressorEndpoint, ImageCompressionUrlConstructor>;
 
 /**
- * Attempts to obtain the compressed image's url using available adapters with fallback.
- * Tries each adapter sequentially until one succeeds.
- *
- * @returns Compressed image's url or the original image url if all adapters fail
- */
+	* Attempts to obtain the compressed image's url using available adapters with fallback.
+	* Tries each adapter sequentially until one succeeds.
+	*
+	* @returns Compressed image's url or the original image url if all adapters fail
+	*/
 export async function getCompressedImageUrlWithFallback(
-	...args: Parameters<ImageCompressionAdapter>
+  payload: ImageCompressionPayloadSchema
 ): Promise<UrlSchema> {
-	for (const adapter of Object.values(IMAGE_COMPRESSION_ADAPTERS)) {
+	for (const url of Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS)) {
 		try {
-			const result = await adapter(...args);
+			const result = await imageCompressionAdapter(payload, url);
 			if (result) return result;
 		} catch (error) {
-			console.warn(`Image compression adapter failed for ${args[0]}:`, error);
+			console.warn(`Image compression adapter failed for ${payload.url}:`, error);
 		}
 	}
 
-	return v.parse(UrlSchema, `${args[0]}`);
+	return v.parse(UrlSchema, `${payload.url}`);
 }
