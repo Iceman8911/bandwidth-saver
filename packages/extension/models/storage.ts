@@ -16,14 +16,15 @@ const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
 
 const CompressionSettingsSchema = v.object({
 	...EnabledSettingsSchema.entries,
+
 	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
-	format: v.optional(ImageFormatSchema, "auto"),
-	mode: v.optional(v.enum(CompressionMode), CompressionMode.SIMPLE),
-	quality: v.optional(NumberBetween1and100Inclusively, 60),
-	preserveAnim: v.optional(v.boolean(), false),
+	format: ImageFormatSchema,
+	mode: v.enum(CompressionMode),
+	quality: NumberBetween1and100Inclusively,
+	preserveAnim: v.boolean(),
 
 	/** Used in `simple` mode since we can't dynamically calculate the one to use */
-	preferredEndpoint: v.optional(v.enum(ImageCompressorEndpoint), ImageCompressorEndpoint.WSRV_NL)
+	preferredEndpoint: v.enum(ImageCompressorEndpoint)
 });
 
 const ProxySettingsSchema = v.object({
@@ -80,7 +81,7 @@ export type STORAGE_SCHEMA = v.InferOutput<typeof STORAGE_SCHEMA>;
 export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 	[StorageKey.SETTINGS_COMPRESSION]: {
 		enabled: true,
-		format: "webp",
+		format: "auto",
 		mode: CompressionMode.SIMPLE,
 		quality: 60,
 		preserveAnim: false,
