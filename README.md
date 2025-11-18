@@ -1,5 +1,8 @@
 # Bandwidth Saver
 
+## Blocking
+
+Assets like videos, audios, fonts and images can be optionally blocked depending on their size (if MV2 is enabled, otherwise the size cannot be determined easily).
 
 ## Compression
 
