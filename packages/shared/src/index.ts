@@ -6,3 +6,4 @@ export * from "./utils/array";
 export * from "./utils/blob";
 export * from "./utils/fetch";
 export * from "./utils/image-optimization/adapter";
+export * from "./utils/random"
