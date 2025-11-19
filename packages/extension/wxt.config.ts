@@ -10,6 +10,7 @@ export default defineConfig({
 			"declarativeNetRequest",
 			"declarativeNetRequestWithHostAccess",
 			"storage",
+			"tabs",
 		],
 	},
 	modules: ["@wxt-dev/module-solid"],
