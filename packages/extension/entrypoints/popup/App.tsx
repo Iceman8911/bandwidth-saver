@@ -1,44 +1,139 @@
+// import { Tooltip } from "@/components/tooltip"
+import { getRandomUUID } from "@bandwidth-saver/shared";
 import { createSignal } from "solid-js";
-import solidLogo from "@/assets/solid.svg";
-import wxtLogo from "/wxt.svg";
+import * as v from "valibot";
 
-function App() {
-	const [count, setCount] = createSignal(0);
+const PopupScope = v.picklist(["domain", "global"]);
+type PopupScope = v.InferOutput<typeof PopupScope>;
+
+const [scope, setScope] = createSignal<PopupScope>("domain");
+
+function Header() {
+	const isScopeSelected = createSelector(scope);
+
+	const handleScopeSelect = ({
+		target: { value },
+	}: InputEvent & { target: HTMLSelectElement }) => {
+		setScope(v.parse(PopupScope, value));
+	};
 
 	return (
-		<div class="mx-auto max-w-7xl px-8 text-center">
-			<div class="flex justify-center">
-				<a href="https://wxt.dev" rel="noopener" target="_blank">
-					<img
-						alt="WXT logo"
-						class="h-24 px-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_rgba(84,188,74,0.88)]"
-						src={wxtLogo}
-					/>
-				</a>
-				<a href="https://solidjs.com" rel="noopener" target="_blank">
-					<img
-						alt="Solid logo"
-						class="h-24 px-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_rgba(97,218,251,0.67)]"
-						src={solidLogo}
-					/>
-				</a>
-			</div>
-			<h1 class="text-5xl leading-tight">WXT + Solid</h1>
-			<div class="p-8">
-				<button
-					class="btn btn-primary btn-soft"
-					onClick={() => setCount((count) => count + 1)}
-					type="button"
-				>
-					count is {count()}
-				</button>
-				<p>
-					Edit <code>popup/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<p class="text-[#888]">Click on the WXT and Solid logos to learn more</p>
+		<div class="flex gap-4">
+			<h2 class="text-center font-semibold text-base text-primary">
+				Bandwidth Saver
+			</h2>
+
+			{/*<Tooltip tip={<div class="h-20">Data and settings shown will be in context of the current website's domain. E.g. <em>google.com</em></div>} dir="bottom">
+
+				</Tooltip>*/}
+			<label class="select select-sm select-primary">
+				<span class="label">Scope</span>
+
+				<select onInput={handleScopeSelect}>
+					<option selected={isScopeSelected("domain")} value="domain">
+						Domain
+					</option>
+					<option selected={isScopeSelected("global")} value="global">
+						Global
+					</option>
+				</select>
+			</label>
 		</div>
 	);
 }
 
-export default App;
+function Statistics() {
+	return (
+		<div class="grid grid-cols-2 grid-rows-2 gap-4 text-info">
+			<div>Requests Processed: {100}</div>
+
+			<div>Requests Blocked: {10}</div>
+
+			<div>Data Consumed: {100} MB</div>
+
+			<div>Data Saved: {45}% </div>
+		</div>
+	);
+}
+
+function DisableToggles() {
+	return (
+		<div class="flex justify-around gap-4">
+			<label class="space-x-2">
+				<span class="label">Enabled globally</span>
+
+				<input checked class="toggle toggle-primary" type="checkbox" />
+			</label>
+
+			<label class="space-x-2">
+				<span class="label">Enabled on this site</span>
+
+				<input checked class="toggle toggle-primary" type="checkbox" />
+			</label>
+		</div>
+	);
+}
+
+function BlockSettingSummary(props: { name: string }) {
+	return (
+		<div class="collapse-arrow join-item collapse border border-base-300">
+			<input name={props.name} type="radio" />
+			<div class="collapse-title font-semibold">Block Settings</div>
+			<div class="collapse-content text-sm">TODO</div>
+		</div>
+	);
+}
+
+function CompressionSettingSummary(props: { name: string }) {
+	return (
+		<div class="collapse-arrow join-item collapse border border-base-300">
+			<input name={props.name} type="radio" />
+			<div class="collapse-title font-semibold">Compression Settings</div>
+			<div class="collapse-content text-sm">TODO</div>
+		</div>
+	);
+}
+
+function ProxySettingSummary(props: { name: string }) {
+	return (
+		<div class="collapse-arrow join-item collapse border border-base-300">
+			<input name={props.name} type="radio" />
+			<div class="collapse-title font-semibold">Proxy Settings</div>
+			<div class="collapse-content text-sm">TODO</div>
+		</div>
+	);
+}
+
+function SettingSummaries() {
+	const accordionName = getRandomUUID();
+
+	return (
+		<div class="join join-vertical bg-base-100">
+			<BlockSettingSummary name={accordionName} />
+
+			<CompressionSettingSummary name={accordionName} />
+
+			<ProxySettingSummary name={accordionName} />
+		</div>
+	);
+}
+
+function Footer() {
+	return "";
+}
+
+export default function App() {
+	return (
+		<div class="h-fit w-96 divide-y divide-base-300 *:w-full *:p-4">
+			<Header />
+
+			<Statistics />
+
+			<DisableToggles />
+
+			<SettingSummaries />
+
+			<Footer />
+		</div>
+	);
+}
