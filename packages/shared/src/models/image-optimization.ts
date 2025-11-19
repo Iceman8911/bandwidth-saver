@@ -1,22 +1,31 @@
 import * as v from "valibot";
 import { NumberBetween1and100Inclusively, UrlSchema } from "./shared";
 
-export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"])
-export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>
+export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"]);
+export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
 
 export const ImageCompressionPayloadSchema = v.object({
-	quality: v.pipe(v.string(), v.transform(Number), NumberBetween1and100Inclusively),
-	url: UrlSchema,
+	format: v.optional(ImageFormatSchema, "auto"),
 	/** If false, animated webp and gif assets will be reduced to their first frame */
 	preserveAnim: v.boolean(),
-	format: v.optional(ImageFormatSchema, "auto")
+	quality: v.pipe(
+		v.string(),
+		v.transform(Number),
+		NumberBetween1and100Inclusively,
+	),
+	url: UrlSchema,
 });
 export type ImageCompressionPayloadSchema = v.InferOutput<
 	typeof ImageCompressionPayloadSchema
 >;
 
 /** Simply constructs a url to the compression service for possible compression */
-export type ImageCompressionUrlConstructor = (payload: ImageCompressionPayloadSchema) => UrlSchema
+export type ImageCompressionUrlConstructor = (
+	payload: ImageCompressionPayloadSchema,
+) => UrlSchema;
 
 /** Validates the url provided by `ImageCompressionUrlConstructor` so that only a valid url or null is returned */
-export type ImageCompressionAdapter = (payload: ImageCompressionPayloadSchema, urlConstructor: ImageCompressionUrlConstructor) => Promise<UrlSchema | null>;
+export type ImageCompressionAdapter = (
+	payload: ImageCompressionPayloadSchema,
+	urlConstructor: ImageCompressionUrlConstructor,
+) => Promise<UrlSchema | null>;

@@ -1,6 +1,6 @@
 import {
 	checkIfUrlReturnsValidResponse,
-    IMAGE_COMPRESSION_URL_CONSTRUCTORS
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { RuntimeMessageSchema } from "@/models/message";
@@ -49,27 +49,31 @@ async function redirectToFirstCompressorEndpointIfPossible() {
 		return;
 	}
 
-	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint]
+	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
-	const host = preferredEndpoint
-	const hostWithoutProtocol = host
-		.replace(/^https?:\/\//, "")
+	const host = preferredEndpoint;
+	const hostWithoutProtocol = host.replace(/^https?:\/\//, "");
 
 	await browser.declarativeNetRequest.updateDynamicRules({
 		addRules: [
 			{
 				action: {
 					redirect: {
-						regexSubstitution: urlConstructor({format,preserveAnim,quality,
-						//@ts-expect-error This will slot in the url here
-						url:"\\0"}),
+						regexSubstitution: urlConstructor({
+							format,
+							preserveAnim,
+							quality,
+							//@ts-expect-error This will slot in the url here
+							url: "\\0",
+						}),
 					},
 					type: "redirect",
 				},
 				condition: {
 					excludedInitiatorDomains: [hostWithoutProtocol],
 					excludedRequestDomains: [hostWithoutProtocol],
-					regexFilter: "^https?://.*\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)([?#].*)?$",
+					regexFilter:
+						"^https?://.*.(png|jpe?g|webp|gif|svg|bmp|ico|avif)([?#].*)?$",
 					resourceTypes: ["image"],
 				},
 				id: REDIRECT_TO_SIMPLE_COMPRESSION_PROXY_RULE_ID,

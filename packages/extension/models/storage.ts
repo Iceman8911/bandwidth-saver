@@ -21,11 +21,11 @@ const CompressionSettingsSchema = v.object({
 	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
 	format: ImageFormatSchema,
 	mode: v.enum(CompressionMode),
-	quality: NumberBetween1and100Inclusively,
-	preserveAnim: v.boolean(),
 
 	/** Used in `simple` mode since we can't dynamically calculate the one to use */
-	preferredEndpoint: v.enum(ImageCompressorEndpoint)
+	preferredEndpoint: v.enum(ImageCompressorEndpoint),
+	preserveAnim: v.boolean(),
+	quality: NumberBetween1and100Inclusively,
 });
 
 const ProxySettingsSchema = v.object({
@@ -79,16 +79,16 @@ const storageSchemaEntries = {
 export const STORAGE_SCHEMA = v.object(storageSchemaEntries);
 export type STORAGE_SCHEMA = v.InferOutput<typeof STORAGE_SCHEMA>;
 
-const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv()
+const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
 export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 	[StorageKey.SETTINGS_COMPRESSION]: {
 		enabled: true,
 		format: "auto",
 		mode: CompressionMode.SIMPLE,
-		quality: 60,
+		preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
 		preserveAnim: false,
-		preferredEndpoint: ImageCompressorEndpoint.WSRV_NL
+		quality: 60,
 	},
 	[StorageKey.SETTINGS_PROXY]: {
 		enabled: false,
