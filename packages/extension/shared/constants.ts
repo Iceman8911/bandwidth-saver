@@ -31,25 +31,25 @@ export enum CompressionMode {
 }
 
 export const StorageKey = {
-	SCHEMA_VERSION: "local:schemaVersion",
+	SCHEMA_VERSION: "sync:schemaVersion",
 
 	/** Settings for blocking assets */
-	SETTINGS_BLOCK: "local:block",
+	SETTINGS_BLOCK: "sync:block",
 
 	/** Settings for customizing compression */
-	SETTINGS_COMPRESSION: "local:compression",
+	SETTINGS_COMPRESSION: "sync:compression",
 
 	/** Sites that shouldn't be affected by the extension */
-	SETTINGS_DENYLIST: "local:denylist",
+	SETTINGS_DENYLIST: "sync:denylist",
 
 	/** Other settings that affect all site domains that didn't fit with the others */
-	SETTINGS_GLOBAL: "local:global",
+	SETTINGS_GLOBAL: "sync:global",
 
 	/** Settings for the remote proxy */
-	SETTINGS_PROXY: "local:proxy",
+	SETTINGS_PROXY: "sync:proxy",
 
 	/** Settings scoped to specific sites */
-	SETTINGS_SITE_SCOPE: "local:siteScope",
+	SETTINGS_SITE_SCOPE: "sync:siteScope",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
