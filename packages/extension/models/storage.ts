@@ -66,14 +66,13 @@ const StatisticsSchema = v.object({
 });
 
 /** Collection of settings that may be applied to all sites, or a select few */
-const CombinedSettingsSchema = v.object({
+const SiteScopedSettingsSchema = v.object({
 	block: BlockSettingsSchema,
 	compression: CompressionSettingsSchema,
 
 	/** In this context, it only applies to the entire domain with increased priority */
 	global: GlobalSettingsSchema,
 	proxy: ProxySettingsSchema,
-	statistics: StatisticsSchema,
 });
 
 const storageSchemaEntries = {
@@ -81,8 +80,12 @@ const storageSchemaEntries = {
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE]: v.record(UrlSchema, CombinedSettingsSchema),
+	[StorageKey.SETTINGS_SITE_SCOPE]: v.record(
+		UrlSchema,
+		SiteScopedSettingsSchema,
+	),
 	[StorageKey.STATISTICS]: StatisticsSchema,
+	[StorageKey.STATISTICS_SITE_SCOPE]: v.record(UrlSchema, StatisticsSchema),
 	[StorageKey.SCHEMA_VERSION]: v.pipe(v.number(), v.integer(), v.minValue(1)),
 	[StorageKey.SETTINGS_DENYLIST]: v.array(UrlSchema),
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
@@ -124,6 +127,7 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		requestsCompressed: 0,
 		requestsProcessed: 0,
 	},
+	[StorageKey.STATISTICS_SITE_SCOPE]: {},
 	[StorageKey.SCHEMA_VERSION]: STORAGE_VERSION,
 	[StorageKey.SETTINGS_DENYLIST]: [],
 	[StorageKey.SETTINGS_SITE_SCOPE]: {},

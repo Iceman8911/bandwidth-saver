@@ -48,10 +48,13 @@ export const StorageKey = {
 	/** Settings for the remote proxy */
 	SETTINGS_PROXY: "local:proxy",
 
-	/** Settings scoped to specific sites and when present, take precedence over the "global" ones */
+	/** Settings scoped to specific sites */
 	SETTINGS_SITE_SCOPE: "local:siteScope",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
+
+	/** Device-specific statistics per site */
+	STATISTICS_SITE_SCOPE: "local:siteScopeStatistics",
 } as const satisfies Record<string, StorageItemKey>;
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];

@@ -43,6 +43,13 @@ export const statisticsStorageItem = storage.defineItem<
 	init: () => STORAGE_DEFAULTS[StorageKey.STATISTICS],
 });
 
+export const siteStatisticsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.STATISTICS_SITE_SCOPE]
+>(StorageKey.STATISTICS_SITE_SCOPE, {
+	fallback: STORAGE_DEFAULTS[StorageKey.STATISTICS_SITE_SCOPE],
+	init: () => STORAGE_DEFAULTS[StorageKey.STATISTICS_SITE_SCOPE],
+});
+
 export const schemaVersionStorageItem = storage.defineItem<
 	STORAGE_SCHEMA[typeof StorageKey.SCHEMA_VERSION]
 >(StorageKey.SCHEMA_VERSION, {
