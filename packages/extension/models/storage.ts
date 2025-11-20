@@ -47,11 +47,20 @@ const BlockSettingsSchema = v.object({
 	video: BlockedAssetSchema,
 });
 
+const IntegerFromAtLeastZeroSchema = v.pipe(
+	v.number(),
+	v.integer(),
+	v.minValue(0),
+);
+
 const StatisticsSchema = v.object({
-	assetsBlocked: v.pipe(v.number(), v.integer(), v.minValue(0)),
-	bytesSaved: v.pipe(v.number(), v.minValue(0)),
-	imagesCompressed: v.pipe(v.number(), v.integer(), v.minValue(0)),
+	bytesSaved: IntegerFromAtLeastZeroSchema,
+	/** Total amount of data consumption after compression / blocking */
+	bytesUsed: IntegerFromAtLeastZeroSchema,
 	lastReset: v.optional(v.pipe(v.string(), v.isoTimestamp())),
+	requestsBlocked: IntegerFromAtLeastZeroSchema,
+	requestsCompressed: IntegerFromAtLeastZeroSchema,
+	requestsProcessed: IntegerFromAtLeastZeroSchema,
 });
 
 /** Collection of settings that may be applied to all sites, or a select few */
@@ -102,9 +111,11 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		video: { enabled: false, minSize: 500 },
 	},
 	[StorageKey.SETTINGS_STATISTICS]: {
-		assetsBlocked: 0,
 		bytesSaved: 0,
-		imagesCompressed: 0,
+		bytesUsed: 0,
+		requestsBlocked: 0,
+		requestsCompressed: 0,
+		requestsProcessed: 0,
 	},
 	[StorageKey.SCHEMA_VERSION]: STORAGE_VERSION,
 	[StorageKey.SETTINGS_DENYLIST]: [],
