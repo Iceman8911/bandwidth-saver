@@ -42,6 +42,9 @@ export const StorageKey = {
 	/** Sites that shouldn't be affected by the extension */
 	SETTINGS_DENYLIST: "local:denylist",
 
+	/** Other settings that affect all site domains that didn't fit with the others */
+	SETTINGS_GLOBAL: "local:global",
+
 	/** Settings for the remote proxy */
 	SETTINGS_PROXY: "local:proxy",
 

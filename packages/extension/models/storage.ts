@@ -15,6 +15,8 @@ import {
 
 const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
 
+const GlobalSettingsSchema = v.object({ ...EnabledSettingsSchema.entries });
+
 const CompressionSettingsSchema = v.object({
 	...EnabledSettingsSchema.entries,
 
@@ -67,11 +69,15 @@ const StatisticsSchema = v.object({
 const CombinedSettingsSchema = v.object({
 	block: BlockSettingsSchema,
 	compression: CompressionSettingsSchema,
+
+	/** In this context, it only applies to the entire domain with increased priority */
+	global: GlobalSettingsSchema,
 	proxy: ProxySettingsSchema,
 	statistics: StatisticsSchema,
 });
 
 const storageSchemaEntries = {
+	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
@@ -91,6 +97,7 @@ export type STORAGE_SCHEMA = v.InferOutput<typeof STORAGE_SCHEMA>;
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
 export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
+	[StorageKey.SETTINGS_GLOBAL]: { enabled: true },
 	[StorageKey.SETTINGS_COMPRESSION]: {
 		enabled: true,
 		format: "auto",

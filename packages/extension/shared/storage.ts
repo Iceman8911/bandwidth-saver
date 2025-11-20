@@ -1,6 +1,13 @@
 import { STORAGE_DEFAULTS, type STORAGE_SCHEMA } from "@/models/storage";
 import { StorageKey } from "./constants";
 
+export const globalSettingsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_GLOBAL]
+>(StorageKey.SETTINGS_GLOBAL, {
+	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_GLOBAL],
+	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_GLOBAL],
+});
+
 export const compressionSettingsStorageItem = storage.defineItem<
 	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_COMPRESSION]
 >(StorageKey.SETTINGS_COMPRESSION, {
