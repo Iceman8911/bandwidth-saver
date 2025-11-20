@@ -82,7 +82,7 @@ const storageSchemaEntries = {
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
 	[StorageKey.SETTINGS_SITE_SCOPE]: v.record(UrlSchema, CombinedSettingsSchema),
-	[StorageKey.SETTINGS_STATISTICS]: StatisticsSchema,
+	[StorageKey.STATISTICS]: StatisticsSchema,
 	[StorageKey.SCHEMA_VERSION]: v.pipe(v.number(), v.integer(), v.minValue(1)),
 	[StorageKey.SETTINGS_DENYLIST]: v.array(UrlSchema),
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
@@ -117,7 +117,7 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		image: { enabled: false, minSize: 100 },
 		video: { enabled: false, minSize: 500 },
 	},
-	[StorageKey.SETTINGS_STATISTICS]: {
+	[StorageKey.STATISTICS]: {
 		bytesSaved: 0,
 		bytesUsed: 0,
 		requestsBlocked: 0,

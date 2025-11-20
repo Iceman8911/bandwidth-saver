@@ -51,6 +51,7 @@ export const StorageKey = {
 	/** Settings scoped to specific sites and when present, take precedence over the "global" ones */
 	SETTINGS_SITE_SCOPE: "local:siteScope",
 
-	SETTINGS_STATISTICS: "local:statistics",
+	/** Device-specific global statistics */
+	STATISTICS: "local:statistics",
 } as const satisfies Record<string, StorageItemKey>;
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
