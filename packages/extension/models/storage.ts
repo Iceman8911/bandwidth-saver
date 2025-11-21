@@ -36,18 +36,40 @@ const ProxySettingsSchema = v.object({
 	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
 });
 
-const BlockedAssetSchema = v.object({
+const BlockedAssetSharedSchema = v.object({
 	...EnabledSettingsSchema.entries,
-	/** Minimum size in KB that assets must be at least to be blocked */
 	minSize: v.pipe(v.number(), v.minValue(0)),
 });
 
-const BlockSettingsSchema = v.object({
-	audio: BlockedAssetSchema,
-	font: BlockedAssetSchema,
-	image: BlockedAssetSchema,
-	video: BlockedAssetSchema,
-});
+const BlockedAssetSchema = v.variant("type", [
+	v.object({
+		...BlockedAssetSharedSchema.entries,
+		fileType: v.picklist(["audio", "font", "image", "video"]),
+		type: v.literal("type"),
+	}),
+
+	v.object({
+		...BlockedAssetSharedSchema.entries,
+		extension: v.string(),
+		type: v.literal("ext"),
+	}),
+
+	// Block by MIME type pattern
+	v.object({
+		...BlockedAssetSharedSchema.entries,
+		mimePattern: v.string(), // e.g., "application/pdf", "text/*"
+		type: v.literal("mime"),
+	}),
+
+	// Block by URL pattern (domain, path, etc.)
+	v.object({
+		...BlockedAssetSharedSchema.entries,
+		type: v.literal("url"),
+		urlPattern: v.string(), // e.g., "*.doubleclick.net/*", "cdn.analytics.com/*"
+	}),
+]);
+
+const BlockSettingsSchema = v.array(BlockedAssetSchema);
 
 const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.number(),
@@ -116,12 +138,12 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 		host: VITE_SERVER_HOST,
 		port: VITE_SERVER_PORT,
 	},
-	[StorageKey.SETTINGS_BLOCK]: {
-		audio: { enabled: false, minSize: 100 },
-		font: { enabled: false, minSize: 50 },
-		image: { enabled: false, minSize: 100 },
-		video: { enabled: false, minSize: 500 },
-	},
+	[StorageKey.SETTINGS_BLOCK]: [
+		{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
+		{ enabled: false, fileType: "font", minSize: 50, type: "type" },
+		{ enabled: false, fileType: "image", minSize: 100, type: "type" },
+		{ enabled: false, fileType: "video", minSize: 100, type: "type" },
+	],
 	[StorageKey.STATISTICS]: {
 		bytesSaved: 0,
 		bytesUsed: 0,
