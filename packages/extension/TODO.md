@@ -7,6 +7,7 @@
   - [ ] Videos
   - [ ] Audios
   - [ ] Fonts
+  - [ ] Support more fine-grained blocking like blocking specific extensions, urls,  domains, etc
 - [ ] Compress / reduce resolution of assets like:
   - [ ] Images
   - [ ] Gifs
