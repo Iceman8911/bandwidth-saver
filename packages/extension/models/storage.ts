@@ -65,24 +65,26 @@ const StatisticsSchema = v.object({
 	requestsProcessed: IntegerFromAtLeastZeroSchema,
 });
 
-/** Collection of settings that may be applied to all sites, or a select few */
-const SiteScopedSettingsSchema = v.object({
-	block: BlockSettingsSchema,
-	compression: CompressionSettingsSchema,
-
-	/** In this context, it only applies to the entire domain with increased priority */
-	global: GlobalSettingsSchema,
-	proxy: ProxySettingsSchema,
-});
-
 const storageSchemaEntries = {
 	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE]: v.record(
+	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: v.record(
 		UrlSchema,
-		SiteScopedSettingsSchema,
+		BlockSettingsSchema,
+	),
+	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: v.record(
+		UrlSchema,
+		CompressionSettingsSchema,
+	),
+	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: v.record(
+		UrlSchema,
+		GlobalSettingsSchema,
+	),
+	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: v.record(
+		UrlSchema,
+		ProxySettingsSchema,
 	),
 	[StorageKey.STATISTICS]: StatisticsSchema,
 	[StorageKey.STATISTICS_SITE_SCOPE]: v.record(UrlSchema, StatisticsSchema),
@@ -130,5 +132,8 @@ export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
 	[StorageKey.STATISTICS_SITE_SCOPE]: {},
 	[StorageKey.SCHEMA_VERSION]: STORAGE_VERSION,
 	[StorageKey.SETTINGS_DENYLIST]: [],
-	[StorageKey.SETTINGS_SITE_SCOPE]: {},
+	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: {},
+	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: {},
+	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: {},
+	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: {},
 } as const satisfies STORAGE_SCHEMA);

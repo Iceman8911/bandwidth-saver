@@ -29,11 +29,32 @@ export const blockSettingsStorageItem = storage.defineItem<
 	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_BLOCK],
 });
 
-export const siteScopeSettingsStorageItem = storage.defineItem<
-	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_SITE_SCOPE]
->(StorageKey.SETTINGS_SITE_SCOPE, {
-	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE],
-	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE],
+export const siteScopedBlockSettingsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_SITE_SCOPE_BLOCK]
+>(StorageKey.SETTINGS_SITE_SCOPE_BLOCK, {
+	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_BLOCK],
+	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_BLOCK],
+});
+
+export const siteScopedCompressionSettingsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]
+>(StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION, {
+	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION],
+	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION],
+});
+
+export const siteScopedGlobalSettingsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]
+>(StorageKey.SETTINGS_SITE_SCOPE_GLOBAL, {
+	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL],
+	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL],
+});
+
+export const siteScopedProxySettingsStorageItem = storage.defineItem<
+	STORAGE_SCHEMA[typeof StorageKey.SETTINGS_SITE_SCOPE_PROXY]
+>(StorageKey.SETTINGS_SITE_SCOPE_PROXY, {
+	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_PROXY],
+	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_SITE_SCOPE_PROXY],
 });
 
 export const statisticsStorageItem = storage.defineItem<

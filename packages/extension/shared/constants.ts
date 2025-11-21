@@ -48,8 +48,17 @@ export const StorageKey = {
 	/** Settings for the remote proxy */
 	SETTINGS_PROXY: "sync:proxy",
 
-	/** Settings scoped to specific sites */
-	SETTINGS_SITE_SCOPE: "sync:siteScope",
+	/** Block settings scoped to a site */
+	SETTINGS_SITE_SCOPE_BLOCK: "sync:siteScopeBlock",
+
+	/** Compression settings scoped to a site */
+	SETTINGS_SITE_SCOPE_COMPRESSION: "sync:siteScopeCompression",
+
+	/** "Global" settings scoped to a site that didn't quite fit with the other storage areas */
+	SETTINGS_SITE_SCOPE_GLOBAL: "sync:siteScopeGlobal",
+
+	/** Proxy settings scoped to a site */
+	SETTINGS_SITE_SCOPE_PROXY: "sync:siteScopeProxy",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
