@@ -1,6 +1,8 @@
 # Bandwidth Saver
 
-A Chrome / Firefox extension for reducing data usage by blocking, compressing and modifying network request headers.
+A Chrome / Firefox extension for monitoring and reducing data usage by blocking, compressing and modifying network request headers.
+
+## Data Monitoring
 
 ## Blocking
 
