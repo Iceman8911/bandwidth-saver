@@ -45,7 +45,7 @@ export const StorageKey = {
 	/** Other settings that affect all site domains that didn't fit with the others */
 	SETTINGS_GLOBAL: "sync:global",
 
-	/** Settings for the remote proxy */
+	/** Settings for the remote proxy that requests will be redirected to */
 	SETTINGS_PROXY: "sync:proxy",
 
 	/** Block settings scoped to a site */
