@@ -39,9 +39,6 @@ export const StorageKey = {
 	/** Settings for customizing compression */
 	SETTINGS_COMPRESSION: "sync:compression",
 
-	/** Sites that shouldn't be affected by the extension */
-	SETTINGS_DENYLIST: "sync:denylist",
-
 	/** Other settings that affect all site domains that didn't fit with the others */
 	SETTINGS_GLOBAL: "sync:global",
 

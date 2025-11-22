@@ -97,7 +97,6 @@ const SiteScopeProxySchema = v.record(UrlSchema, ProxySettingsSchema);
 const StatisticsSiteScopeSchema = v.record(UrlSchema, StatisticsSchema);
 
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
-const SettingsDenylistSchema = v.array(UrlSchema);
 
 export const STORAGE_SCHEMA = {
 	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
@@ -111,7 +110,6 @@ export const STORAGE_SCHEMA = {
 	[StorageKey.STATISTICS]: StatisticsSchema,
 	[StorageKey.STATISTICS_SITE_SCOPE]: StatisticsSiteScopeSchema,
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
-	[StorageKey.SETTINGS_DENYLIST]: SettingsDenylistSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
@@ -157,11 +155,6 @@ const DEFAULT_STATISTICS_SITE_SCOPE = v.parse(
 
 const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
 
-const DEFAULT_SETTINGS_DENYLIST = v.parse(
-	SettingsDenylistSchema,
-	[] as const satisfies v.InferOutput<typeof SettingsDenylistSchema>,
-);
-
 const DEFAULT_SITE_SCOPE_BLOCK = v.parse(
 	SiteScopeBlockSchema,
 	{} as const satisfies v.InferOutput<typeof SiteScopeBlockSchema>,
@@ -190,7 +183,6 @@ export const STORAGE_DEFAULTS = {
 	[StorageKey.STATISTICS]: DEFAULT_STATISTICS,
 	[StorageKey.STATISTICS_SITE_SCOPE]: DEFAULT_STATISTICS_SITE_SCOPE,
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
-	[StorageKey.SETTINGS_DENYLIST]: DEFAULT_SETTINGS_DENYLIST,
 	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: DEFAULT_SITE_SCOPE_BLOCK,
 	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: DEFAULT_SITE_SCOPE_COMPRESSION,
 	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: DEFAULT_SITE_SCOPE_GLOBAL,

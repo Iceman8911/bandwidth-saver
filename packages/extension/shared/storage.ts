@@ -88,10 +88,3 @@ export const schemaVersionStorageItem = storage.defineItem<
 	fallback: STORAGE_DEFAULTS[StorageKey.SCHEMA_VERSION],
 	init: () => STORAGE_DEFAULTS[StorageKey.SCHEMA_VERSION],
 });
-
-export const denylistStorageItem = storage.defineItem<
-	v.InferOutput<(typeof STORAGE_SCHEMA)[typeof StorageKey.SETTINGS_DENYLIST]>
->(StorageKey.SETTINGS_DENYLIST, {
-	fallback: STORAGE_DEFAULTS[StorageKey.SETTINGS_DENYLIST],
-	init: () => STORAGE_DEFAULTS[StorageKey.SETTINGS_DENYLIST],
-});
