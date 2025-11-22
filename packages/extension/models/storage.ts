@@ -87,75 +87,116 @@ const StatisticsSchema = v.object({
 	requestsProcessed: IntegerFromAtLeastZeroSchema,
 });
 
-const storageSchemaEntries = {
+const SiteScopeBlockSchema = v.record(UrlSchema, BlockSettingsSchema);
+const SiteScopeCompressionSchema = v.record(
+	UrlSchema,
+	CompressionSettingsSchema,
+);
+const SiteScopeGlobalSchema = v.record(UrlSchema, GlobalSettingsSchema);
+const SiteScopeProxySchema = v.record(UrlSchema, ProxySettingsSchema);
+const StatisticsSiteScopeSchema = v.record(UrlSchema, StatisticsSchema);
+
+const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
+const SettingsDenylistSchema = v.array(UrlSchema);
+
+export const STORAGE_SCHEMA = {
 	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: v.record(
-		UrlSchema,
-		BlockSettingsSchema,
-	),
-	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: v.record(
-		UrlSchema,
-		CompressionSettingsSchema,
-	),
-	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: v.record(
-		UrlSchema,
-		GlobalSettingsSchema,
-	),
-	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: v.record(
-		UrlSchema,
-		ProxySettingsSchema,
-	),
+	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: SiteScopeBlockSchema,
+	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: SiteScopeCompressionSchema,
+	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: SiteScopeGlobalSchema,
+	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: SiteScopeProxySchema,
 	[StorageKey.STATISTICS]: StatisticsSchema,
-	[StorageKey.STATISTICS_SITE_SCOPE]: v.record(UrlSchema, StatisticsSchema),
-	[StorageKey.SCHEMA_VERSION]: v.pipe(v.number(), v.integer(), v.minValue(1)),
-	[StorageKey.SETTINGS_DENYLIST]: v.array(UrlSchema),
+	[StorageKey.STATISTICS_SITE_SCOPE]: StatisticsSiteScopeSchema,
+	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
+	[StorageKey.SETTINGS_DENYLIST]: SettingsDenylistSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
-
-/**
- * Storage schema registry mapping each StorageKey to its Valibot schema.
- * Each key represents an independent storage entry that can be read/written separately.
- */
-export const STORAGE_SCHEMA = v.object(storageSchemaEntries);
-export type STORAGE_SCHEMA = v.InferOutput<typeof STORAGE_SCHEMA>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
-export const STORAGE_DEFAULTS = v.parse(STORAGE_SCHEMA, {
-	[StorageKey.SETTINGS_GLOBAL]: { enabled: true },
-	[StorageKey.SETTINGS_COMPRESSION]: {
-		enabled: true,
-		format: "auto",
-		mode: CompressionMode.SIMPLE,
-		preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
-		preserveAnim: false,
-		quality: 60,
-	},
-	[StorageKey.SETTINGS_PROXY]: {
-		enabled: false,
-		host: VITE_SERVER_HOST,
-		port: VITE_SERVER_PORT,
-	},
-	[StorageKey.SETTINGS_BLOCK]: [
-		{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
-		{ enabled: false, fileType: "font", minSize: 50, type: "type" },
-		{ enabled: false, fileType: "image", minSize: 100, type: "type" },
-		{ enabled: false, fileType: "video", minSize: 100, type: "type" },
-	],
-	[StorageKey.STATISTICS]: {
-		bytesSaved: 0,
-		bytesUsed: 0,
-		requestsBlocked: 0,
-		requestsCompressed: 0,
-		requestsProcessed: 0,
-	},
-	[StorageKey.STATISTICS_SITE_SCOPE]: {},
-	[StorageKey.SCHEMA_VERSION]: STORAGE_VERSION,
-	[StorageKey.SETTINGS_DENYLIST]: [],
-	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: {},
-	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: {},
-	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: {},
-	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: {},
-} as const satisfies STORAGE_SCHEMA);
+const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
+	enabled: true,
+} as const satisfies v.InferOutput<typeof GlobalSettingsSchema>);
+
+const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
+	enabled: true,
+	format: "auto",
+	mode: CompressionMode.SIMPLE,
+	preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
+	preserveAnim: false,
+	quality: 60,
+} as const satisfies v.InferOutput<typeof CompressionSettingsSchema>);
+
+const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
+	enabled: false,
+	host: VITE_SERVER_HOST,
+	port: VITE_SERVER_PORT,
+} as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
+
+const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
+	{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
+	{ enabled: false, fileType: "font", minSize: 50, type: "type" },
+	{ enabled: false, fileType: "image", minSize: 100, type: "type" },
+	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
+] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
+
+const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
+	bytesSaved: 0,
+	bytesUsed: 0,
+	requestsBlocked: 0,
+	requestsCompressed: 0,
+	requestsProcessed: 0,
+} as const satisfies v.InferOutput<typeof StatisticsSchema>);
+
+const DEFAULT_STATISTICS_SITE_SCOPE = v.parse(
+	StatisticsSiteScopeSchema,
+	{} as const satisfies v.InferOutput<typeof StatisticsSiteScopeSchema>,
+);
+
+const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
+
+const DEFAULT_SETTINGS_DENYLIST = v.parse(
+	SettingsDenylistSchema,
+	[] as const satisfies v.InferOutput<typeof SettingsDenylistSchema>,
+);
+
+const DEFAULT_SITE_SCOPE_BLOCK = v.parse(
+	SiteScopeBlockSchema,
+	{} as const satisfies v.InferOutput<typeof SiteScopeBlockSchema>,
+);
+
+const DEFAULT_SITE_SCOPE_COMPRESSION = v.parse(
+	SiteScopeCompressionSchema,
+	{} as const satisfies v.InferOutput<typeof SiteScopeCompressionSchema>,
+);
+
+const DEFAULT_SITE_SCOPE_GLOBAL = v.parse(
+	SiteScopeGlobalSchema,
+	{} as const satisfies v.InferOutput<typeof SiteScopeGlobalSchema>,
+);
+
+const DEFAULT_SITE_SCOPE_PROXY = v.parse(
+	SiteScopeProxySchema,
+	{} as const satisfies v.InferOutput<typeof SiteScopeProxySchema>,
+);
+
+export const STORAGE_DEFAULTS = {
+	[StorageKey.SETTINGS_GLOBAL]: DEFAULT_GLOBAL_SETTINGS,
+	[StorageKey.SETTINGS_COMPRESSION]: DEFAULT_COMPRESSION_SETTINGS,
+	[StorageKey.SETTINGS_PROXY]: DEFAULT_PROXY_SETTINGS,
+	[StorageKey.SETTINGS_BLOCK]: DEFAULT_BLOCK_SETTINGS,
+	[StorageKey.STATISTICS]: DEFAULT_STATISTICS,
+	[StorageKey.STATISTICS_SITE_SCOPE]: DEFAULT_STATISTICS_SITE_SCOPE,
+	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
+	[StorageKey.SETTINGS_DENYLIST]: DEFAULT_SETTINGS_DENYLIST,
+	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: DEFAULT_SITE_SCOPE_BLOCK,
+	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: DEFAULT_SITE_SCOPE_COMPRESSION,
+	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: DEFAULT_SITE_SCOPE_GLOBAL,
+	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: DEFAULT_SITE_SCOPE_PROXY,
+} as const satisfies {
+	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
+		(typeof STORAGE_SCHEMA)[STORAGE_KEY]
+	>;
+};
