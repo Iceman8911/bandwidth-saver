@@ -1,16 +1,16 @@
-import { createAsync } from "@solidjs/router";
-import type { Accessor } from "solid-js";
+import { type AccessorWithLatest, createAsync } from "@solidjs/router";
+import { createEffect, createSignal } from "solid-js";
 
 const signalCache = new WeakMap<
 	WxtStorageItem<unknown, Record<string, unknown>>,
-	Accessor<unknown>
+	AccessorWithLatest<unknown>
 >();
 
 export function convertStorageItemToReadonlySignal<
 	TStorageItem extends WxtStorageItem<unknown, Record<string, unknown>>,
 >(
 	storageItem: TStorageItem,
-): Accessor<
+): AccessorWithLatest<
 	TStorageItem extends WxtStorageItem<
 		infer TStorageValue,
 		Record<string, unknown>
@@ -26,23 +26,59 @@ export function convertStorageItemToReadonlySignal<
 		: never;
 
 	const cachedSignal = signalCache.get(storageItem) as
-		| Accessor<TStorageValue | undefined>
+		| AccessorWithLatest<TStorageValue | undefined>
 		| undefined;
 
-	if (cachedSignal) return cachedSignal as Accessor<TStorageValue>;
+	if (cachedSignal) return cachedSignal as AccessorWithLatest<TStorageValue>;
 
-	const [get, set] = createSignal<Promise<TStorageValue>>(
-		storageItem.getValue() as Promise<TStorageValue>,
+	// signal that holds the current resolved value (synchronous for watch updates)
+	const [getValue, setValue] = createSignal<TStorageValue | undefined>(
+		undefined,
 	);
 
-	storageItem.watch((newData) => {
-		set(Promise.resolve(newData as TStorageValue));
+	// monotonic counters to tag fetches and track the latest id
+	let fetchCounter = 0;
+	const [getLatestId, setLatestId] = createSignal(0);
+
+	// createAsync expects a function returning a Promise.
+	// We return a promise that resolves to an object { id, value } so we can
+	// check the id on resolution and only apply the value if it's newest.
+	const asyncAccessor = createAsync(async () => {
+		const id = ++fetchCounter;
+		// mark this fetch as the latest
+		setLatestId(id);
+
+		return storageItem
+			.getValue()
+			.then((v) => ({ id, value: v as TStorageValue }))
+			.catch(() => ({ id, value: undefined as TStorageValue | undefined }));
 	});
 
-	const resolvedPromise = createAsync(get);
+	// apply async results only when their id matches the current latest id
+	createEffect(() => {
+		const res = asyncAccessor();
+		if (!res) return;
 
-	signalCache.set(storageItem, resolvedPromise);
+		const { id, value } = res;
 
-	//@ts-expect-error TypeScript can't prove the return type matches, but it does at runtime
-	return resolvedPromise;
+		if (id === getLatestId()) {
+			setValue(() => value);
+		}
+	});
+
+	// watch updates are applied synchronously and bump the latest id
+	storageItem.watch((newData) => {
+		const id = ++fetchCounter;
+		setLatestId(id);
+		setValue(() => newData as TStorageValue);
+	});
+
+	// Cache and return the accessor for consumers.
+	// The runtime accessor shape is a simple function returning the resolved value.
+	signalCache.set(
+		storageItem,
+		getValue as unknown as AccessorWithLatest<TStorageValue | undefined>,
+	);
+
+	return getValue as unknown as AccessorWithLatest<TStorageValue>;
 }
