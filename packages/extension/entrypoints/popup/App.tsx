@@ -1,8 +1,5 @@
-// import { Tooltip } from "@/components/tooltip"
-
-import { getRandomUUID, UrlSchema } from "@bandwidth-saver/shared";
+import { getRandomUUID } from "@bandwidth-saver/shared";
 import { createSignal } from "solid-js";
-import * as v from "valibot";
 import { PopupBlockSettings } from "@/components/popup/block-settings";
 import { PopupCompressionSettings } from "@/components/popup/compression-settings";
 import { PopupFooter } from "@/components/popup/footer";
@@ -11,10 +8,9 @@ import { PopupProxySettings } from "@/components/popup/proxy-settings";
 import { PopupStatistics } from "@/components/popup/statistics";
 import { PopupDisableToggles } from "@/components/popup/toggle";
 import type { SettingsScope } from "@/models/context";
-import { getActiveTabOrigin } from "@/utils/tabs";
+import { ACTIVE_TAB_URL } from "@/shared/constants";
 
-const activeTabUrl =
-	(await getActiveTabOrigin()) ?? v.parse(UrlSchema, window.location);
+const activeTabUrl = await ACTIVE_TAB_URL();
 
 const [scope, setScope] = createSignal<SettingsScope>("domain");
 
