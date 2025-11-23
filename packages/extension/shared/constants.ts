@@ -3,8 +3,10 @@ import * as v from "valibot";
 
 export const STORAGE_VERSION = 1;
 
+export const DUMMY_TAB_URL = v.parse(UrlSchema, window.location);
+
 export const ACTIVE_TAB_URL = async () =>
-	(await getActiveTabOrigin()) ?? v.parse(UrlSchema, window.location);
+	(await getActiveTabOrigin()) ?? DUMMY_TAB_URL;
 
 export enum MessageType {
 	/** Check if the url returns a valid response code */
