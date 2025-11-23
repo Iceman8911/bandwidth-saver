@@ -3,6 +3,9 @@
 import { getRandomUUID } from "@bandwidth-saver/shared";
 import { createSignal } from "solid-js";
 import * as v from "valibot";
+import { BaseButton } from "@/components/button";
+import { STORAGE_DEFAULTS, STORAGE_SCHEMA } from "@/models/storage";
+import { StorageKey } from "@/shared/constants";
 import {
 	blockSettingsStorageItem,
 	compressionSettingsStorageItem,
@@ -75,6 +78,16 @@ function Statistics() {
 				: null,
 	);
 
+	const bytesSaved = createMemo(() => statistics()?.bytesSaved ?? 0);
+	const bytesUsed = createMemo(() => statistics()?.bytesUsed ?? 0);
+	const percentageOfBytesSaved = createMemo(() => {
+		const ratio = bytesSaved() / (bytesUsed() + bytesSaved());
+
+		if (Number.isNaN(ratio)) return 0;
+
+		return ratio / (1024 * 1024);
+	});
+
 	return (
 		<div class="grid grid-cols-2 grid-rows-2 gap-4 text-info">
 			<Suspense>
@@ -82,12 +95,9 @@ function Statistics() {
 
 				<div>Requests Blocked: {statistics()?.requestsBlocked ?? 0}</div>
 
-				<div>
-					Data Consumed:{" "}
-					{(statistics()?.requestsCompressed ?? 0) / (1024 * 1024)} MB
-				</div>
+				<div>Data Consumed: {bytesUsed()} MB</div>
 
-				<div>Data Saved: {45}% </div>
+				<div>Data Saved: {percentageOfBytesSaved()}% </div>
 			</Suspense>
 		</div>
 	);
@@ -122,7 +132,7 @@ function DisableToggles() {
 			...settings,
 			[activeTabUrl]: {
 				...settings?.[activeTabUrl],
-				enabled: !!isEnabledForSite(),
+				enabled: !isEnabledForSite(),
 			},
 		});
 	};
@@ -171,11 +181,13 @@ function BlockSettingSummary(props: { name: string }) {
 	);
 
 	return (
-		<div class="collapse-arrow join-item collapse border border-base-300">
-			<input name={props.name} type="radio" />
-			<div class="collapse-title font-semibold">Block Settings</div>
-			<div class="collapse-content text-sm">TODO</div>
-		</div>
+		<details
+			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
+			name={props.name}
+		>
+			<summary class="collapse-title font-semibold">Block Settings</summary>
+			<div class="collapse-content text-sm"></div>
+		</details>
 	);
 }
 
@@ -196,11 +208,15 @@ function CompressionSettingSummary(props: { name: string }) {
 	);
 
 	return (
-		<div class="collapse-arrow join-item collapse border border-base-300">
-			<input name={props.name} type="radio" />
-			<div class="collapse-title font-semibold">Compression Settings</div>
-			<div class="collapse-content text-sm">TODO</div>
-		</div>
+		<details
+			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
+			name={props.name}
+		>
+			<summary class="collapse-title font-semibold">
+				Compression Settings
+			</summary>
+			<div class="collapse-content text-sm"></div>
+		</details>
 	);
 }
 
@@ -212,7 +228,7 @@ function ProxySettingSummary(props: { name: string }) {
 		siteScopedProxySettingsStorageItem,
 	);
 
-	const _proxySettings = createMemo(() =>
+	const proxySettings = createMemo(() =>
 		scope() === "global"
 			? _resolvedGlobalProxySettings()
 			: activeTabUrl
@@ -220,17 +236,58 @@ function ProxySettingSummary(props: { name: string }) {
 				: null,
 	);
 
+	const [tempProxySettings, setTempProxySettings] = createStore(
+		proxySettings() ??
+			structuredClone(STORAGE_DEFAULTS[StorageKey.SETTINGS_PROXY]),
+	);
+
+	const handleUpdateProxySettings = (e: Event) => {
+		e.preventDefault();
+
+		const parsedProxySettings = v.parse(
+			STORAGE_SCHEMA[StorageKey.SETTINGS_PROXY],
+			tempProxySettings,
+		);
+
+		if (scope() === "global") {
+			proxySettingsStorageItem.setValue(parsedProxySettings);
+		} else if (activeTabUrl) {
+			siteScopedProxySettingsStorageItem.setValue({
+				..._resolvedSiteProxySettings(),
+				[activeTabUrl]: parsedProxySettings,
+			});
+		}
+	};
+
+	// Whenever the scope is changed, refresh the displayed proxy settings
+	createEffect(
+		on(
+			[proxySettings],
+			([proxySettings]) => proxySettings && setTempProxySettings(proxySettings),
+		),
+	);
+
 	return (
-		<div class="collapse-arrow join-item collapse border border-base-300">
-			<input name={props.name} type="radio" />
-			<div class="collapse-title font-semibold">Proxy Settings</div>
+		<details
+			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
+			name={props.name}
+		>
+			<summary class="collapse-title font-semibold">Proxy Settings</summary>
 			<div class="collapse-content text-sm">
-				<form class="grid grid-cols-2 gap-4">
+				<form
+					class="grid grid-cols-2 gap-4"
+					onSubmit={handleUpdateProxySettings}
+				>
 					{/* Host */}
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">Host</legend>
-						<input class="input" placeholder="localhost" type="text" />
-						{/*<p class="label">You can edit page title later on from settings</p>*/}
+						<input
+							class="input"
+							onInput={(e) => setTempProxySettings("host", e.target.value)}
+							placeholder="localhost"
+							type="text"
+							value={tempProxySettings.host}
+						/>
 					</fieldset>
 
 					{/* Port */}
@@ -240,21 +297,32 @@ function ProxySettingSummary(props: { name: string }) {
 							class="input"
 							max={65536}
 							min={0}
-							placeholder="localhost"
+							onInput={(e) =>
+								setTempProxySettings("port", Number(e.target.value))
+							}
+							placeholder="3001"
 							type="number"
+							value={tempProxySettings.port}
 						/>
-						{/*<p class="label">You can edit page title later on from settings</p>*/}
 					</fieldset>
 
 					{/* Enabled */}
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">Enabled</legend>
-						<input class="input" placeholder="localhost" type="text" />
-						{/*<p class="label">You can edit page title later on from settings</p>*/}
+						<input
+							checked={tempProxySettings.enabled}
+							class="toggle toggle-primary"
+							onInput={(e) => setTempProxySettings("enabled", e.target.checked)}
+							type="checkbox"
+						/>
 					</fieldset>
+
+					<BaseButton class="btn-primary place-self-center" type="submit">
+						Save Changes
+					</BaseButton>
 				</form>
 			</div>
-		</div>
+		</details>
 	);
 }
 
