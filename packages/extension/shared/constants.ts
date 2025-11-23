@@ -1,4 +1,10 @@
+import { UrlSchema } from "@bandwidth-saver/shared";
+import * as v from "valibot";
+
 export const STORAGE_VERSION = 1;
+
+export const ACTIVE_TAB_URL = async () =>
+	(await getActiveTabOrigin()) ?? v.parse(UrlSchema, window.location);
 
 export enum MessageType {
 	/** Check if the url returns a valid response code */
