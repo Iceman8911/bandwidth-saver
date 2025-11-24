@@ -23,52 +23,52 @@ const observer = new PerformanceObserver((list) => {
 				const assetSize = { ...DEFAULT_ASSET_STATISTICS };
 
 				// determine which asset key to increment
-				let assetKey: keyof typeof assetSize = "other";
+				let assetType: keyof typeof assetSize = "other";
 
 				switch (parsedInitiatorType) {
 					case "audio":
-						assetKey = "audio";
+						assetType = "audio";
 						break;
 
 					case "css":
-						assetKey = "style";
+						assetType = "style";
 						break;
 
 					case "image":
 					case "img":
 					case "icon":
 					case "input":
-						assetKey = "image";
+						assetType = "image";
 						break;
 
 					case "script":
-						assetKey = "script";
+						assetType = "script";
 						break;
 
 					case "video":
-						assetKey = "video";
+						assetType = "video";
 						break;
 
 					case "link":
 						// typically a stylesheet, but fallback to URL heuristics
-						assetKey = "style";
+						assetType = "style";
 						break;
 
 					case "navigation":
 					case "frame":
 					case "iframe":
-						assetKey = "html";
+						assetType = "html";
 						break;
 					default:
-						assetKey = detectAssetTypeFromUrl(new URL(name));
+						assetType = detectAssetTypeFromUrl(new URL(name));
 						break;
 				}
 
-				assetSize[assetKey] += transferSize;
+				assetSize[assetType] += transferSize;
 
 				sendMessage(
 					MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API,
-					{ bytes: assetSize, url: v.parse(UrlSchema, name) },
+					{ bytes: assetSize, type: assetType, url: v.parse(UrlSchema, name) },
 					"background",
 				);
 			}
