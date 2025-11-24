@@ -191,6 +191,15 @@ export function PopupCompressionSettings(props: {
 			structuredClone(STORAGE_DEFAULTS[StorageKey.SETTINGS_COMPRESSION]),
 	);
 
+	// Sync whenever the scope is changed
+	createEffect(
+		on(
+			compressionSettings,
+			(compressionSettings) =>
+				compressionSettings && setTempCompressionSettings(compressionSettings),
+		),
+	);
+
 	const handleUpdateCompressionSettings = (e: SubmitEvent) => {
 		e.preventDefault();
 
