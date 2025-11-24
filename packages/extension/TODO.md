@@ -16,3 +16,6 @@
 - [ ] **Experimental**:
   - [ ] Replace `no-store` with `no-cache` on large resources
   - [ ] Replace `no-cache` with a short-lived time
+
+# Statistics
+- [ ] Split data usage into categories; image, audio, font, video, script.
