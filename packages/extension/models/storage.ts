@@ -77,7 +77,7 @@ const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.minValue(0),
 );
 
-const AssetStatisticsSchema = v.object({
+export const AssetStatisticsSchema = v.object({
 	audio: IntegerFromAtLeastZeroSchema,
 	font: IntegerFromAtLeastZeroSchema,
 	html: IntegerFromAtLeastZeroSchema,
@@ -87,6 +87,7 @@ const AssetStatisticsSchema = v.object({
 	style: IntegerFromAtLeastZeroSchema,
 	video: IntegerFromAtLeastZeroSchema,
 });
+export type AssetStatisticsSchema = v.InferOutput<typeof AssetStatisticsSchema>;
 
 const StatisticsSchema = v.object({
 	bytesSaved: AssetStatisticsSchema,
@@ -160,7 +161,7 @@ const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
 	script: 0,
 	style: 0,
 	video: 0,
-} as const satisfies v.InferOutput<typeof AssetStatisticsSchema>);
+} as const satisfies AssetStatisticsSchema);
 
 const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	bytesSaved: { ...DEFAULT_ASSET_STATISTICS },
