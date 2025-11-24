@@ -6,36 +6,9 @@ import * as v from "valibot";
 import { RuntimeMessageSchema } from "@/models/message";
 import { CompressionMode, MessageType } from "@/shared/constants";
 import { compressionSettingsStorageItem } from "@/shared/storage";
+import { enableSaveDataForAllRequests } from "./compression/save-data";
 
-const ADD_SAVE_DATA_HEADER_RULE_ID = 1;
 const REDIRECT_TO_SIMPLE_COMPRESSION_PROXY_RULE_ID = 2;
-
-function appendSaveDataToAllRequests() {
-	browser.declarativeNetRequest.updateDynamicRules({
-		addRules: [
-			{
-				action: {
-					requestHeaders: [
-						{
-							header: "Save-Data",
-							operation: "set",
-							value: "on",
-						},
-					],
-					type: "modifyHeaders",
-				},
-				condition: {
-					resourceTypes: Object.values(
-						browser.declarativeNetRequest.ResourceType,
-					),
-					urlFilter: "*",
-				},
-				id: ADD_SAVE_DATA_HEADER_RULE_ID,
-			},
-		],
-		removeRuleIds: [ADD_SAVE_DATA_HEADER_RULE_ID], // Remove existing rule if present
-	});
-}
 
 async function redirectToFirstCompressorEndpointIfPossible() {
 	const { enabled, mode, quality, format, preserveAnim, preferredEndpoint } =
@@ -108,7 +81,7 @@ function checkIfCompressionUrlFromContentScriptIsValid() {
 }
 
 export default defineBackground(() => {
-	appendSaveDataToAllRequests();
+	enableSaveDataForAllRequests();
 
 	redirectToFirstCompressorEndpointIfPossible();
 	watchCompressionSettingsChanges();
