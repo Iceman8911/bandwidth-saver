@@ -77,13 +77,24 @@ const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.minValue(0),
 );
 
+const AssetStatisticsSchema = v.object({
+	audio: IntegerFromAtLeastZeroSchema,
+	font: IntegerFromAtLeastZeroSchema,
+	html: IntegerFromAtLeastZeroSchema,
+	image: IntegerFromAtLeastZeroSchema,
+	other: IntegerFromAtLeastZeroSchema,
+	script: IntegerFromAtLeastZeroSchema,
+	style: IntegerFromAtLeastZeroSchema,
+	video: IntegerFromAtLeastZeroSchema,
+});
+
 const StatisticsSchema = v.object({
-	bytesSaved: IntegerFromAtLeastZeroSchema,
+	bytesSaved: AssetStatisticsSchema,
 	/** Total amount of data consumption after compression / blocking */
-	bytesUsed: IntegerFromAtLeastZeroSchema,
+	bytesUsed: AssetStatisticsSchema,
 	lastReset: v.optional(v.pipe(v.string(), v.isoTimestamp())),
-	requestsBlocked: IntegerFromAtLeastZeroSchema,
-	requestsCompressed: IntegerFromAtLeastZeroSchema,
+	requestsBlocked: AssetStatisticsSchema,
+	requestsCompressed: AssetStatisticsSchema,
 	requestsProcessed: IntegerFromAtLeastZeroSchema,
 });
 
@@ -140,11 +151,22 @@ const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
 	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
 ] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
 
+const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
+	audio: 0,
+	font: 0,
+	html: 0,
+	image: 0,
+	other: 0,
+	script: 0,
+	style: 0,
+	video: 0,
+} as const satisfies v.InferOutput<typeof AssetStatisticsSchema>);
+
 const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
-	bytesSaved: 0,
-	bytesUsed: 0,
-	requestsBlocked: 0,
-	requestsCompressed: 0,
+	bytesSaved: { ...DEFAULT_ASSET_STATISTICS },
+	bytesUsed: { ...DEFAULT_ASSET_STATISTICS },
+	requestsBlocked: { ...DEFAULT_ASSET_STATISTICS },
+	requestsCompressed: { ...DEFAULT_ASSET_STATISTICS },
 	requestsProcessed: 0,
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 

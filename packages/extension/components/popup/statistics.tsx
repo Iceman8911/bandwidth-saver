@@ -4,6 +4,7 @@ import {
 	siteStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
+import { getSumOfValuesInObject } from "@/utils/object";
 
 export function PopupStatistics(props: {
 	scope: SettingsScope;
@@ -22,8 +23,12 @@ export function PopupStatistics(props: {
 			: _resolvedSiteStatistics()?.[props.tabUrl],
 	);
 
-	const bytesSaved = createMemo(() => statistics()?.bytesSaved ?? 0);
-	const bytesUsed = createMemo(() => statistics()?.bytesUsed ?? 0);
+	const bytesSaved = createMemo(() =>
+		getSumOfValuesInObject(statistics()?.bytesSaved ?? {}),
+	);
+	const bytesUsed = createMemo(() =>
+		getSumOfValuesInObject(statistics()?.bytesUsed ?? {}),
+	);
 	const percentageOfBytesSaved = createMemo(() => {
 		const ratio = bytesSaved() / (bytesUsed() + bytesSaved());
 
@@ -35,9 +40,15 @@ export function PopupStatistics(props: {
 	return (
 		<div class="grid grid-cols-2 grid-rows-2 gap-4 text-info">
 			<Suspense>
-				<div>Requests Processed: {statistics()?.requestsCompressed ?? 0}</div>
+				<div>
+					Requests Processed:{" "}
+					{getSumOfValuesInObject(statistics()?.requestsCompressed ?? {})}
+				</div>
 
-				<div>Requests Blocked: {statistics()?.requestsBlocked ?? 0}</div>
+				<div>
+					Requests Blocked:{" "}
+					{getSumOfValuesInObject(statistics()?.requestsBlocked ?? {})}
+				</div>
 
 				<div>Data Consumed: {bytesUsed()} MB</div>
 
