@@ -72,3 +72,17 @@ export const StorageKey = {
 	STATISTICS_SITE_SCOPE: "local:siteScopeStatistics",
 } as const satisfies Record<string, StorageItemKey>;
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
+
+export enum DeclarativeNetRequestRuleIds {
+	ADD_SAVE_DATA_HEADER,
+
+	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT,
+
+	/** Disables related rules since `declartiveNetRequest` will not be used */
+	ENABLE_WEB_REQUEST,
+
+	/** Disables related rules since code for this runs on the client-page itself */
+	ENABLE_MONKEY_PATCH,
+
+	REDIRECT_TO_REMOTE_POXY,
+}
