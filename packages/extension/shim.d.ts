@@ -9,7 +9,7 @@ declare module "webext-bridge" {
 		// // use the `ProtocolWithReturn` type wrapper
 		// bar: ProtocolWithReturn<CustomDataType, CustomReturnType>;
 
-		[MessageType.MONITOR_BANDWIDTH]: {
+		[MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API]: {
 			/** The url for the downloaded asset */
 			url: UrlSchema;
 			/** Bytes downloaded for the asset type */

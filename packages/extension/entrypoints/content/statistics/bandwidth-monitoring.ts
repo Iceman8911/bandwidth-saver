@@ -67,7 +67,7 @@ const observer = new PerformanceObserver((list) => {
 				assetSize[assetKey] += transferSize;
 
 				sendMessage(
-					MessageType.MONITOR_BANDWIDTH,
+					MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API,
 					{ bytes: assetSize, url: v.parse(UrlSchema, name) },
 					"background",
 				);

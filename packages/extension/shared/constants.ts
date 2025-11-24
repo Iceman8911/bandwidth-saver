@@ -13,7 +13,7 @@ export enum MessageType {
 	VALIDATE_URL = "0",
 
 	/** Sends the bandwidth used from content scripts to the background */
-	MONITOR_BANDWIDTH = "1",
+	MONITOR_BANDWIDTH_WITH_PERFORMANCE_API = "1",
 }
 
 export enum CompressionMode {
