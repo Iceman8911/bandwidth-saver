@@ -191,6 +191,19 @@ export function PopupCompressionSettings(props: {
 			structuredClone(STORAGE_DEFAULTS[StorageKey.SETTINGS_COMPRESSION]),
 	);
 
+	const handleUpdateCompressionSettings = (e: SubmitEvent) => {
+		e.preventDefault();
+
+		if (props.scope === "global") {
+			compressionSettingsStorageItem.setValue(tempCompressionSettings);
+		} else {
+			siteScopedCompressionSettingsStorageItem.setValue({
+				..._resolvedSiteCompressionSettings(),
+				[props.tabUrl]: tempCompressionSettings,
+			});
+		}
+	};
+
 	return (
 		<details
 			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
@@ -200,7 +213,10 @@ export function PopupCompressionSettings(props: {
 				Image Compression Settings
 			</summary>
 			<div class="collapse-content text-sm">
-				<form class="grid grid-cols-2 gap-4">
+				<form
+					class="grid grid-cols-2 gap-4"
+					onSubmit={handleUpdateCompressionSettings}
+				>
 					<CompressionFormatSelect
 						set={setTempCompressionSettings}
 						store={tempCompressionSettings}
@@ -225,6 +241,10 @@ export function PopupCompressionSettings(props: {
 						set={setTempCompressionSettings}
 						store={tempCompressionSettings}
 					/>
+
+					<BaseButton class="btn-primary" type="submit">
+						💾 Save Changes
+					</BaseButton>
 				</form>
 			</div>
 		</details>
