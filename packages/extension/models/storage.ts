@@ -152,7 +152,7 @@ const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
 	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
 ] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
 
-const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
+export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
 	audio: 0,
 	font: 0,
 	html: 0,
