@@ -7,6 +7,8 @@ type BandwidthMonitoringPayload = {
 	url: UrlSchema;
 	/** Bytes downloaded for the asset type */
 	bytes: AssetStatisticsSchema;
+	/** The asset type */
+	type: keyof AssetStatisticsSchema;
 };
 
 declare module "webext-bridge" {
