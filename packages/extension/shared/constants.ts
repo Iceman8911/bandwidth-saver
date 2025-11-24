@@ -14,6 +14,8 @@ export enum MessageType {
 
 	/** Sends the bandwidth used from content scripts to the background */
 	MONITOR_BANDWIDTH_WITH_PERFORMANCE_API = "1",
+
+	MONITOR_BANDWIDTH_WITH_WEB_REQUEST = "2",
 }
 
 export enum CompressionMode {
