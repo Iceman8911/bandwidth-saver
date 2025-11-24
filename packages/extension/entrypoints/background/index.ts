@@ -7,6 +7,7 @@ import { RuntimeMessageSchema } from "@/models/message";
 import { CompressionMode, MessageType } from "@/shared/constants";
 import { compressionSettingsStorageItem } from "@/shared/storage";
 import { enableSaveDataForAllRequests } from "./compression/save-data";
+import { monitorBandwidthUsageViaBackground } from "./statistics/bandwidth-monitoring";
 
 const REDIRECT_TO_SIMPLE_COMPRESSION_PROXY_RULE_ID = 2;
 
@@ -82,6 +83,8 @@ function checkIfCompressionUrlFromContentScriptIsValid() {
 
 export default defineBackground(() => {
 	enableSaveDataForAllRequests();
+
+	monitorBandwidthUsageViaBackground();
 
 	redirectToFirstCompressorEndpointIfPossible();
 	watchCompressionSettingsChanges();
