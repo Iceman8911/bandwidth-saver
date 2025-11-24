@@ -11,6 +11,9 @@ export const ACTIVE_TAB_URL = async () =>
 export enum MessageType {
 	/** Check if the url returns a valid response code */
 	VALIDATE_URL,
+
+	/** Sends the bandwidth used from content scripts to the background */
+	MONITOR_BANDWIDTH,
 }
 
 export enum CompressionMode {
