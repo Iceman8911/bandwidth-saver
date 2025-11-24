@@ -1,3 +1,4 @@
+import "webext-bridge";
 import { MessageType } from "./shared/constants";
 import { UrlSchema } from "@bandwidth-saver/shared";
 import { AssetStatisticsSchema } from "./models/storage";
