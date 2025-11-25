@@ -172,7 +172,7 @@ export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
 	video: 0,
 } as const satisfies AssetStatisticsSchema);
 
-const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
+export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	bytesSaved: { ...DEFAULT_ASSET_STATISTICS },
 	bytesUsed: { ...DEFAULT_ASSET_STATISTICS },
 	requestsBlocked: { ...DEFAULT_ASSET_STATISTICS },
