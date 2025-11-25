@@ -15,5 +15,10 @@ export default defineConfig({
 		],
 	},
 	modules: ["@wxt-dev/module-solid"],
-	vite: () => ({ plugins: [tailwindcss(), InlineEnum()] }),
+	vite: () => ({
+		plugins: [
+			tailwindcss(),
+			process.env.NODE_ENV === "production" ? InlineEnum() : [],
+		],
+	}),
 });
