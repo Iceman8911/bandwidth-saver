@@ -86,6 +86,8 @@ export default defineBackground(() => {
 
 	monitorBandwidthUsageViaBackground();
 
+	processMonitoredBandwidthData();
+
 	redirectToFirstCompressorEndpointIfPossible();
 	watchCompressionSettingsChanges();
 
