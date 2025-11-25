@@ -19,3 +19,6 @@
 
 # Statistics
 - [ ] Split data usage into categories; image, audio, font, video, script.
+
+# Optimization
+- [ ] Site-specific data should be at the top level in the extension local storage scope, indexed by their origins so we won't have to load unrelated entries when trying to update a single site's data
