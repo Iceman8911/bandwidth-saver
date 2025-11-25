@@ -79,7 +79,7 @@ export const StorageKey = {
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
 
 export enum DeclarativeNetRequestRuleIds {
-	ADD_SAVE_DATA_HEADER,
+	ADD_SAVE_DATA_HEADER = 1,
 
 	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT,
 
