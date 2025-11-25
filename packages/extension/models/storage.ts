@@ -90,13 +90,22 @@ export const AssetStatisticsSchema = v.object({
 export type AssetStatisticsSchema = v.InferOutput<typeof AssetStatisticsSchema>;
 
 const StatisticsSchema = v.object({
+	// Maybe I can monitor the original requests for their (content-length) before the redirect? But this is be pretty inaccurate anyway since some sites just don't include it.
 	bytesSaved: AssetStatisticsSchema,
+
 	/** Total amount of data consumption after compression / blocking */
 	bytesUsed: AssetStatisticsSchema,
+
 	lastReset: v.optional(v.pipe(v.string(), v.isoTimestamp())),
+
+	/** Amount of requests blocked */
 	requestsBlocked: AssetStatisticsSchema,
+
+	/** Amount of non-cached requests re-routed to the compression service */
 	requestsCompressed: AssetStatisticsSchema,
-	requestsProcessed: IntegerFromAtLeastZeroSchema,
+
+	/** Amount of non-cached requests made by site(s) in total */
+	requestsMade: IntegerFromAtLeastZeroSchema,
 });
 
 const SiteScopeBlockSchema = v.record(UrlSchema, BlockSettingsSchema);
@@ -168,7 +177,7 @@ const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	bytesUsed: { ...DEFAULT_ASSET_STATISTICS },
 	requestsBlocked: { ...DEFAULT_ASSET_STATISTICS },
 	requestsCompressed: { ...DEFAULT_ASSET_STATISTICS },
-	requestsProcessed: 0,
+	requestsMade: 0,
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 
 const DEFAULT_STATISTICS_SITE_SCOPE = v.parse(
