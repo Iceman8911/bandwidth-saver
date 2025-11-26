@@ -162,42 +162,43 @@ function cacheBandwidthDataFromPerformanceApi(
 	});
 }
 
-function cacheBandwidthDataFromWebRequest(storage: typeof bandwidthRawDataMap) {
-	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_WEB_REQUEST, ({ data }) => {
-		const { url } = data;
-		const prevMapData = storage.get(url);
+/** Since background can't message background, we'll export htis and call it elsewhere */
+export function cacheBandwidthDataFromWebRequest(
+	data: BandwidthMonitoringMessagePayload,
+	storage = bandwidthRawDataMap,
+) {
+	const { url } = data;
+	const prevMapData = storage.get(url);
 
-		const base = prevMapData ?? {
-			perfApi: null,
-			timerId: null,
-			webRequest: null,
-		};
+	const base = prevMapData ?? {
+		perfApi: null,
+		timerId: null,
+		webRequest: null,
+	};
 
-		// clear any pending timer so we debounce per-URL
-		if (base.timerId) {
-			try {
-				clearTimeout(base.timerId);
-			} catch {}
-		}
+	// clear any pending timer so we debounce per-URL
+	if (base.timerId) {
+		try {
+			clearTimeout(base.timerId);
+		} catch {}
+	}
 
-		const newEntry: BandwidthRawDataFromMessages = {
-			...base,
-			timerId: null,
-			webRequest: data,
-		};
+	const newEntry: BandwidthRawDataFromMessages = {
+		...base,
+		timerId: null,
+		webRequest: data,
+	};
 
-		// schedule processing after the configured delay
-		const timerId = setTimeout(() => {
-			processCachedBandwidthData(storage, url);
-		}, DELAY_TILL_RAW_DATA_PROCESSING_IN_MS) as unknown as number;
+	// schedule processing after the configured delay
+	const timerId = setTimeout(() => {
+		processCachedBandwidthData(storage, url);
+	}, DELAY_TILL_RAW_DATA_PROCESSING_IN_MS) as unknown as number;
 
-		newEntry.timerId = timerId;
+	newEntry.timerId = timerId;
 
-		storage.set(url, newEntry);
-	});
+	storage.set(url, newEntry);
 }
 
 export function processMonitoredBandwidthData() {
 	cacheBandwidthDataFromPerformanceApi(bandwidthRawDataMap);
-	cacheBandwidthDataFromWebRequest(bandwidthRawDataMap);
 }

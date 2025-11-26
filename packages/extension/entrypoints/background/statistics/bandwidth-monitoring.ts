@@ -4,9 +4,9 @@ import {
 	type AssetStatisticsSchema,
 	DEFAULT_ASSET_STATISTICS,
 } from "@/models/storage";
-import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
-import { sendMessage } from "@/shared/messaging";
+import { DUMMY_TAB_URL } from "@/shared/constants";
 import { detectAssetTypeFromUrl } from "@/shared/url";
+import { cacheBandwidthDataFromWebRequest } from "./bandwidth-calculation";
 
 const getHeader = (
 	responseHeaders: Browser.webRequest.HttpHeader[],
@@ -93,7 +93,7 @@ export function monitorBandwidthUsageViaBackground() {
 			const assetSize = { ...DEFAULT_ASSET_STATISTICS };
 			assetSize[assetType] = contentLength;
 
-			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_WEB_REQUEST, {
+			cacheBandwidthDataFromWebRequest({
 				bytes: assetSize,
 				type: assetType,
 				url: v.parse(UrlSchema, `${parsedUrl}`),
