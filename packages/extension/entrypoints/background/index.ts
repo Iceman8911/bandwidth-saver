@@ -65,7 +65,7 @@ function watchCompressionSettingsChanges() {
 	});
 }
 
-function checkIfCompressionUrlFromContentScriptIsValid() {
+function _checkIfCompressionUrlFromContentScriptIsValid() {
 	browser.runtime.onMessage.addListener((message, _, sendResponse) => {
 		const parsedMessage = v.parse(RuntimeMessageSchema, message);
 
@@ -91,5 +91,5 @@ export default defineBackground(() => {
 	redirectToFirstCompressorEndpointIfPossible();
 	watchCompressionSettingsChanges();
 
-	checkIfCompressionUrlFromContentScriptIsValid();
+	// checkIfCompressionUrlFromContentScriptIsValid();
 });
