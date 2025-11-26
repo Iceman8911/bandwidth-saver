@@ -1,11 +1,11 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import { sendMessage } from "webext-bridge/background";
 import {
 	type AssetStatisticsSchema,
 	DEFAULT_ASSET_STATISTICS,
 } from "@/models/storage";
 import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
+import { sendMessage } from "@/shared/messaging";
 import { detectAssetTypeFromUrl } from "@/shared/url";
 
 const getHeader = (
@@ -93,15 +93,11 @@ export function monitorBandwidthUsageViaBackground() {
 			const assetSize = { ...DEFAULT_ASSET_STATISTICS };
 			assetSize[assetType] = contentLength;
 
-			sendMessage(
-				MessageType.MONITOR_BANDWIDTH_WITH_WEB_REQUEST,
-				{
-					bytes: assetSize,
-					type: assetType,
-					url: v.parse(UrlSchema, `${parsedUrl}`),
-				},
-				"background",
-			);
+			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_WEB_REQUEST, {
+				bytes: assetSize,
+				type: assetType,
+				url: v.parse(UrlSchema, `${parsedUrl}`),
+			});
 
 			return undefined;
 		},

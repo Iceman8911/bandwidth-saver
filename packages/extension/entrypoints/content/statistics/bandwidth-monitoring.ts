@@ -1,9 +1,9 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import { sendMessage } from "webext-bridge/content-script";
 import { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
 import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
+import { sendMessage } from "@/shared/messaging";
 import { detectAssetTypeFromUrl } from "@/shared/url";
 
 const observer = new PerformanceObserver((list) => {
@@ -66,11 +66,11 @@ const observer = new PerformanceObserver((list) => {
 
 				assetSize[assetType] += transferSize;
 
-				sendMessage(
-					MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API,
-					{ bytes: assetSize, type: assetType, url: v.parse(UrlSchema, name) },
-					"background",
-				);
+				sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
+					bytes: assetSize,
+					type: assetType,
+					url: v.parse(UrlSchema, name),
+				});
 			}
 		}
 	}

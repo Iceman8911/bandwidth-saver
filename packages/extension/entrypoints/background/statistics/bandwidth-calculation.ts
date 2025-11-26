@@ -1,8 +1,8 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import { onMessage } from "webext-bridge/background";
 import { DEFAULT_ASSET_STATISTICS, DEFAULT_STATISTICS } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
+import { onMessage } from "@/shared/messaging";
 import {
 	siteStatisticsStorageItem,
 	statisticsStorageItem,
