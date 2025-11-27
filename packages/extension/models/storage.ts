@@ -16,7 +16,11 @@ import {
 
 const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
 
-const GlobalSettingsSchema = v.object({ ...EnabledSettingsSchema.entries });
+const GlobalSettingsSchema = v.object({
+	...EnabledSettingsSchema.entries,
+	/** Whether the save data header should be applied to each request */
+	saveData: v.boolean(),
+});
 
 const CompressionSettingsSchema = v.object({
 	...EnabledSettingsSchema.entries,
@@ -140,6 +144,7 @@ const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
 const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
 	enabled: true,
+	saveData: true,
 } as const satisfies v.InferOutput<typeof GlobalSettingsSchema>);
 
 const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
