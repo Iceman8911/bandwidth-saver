@@ -6,7 +6,7 @@ import {
 	globalSettingsStorageItem,
 } from "@/shared/storage";
 
-export function PopupDisableToggles(props: { tabUrl: UrlSchema }) {
+export function PopupToggles(props: { tabUrl: UrlSchema }) {
 	const siteScopedGlobalSettingsStorageItem = () =>
 		getSiteScopedGlobalSettingsStorageItem(props.tabUrl);
 

@@ -7,7 +7,7 @@ import { PopupFooter } from "@/components/popup/footer";
 import { PopupHeader } from "@/components/popup/header";
 import { PopupProxySettings } from "@/components/popup/proxy-settings";
 import { PopupStatistics } from "@/components/popup/statistics";
-import { PopupDisableToggles } from "@/components/popup/toggle";
+import { PopupToggles } from "@/components/popup/toggle";
 import type { SettingsScope } from "@/models/context";
 import { ACTIVE_TAB_URL, DUMMY_TAB_URL } from "@/shared/constants";
 
@@ -50,7 +50,7 @@ export default function App() {
 
 			<PopupStatistics scope={scope()} tabUrl={activeTabUrl()} />
 
-			<PopupDisableToggles tabUrl={activeTabUrl()} />
+			<PopupToggles tabUrl={activeTabUrl()} />
 
 			<PopupSettings />
 
