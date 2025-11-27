@@ -1,4 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { DEFAULT_GLOBAL_SETTINGS } from "@/models/storage";
 import {
 	getSiteScopedGlobalSettingsStorageItem,
 	globalSettingsStorageItem,
@@ -8,21 +9,26 @@ export function PopupDisableToggles(props: { tabUrl: UrlSchema }) {
 	const siteScopedGlobalSettingsStorageItem = () =>
 		getSiteScopedGlobalSettingsStorageItem(props.tabUrl);
 
-	const globalSettings = convertStorageItemToReadonlySignal(
+	const _globalSettings = convertStorageItemToReadonlySignal(
 		globalSettingsStorageItem,
 	);
 
-	const siteScopeGlobalSettings = convertStorageItemToReadonlySignal(
+	const globalSettings = () => _globalSettings() ?? DEFAULT_GLOBAL_SETTINGS;
+
+	const _siteScopeGlobalSettings = convertStorageItemToReadonlySignal(
 		siteScopedGlobalSettingsStorageItem(),
 	);
 
-	const isEnabledGlobally = () => globalSettings()?.enabled;
+	const siteScopeGlobalSettings = () =>
+		_siteScopeGlobalSettings() ?? DEFAULT_GLOBAL_SETTINGS;
 
-	const isEnabledForSite = () => siteScopeGlobalSettings()?.enabled;
+	const isEnabledGlobally = () => globalSettings().enabled;
+
+	const isEnabledForSite = () => siteScopeGlobalSettings().enabled;
 
 	const handleGlobalToggle = () =>
 		globalSettingsStorageItem.setValue({
-			...(globalSettings() ?? {}),
+			...globalSettings(),
 			enabled: !isEnabledGlobally(),
 		});
 
