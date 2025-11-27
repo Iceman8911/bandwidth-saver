@@ -3,7 +3,7 @@ import * as v from "valibot";
 
 export const STORAGE_VERSION = 1;
 
-export const DUMMY_TAB_URL = v.parse(UrlSchema, "foo://bar");
+export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 
 export const ACTIVE_TAB_URL = async () =>
 	(await getActiveTabOrigin()) ?? DUMMY_TAB_URL;
