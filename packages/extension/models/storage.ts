@@ -142,7 +142,7 @@ export const STORAGE_SCHEMA = {
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
-const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
+export const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
 	enabled: true,
 	saveData: true,
 } as const satisfies v.InferOutput<typeof GlobalSettingsSchema>);
