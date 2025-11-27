@@ -22,14 +22,15 @@ export function PopupProxySettings(props: {
 	const _resolvedGlobalProxySettings = convertStorageItemToReadonlySignal(
 		proxySettingsStorageItem,
 	);
-	const _resolvedSiteProxySettings = convertStorageItemToReadonlySignal(
-		siteScopedProxySettingsStorageItem(),
+
+	const _resolvedSiteProxySettingsAccessor = createMemo(() =>
+		convertStorageItemToReadonlySignal(siteScopedProxySettingsStorageItem()),
 	);
 
 	const proxySettings = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalProxySettings()
-			: _resolvedSiteProxySettings(),
+			: _resolvedSiteProxySettingsAccessor()(),
 	);
 
 	const [tempProxySettings, setTempProxySettings] = createStore(

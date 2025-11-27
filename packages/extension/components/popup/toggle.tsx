@@ -1,4 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { createMemo } from "solid-js";
 import { DEFAULT_GLOBAL_SETTINGS } from "@/models/storage";
 import {
 	getSiteScopedGlobalSettingsStorageItem,
@@ -15,12 +16,13 @@ export function PopupDisableToggles(props: { tabUrl: UrlSchema }) {
 
 	const globalSettings = () => _globalSettings() ?? DEFAULT_GLOBAL_SETTINGS;
 
-	const _siteScopeGlobalSettings = convertStorageItemToReadonlySignal(
-		siteScopedGlobalSettingsStorageItem(),
+	const _siteScopeGlobalSettingsAccessor = createMemo(() =>
+		convertStorageItemToReadonlySignal(siteScopedGlobalSettingsStorageItem()),
 	);
 
-	const siteScopeGlobalSettings = () =>
-		_siteScopeGlobalSettings() ?? DEFAULT_GLOBAL_SETTINGS;
+	const siteScopeGlobalSettings = () => {
+		return _siteScopeGlobalSettingsAccessor()() ?? DEFAULT_GLOBAL_SETTINGS;
+	};
 
 	const isEnabledGlobally = () => globalSettings().enabled;
 

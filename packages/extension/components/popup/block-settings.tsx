@@ -318,15 +318,16 @@ export function PopupBlockSettings(props: {
 	const _resolvedGlobalBlockSettings = convertStorageItemToReadonlySignal(
 		blockSettingsStorageItem,
 	);
-	const _resolvedSiteBlockSettings = convertStorageItemToReadonlySignal(
-		siteScopedBlockSettingsStorageItem(),
+
+	const _resolvedSiteBlockSettingsAccessor = createMemo(() =>
+		convertStorageItemToReadonlySignal(siteScopedBlockSettingsStorageItem()),
 	);
 
 	const blockSettings = createMemo(
 		() =>
 			(props.scope === "global"
 				? _resolvedGlobalBlockSettings()
-				: _resolvedSiteBlockSettings()) ?? [],
+				: _resolvedSiteBlockSettingsAccessor()()) ?? [],
 	);
 
 	const handleAddNewBlockSetting = () => {

@@ -174,14 +174,17 @@ export function PopupCompressionSettings(props: {
 	const _resolvedGlobalCompressionSettings = convertStorageItemToReadonlySignal(
 		compressionSettingsStorageItem,
 	);
-	const _resolvedSiteCompressionSettings = convertStorageItemToReadonlySignal(
-		siteScopedCompressionSettingsStorageItem(),
+
+	const _resolvedSiteCompressionSettingsAccessor = createMemo(() =>
+		convertStorageItemToReadonlySignal(
+			siteScopedCompressionSettingsStorageItem(),
+		),
 	);
 
 	const compressionSettings = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalCompressionSettings()
-			: _resolvedSiteCompressionSettings(),
+			: _resolvedSiteCompressionSettingsAccessor()(),
 	);
 
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(

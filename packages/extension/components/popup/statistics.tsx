@@ -20,14 +20,15 @@ export function PopupStatistics(props: {
 	const _resolvedGlobalStatistics = convertStorageItemToReadonlySignal(
 		statisticsStorageItem,
 	);
-	const _resolvedSiteStatistics = convertStorageItemToReadonlySignal(
-		siteStatisticsStorageItem(),
+
+	const _resolvedSiteStatisticsAccessor = createMemo(() =>
+		convertStorageItemToReadonlySignal(siteStatisticsStorageItem()),
 	);
 
 	const statistics = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalStatistics()
-			: _resolvedSiteStatistics(),
+			: _resolvedSiteStatisticsAccessor()(),
 	);
 
 	const bytesSaved = createMemo(() =>
