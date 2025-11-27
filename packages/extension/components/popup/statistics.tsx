@@ -6,6 +6,10 @@ import {
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
 
+function convertBytesToMB(bytes: number): number {
+	return Math.round((bytes * 100) / (1024 * 1024)) / 100;
+}
+
 export function PopupStatistics(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
@@ -37,7 +41,7 @@ export function PopupStatistics(props: {
 
 		if (Number.isNaN(ratio)) return 0;
 
-		return ratio / (1024 * 1024);
+		return convertBytesToMB(ratio);
 	});
 
 	return (
@@ -53,7 +57,7 @@ export function PopupStatistics(props: {
 					{getSumOfValuesInObject(statistics()?.requestsBlocked ?? {})}
 				</div>
 
-				<div>Data Consumed: {bytesUsed()} MB</div>
+				<div>Data Consumed: {convertBytesToMB(bytesUsed())} MB</div>
 
 				<div>Data Saved: {percentageOfBytesSaved()}% </div>
 			</Suspense>
