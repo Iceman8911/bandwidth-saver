@@ -47,7 +47,7 @@ function detectAssetTypeFromContentTypeOrUrl(
 
 export function monitorBandwidthUsageViaBackground() {
 	browser.webRequest.onCompleted.addListener(
-		({ responseHeaders = [], type, url, fromCache }) => {
+		({ responseHeaders = [], type, url, fromCache, initiator }) => {
 			// No need to bother ourselves if the asset is cached
 			if (fromCache) return;
 
@@ -94,9 +94,13 @@ export function monitorBandwidthUsageViaBackground() {
 			assetSize[assetType] = contentLength;
 
 			cacheBandwidthDataFromWebRequest({
+				assetUrl: v.parse(UrlSchema, `${parsedUrl}`),
 				bytes: assetSize,
+				hostOrigin: getUrlSchemaOrigin(
+					// This fallback should never really happen
+					v.parse(UrlSchema, initiator ?? DUMMY_TAB_URL),
+				),
 				type: assetType,
-				url: v.parse(UrlSchema, `${parsedUrl}`),
 			});
 
 			return undefined;

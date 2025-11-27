@@ -5,6 +5,7 @@ import {
 	ImageCompressorEndpoint,
 	ImageFormatSchema,
 	NumberBetween1and100Inclusively,
+	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import {
@@ -108,6 +109,16 @@ const StatisticsSchema = v.object({
 	requestsMade: IntegerFromAtLeastZeroSchema,
 });
 
+const DetailedStatisticsSchema = v.object({
+	...StatisticsSchema.entries,
+
+	/** Requests from external sources that should technically be counted under the host's origin and not their standalone entries since they were created there.
+	 *
+	 * The url keys are also their url origin, (otherwise there'd be way too many bloat entries)
+	 */
+	crossOrigin: v.record(UrlSchema, AssetStatisticsSchema),
+});
+
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const STORAGE_SCHEMA = {
@@ -121,7 +132,7 @@ export const STORAGE_SCHEMA = {
 	[StorageKey.SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]: GlobalSettingsSchema,
 	[StorageKey.SITE_SCOPE_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
 	[StorageKey.STATISTICS]: StatisticsSchema,
-	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: StatisticsSchema,
+	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: DetailedStatisticsSchema,
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
@@ -180,7 +191,10 @@ export const STORAGE_DEFAULTS = {
 	[StorageKey.SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
 	[StorageKey.SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
 	[StorageKey.STATISTICS]: clone(DEFAULT_STATISTICS),
-	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: clone(DEFAULT_STATISTICS),
+	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: {
+		...clone(DEFAULT_STATISTICS),
+		crossOrigin: {},
+	} as v.InferOutput<typeof DetailedStatisticsSchema>,
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
 	[StorageKey.SITE_SCOPE_SETTINGS_BLOCK_PREFIX]: clone(DEFAULT_BLOCK_SETTINGS),
 	[StorageKey.SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]: clone(

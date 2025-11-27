@@ -8,6 +8,7 @@ import { detectAssetTypeFromUrl } from "@/shared/url";
 
 const observer = new PerformanceObserver((list) => {
 	const entries = list.getEntries();
+	const hostOrigin = getUrlSchemaOrigin(v.parse(UrlSchema, location.origin));
 
 	for (const entry of entries) {
 		if (entry instanceof PerformanceResourceTiming) {
@@ -67,9 +68,10 @@ const observer = new PerformanceObserver((list) => {
 				assetSize[assetType] += transferSize;
 
 				sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
+					assetUrl: v.parse(UrlSchema, name),
 					bytes: assetSize,
+					hostOrigin,
 					type: assetType,
-					url: v.parse(UrlSchema, name),
 				});
 			}
 		}

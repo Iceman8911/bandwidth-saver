@@ -1,6 +1,6 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
-import { MessageType } from "@/shared/constants";
+import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
 import {
 	getSiteScopedStatisticsStorageItem,
@@ -28,10 +28,7 @@ async function storeBandwidthDataFromPayload(
 		>
 	>,
 ) {
-	const { bytes, type, url } = data;
-
-	// Extract the origin since the sites are scoped based of the orgin
-	const urlOrigin = getUrlSchemaOrigin(url);
+	const { bytes, type, assetUrl, hostOrigin } = data;
 
 	const assetSize = bytes[type];
 
@@ -46,8 +43,17 @@ async function storeBandwidthDataFromPayload(
 	siteScopedStore.bytesUsed[type] += assetSize;
 	siteScopedStore.requestsMade++;
 
+	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
+
+	if (hostOrigin !== assetUrlOrigin) {
+		const crossOriginData =
+			siteScopedStore.crossOrigin[assetUrlOrigin] ?? DEFAULT_ASSET_STATISTICS;
+		crossOriginData[type] += assetSize;
+		siteScopedStore.crossOrigin[assetUrlOrigin] = crossOriginData;
+	}
+
 	const siteScopedStatisticsSavePromise =
-		getSiteScopedStatisticsStorageItem(urlOrigin).setValue(siteScopedStore);
+		getSiteScopedStatisticsStorageItem(hostOrigin).setValue(siteScopedStore);
 
 	await Promise.all([
 		globalStatisticsSavePromise,
@@ -55,7 +61,7 @@ async function storeBandwidthDataFromPayload(
 	]);
 
 	// Remove any cached raw data for this URL (we've persisted the measurement)
-	bandwidthRawDataMap.delete(url);
+	bandwidthRawDataMap.delete(assetUrl);
 }
 
 /**
@@ -83,9 +89,16 @@ async function processCachedBandwidthData(
 
 	const { perfApi, webRequest } = rawData;
 
+	if (!perfApi && !webRequest) return;
+
+	const hostOrigin =
+		(webRequest?.hostOrigin || perfApi?.hostOrigin) ?? DUMMY_TAB_URL;
+
 	const [globalStatisticsValue, siteStatisticsValue] = await Promise.all([
 		statisticsStorageItem.getValue(),
-		getSiteScopedStatisticsStorageItem(getUrlSchemaOrigin(urlEntry)).getValue(),
+		getSiteScopedStatisticsStorageItem(
+			getUrlSchemaOrigin(hostOrigin),
+		).getValue(),
 	]);
 
 	if (perfApi && webRequest) {
@@ -93,12 +106,13 @@ async function processCachedBandwidthData(
 		const { type } = webRequest;
 
 		const data: BandwidthMonitoringMessagePayload = {
+			assetUrl: urlEntry,
 			bytes: {
 				...DEFAULT_ASSET_STATISTICS,
 				[type]: perfApi.bytes[type] || webRequest.bytes[type],
 			},
+			hostOrigin: webRequest.hostOrigin || perfApi.hostOrigin,
 			type,
-			url: urlEntry,
 		};
 
 		await storeBandwidthDataFromPayload(
@@ -128,7 +142,7 @@ function cacheBandwidthDataFromPerformanceApi(
 	storage: typeof bandwidthRawDataMap,
 ) {
 	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) => {
-		const { url } = data;
+		const { assetUrl: url } = data;
 		const prevMapData = storage.get(url);
 
 		const base = prevMapData ?? {
@@ -166,7 +180,7 @@ export function cacheBandwidthDataFromWebRequest(
 	data: BandwidthMonitoringMessagePayload,
 	storage = bandwidthRawDataMap,
 ) {
-	const { url } = data;
+	const { assetUrl: url } = data;
 	const prevMapData = storage.get(url);
 
 	const base = prevMapData ?? {
