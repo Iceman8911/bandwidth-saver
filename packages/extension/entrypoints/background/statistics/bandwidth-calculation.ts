@@ -1,13 +1,13 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
-import * as v from "valibot";
-import { DEFAULT_ASSET_STATISTICS, DEFAULT_STATISTICS } from "@/models/storage";
+import type { UrlSchema } from "@bandwidth-saver/shared";
+import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
 import {
-	siteStatisticsStorageItem,
+	getSiteScopedStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
+import { getUrlSchemaOrigin } from "@/utils/url";
 
 const DELAY_TILL_RAW_DATA_PROCESSING_IN_MS = 1000;
 
@@ -23,13 +23,15 @@ async function storeBandwidthDataFromPayload(
 	data: BandwidthMonitoringMessagePayload,
 	globalStore: Awaited<ReturnType<typeof statisticsStorageItem.getValue>>,
 	siteScopedStore: Awaited<
-		ReturnType<typeof siteStatisticsStorageItem.getValue>
+		ReturnType<
+			Awaited<ReturnType<typeof getSiteScopedStatisticsStorageItem>>["getValue"]
+		>
 	>,
 ) {
 	const { bytes, type, url } = data;
 
 	// Extract the origin since the sites are scoped based of the orgin
-	const urlOrigin = v.parse(UrlSchema, new URL(url).origin);
+	const urlOrigin = getUrlSchemaOrigin(url);
 
 	const assetSize = bytes[type];
 
@@ -41,14 +43,11 @@ async function storeBandwidthDataFromPayload(
 	const globalStatisticsSavePromise =
 		statisticsStorageItem.setValue(globalStore);
 
-	if (!siteScopedStore[urlOrigin])
-		siteScopedStore[urlOrigin] = structuredClone(DEFAULT_STATISTICS);
-
-	siteScopedStore[urlOrigin].bytesUsed[type] += assetSize;
-	siteScopedStore[urlOrigin].requestsMade++;
+	siteScopedStore.bytesUsed[type] += assetSize;
+	siteScopedStore.requestsMade++;
 
 	const siteScopedStatisticsSavePromise =
-		siteStatisticsStorageItem.setValue(siteScopedStore);
+		getSiteScopedStatisticsStorageItem(urlOrigin).setValue(siteScopedStore);
 
 	await Promise.all([
 		globalStatisticsSavePromise,
@@ -86,7 +85,7 @@ async function processCachedBandwidthData(
 
 	const [globalStatisticsValue, siteStatisticsValue] = await Promise.all([
 		statisticsStorageItem.getValue(),
-		siteStatisticsStorageItem.getValue(),
+		getSiteScopedStatisticsStorageItem(getUrlSchemaOrigin(urlEntry)).getValue(),
 	]);
 
 	if (perfApi && webRequest) {

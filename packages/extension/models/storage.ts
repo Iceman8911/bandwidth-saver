@@ -1,10 +1,10 @@
 import {
 	type AnyValibotSchema,
+	clone,
 	getExtensionEnv,
 	ImageCompressorEndpoint,
 	ImageFormatSchema,
 	NumberBetween1and100Inclusively,
-	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import {
@@ -108,15 +108,6 @@ const StatisticsSchema = v.object({
 	requestsMade: IntegerFromAtLeastZeroSchema,
 });
 
-const SiteScopeBlockSchema = v.record(UrlSchema, BlockSettingsSchema);
-const SiteScopeCompressionSchema = v.record(
-	UrlSchema,
-	CompressionSettingsSchema,
-);
-const SiteScopeGlobalSchema = v.record(UrlSchema, GlobalSettingsSchema);
-const SiteScopeProxySchema = v.record(UrlSchema, ProxySettingsSchema);
-const StatisticsSiteScopeSchema = v.record(UrlSchema, StatisticsSchema);
-
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const STORAGE_SCHEMA = {
@@ -124,12 +115,13 @@ export const STORAGE_SCHEMA = {
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: SiteScopeBlockSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: SiteScopeCompressionSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: SiteScopeGlobalSchema,
-	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: SiteScopeProxySchema,
+	[StorageKey.SITE_SCOPE_SETTINGS_BLOCK_PREFIX]: BlockSettingsSchema,
+	[StorageKey.SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]:
+		CompressionSettingsSchema,
+	[StorageKey.SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]: GlobalSettingsSchema,
+	[StorageKey.SITE_SCOPE_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
 	[StorageKey.STATISTICS]: StatisticsSchema,
-	[StorageKey.STATISTICS_SITE_SCOPE]: StatisticsSiteScopeSchema,
+	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: StatisticsSchema,
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
@@ -180,45 +172,24 @@ export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	requestsMade: 0,
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 
-const DEFAULT_STATISTICS_SITE_SCOPE = v.parse(
-	StatisticsSiteScopeSchema,
-	{} as const satisfies v.InferOutput<typeof StatisticsSiteScopeSchema>,
-);
-
 const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
 
-const DEFAULT_SITE_SCOPE_BLOCK = v.parse(
-	SiteScopeBlockSchema,
-	{} as const satisfies v.InferOutput<typeof SiteScopeBlockSchema>,
-);
-
-const DEFAULT_SITE_SCOPE_COMPRESSION = v.parse(
-	SiteScopeCompressionSchema,
-	{} as const satisfies v.InferOutput<typeof SiteScopeCompressionSchema>,
-);
-
-const DEFAULT_SITE_SCOPE_GLOBAL = v.parse(
-	SiteScopeGlobalSchema,
-	{} as const satisfies v.InferOutput<typeof SiteScopeGlobalSchema>,
-);
-
-const DEFAULT_SITE_SCOPE_PROXY = v.parse(
-	SiteScopeProxySchema,
-	{} as const satisfies v.InferOutput<typeof SiteScopeProxySchema>,
-);
-
 export const STORAGE_DEFAULTS = {
-	[StorageKey.SETTINGS_GLOBAL]: DEFAULT_GLOBAL_SETTINGS,
-	[StorageKey.SETTINGS_COMPRESSION]: DEFAULT_COMPRESSION_SETTINGS,
-	[StorageKey.SETTINGS_PROXY]: DEFAULT_PROXY_SETTINGS,
-	[StorageKey.SETTINGS_BLOCK]: DEFAULT_BLOCK_SETTINGS,
-	[StorageKey.STATISTICS]: DEFAULT_STATISTICS,
-	[StorageKey.STATISTICS_SITE_SCOPE]: DEFAULT_STATISTICS_SITE_SCOPE,
+	[StorageKey.SETTINGS_GLOBAL]: clone(DEFAULT_GLOBAL_SETTINGS),
+	[StorageKey.SETTINGS_COMPRESSION]: clone(DEFAULT_COMPRESSION_SETTINGS),
+	[StorageKey.SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
+	[StorageKey.SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
+	[StorageKey.STATISTICS]: clone(DEFAULT_STATISTICS),
+	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: clone(DEFAULT_STATISTICS),
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
-	[StorageKey.SETTINGS_SITE_SCOPE_BLOCK]: DEFAULT_SITE_SCOPE_BLOCK,
-	[StorageKey.SETTINGS_SITE_SCOPE_COMPRESSION]: DEFAULT_SITE_SCOPE_COMPRESSION,
-	[StorageKey.SETTINGS_SITE_SCOPE_GLOBAL]: DEFAULT_SITE_SCOPE_GLOBAL,
-	[StorageKey.SETTINGS_SITE_SCOPE_PROXY]: DEFAULT_SITE_SCOPE_PROXY,
+	[StorageKey.SITE_SCOPE_SETTINGS_BLOCK_PREFIX]: clone(DEFAULT_BLOCK_SETTINGS),
+	[StorageKey.SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]: clone(
+		DEFAULT_COMPRESSION_SETTINGS,
+	),
+	[StorageKey.SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]: clone(
+		DEFAULT_GLOBAL_SETTINGS,
+	),
+	[StorageKey.SITE_SCOPE_SETTINGS_PROXY_PREFIX]: clone(DEFAULT_PROXY_SETTINGS),
 } as const satisfies {
 	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
 		(typeof STORAGE_SCHEMA)[STORAGE_KEY]

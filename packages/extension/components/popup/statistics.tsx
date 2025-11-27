@@ -1,7 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import type { SettingsScope } from "@/models/context";
 import {
-	siteStatisticsStorageItem,
+	getSiteScopedStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
@@ -10,17 +10,20 @@ export function PopupStatistics(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
 }) {
+	const siteStatisticsStorageItem = () =>
+		getSiteScopedStatisticsStorageItem(props.tabUrl);
+
 	const _resolvedGlobalStatistics = convertStorageItemToReadonlySignal(
 		statisticsStorageItem,
 	);
 	const _resolvedSiteStatistics = convertStorageItemToReadonlySignal(
-		siteStatisticsStorageItem,
+		siteStatisticsStorageItem(),
 	);
 
 	const statistics = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalStatistics()
-			: _resolvedSiteStatistics()?.[props.tabUrl],
+			: _resolvedSiteStatistics(),
 	);
 
 	const bytesSaved = createMemo(() =>

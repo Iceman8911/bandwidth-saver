@@ -60,28 +60,22 @@ export const StorageKey = {
 	SETTINGS_PROXY: "sync:proxy",
 
 	/** Block settings scoped to a site */
-	SETTINGS_SITE_SCOPE_BLOCK: "sync:siteScopeBlock",
+	SITE_SCOPE_SETTINGS_BLOCK_PREFIX: "sync:siteScopeBlock-",
 
 	/** Compression settings scoped to a site */
-	SETTINGS_SITE_SCOPE_COMPRESSION: "sync:siteScopeCompression",
+	SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX: "sync:siteScopeCompression-",
 
 	/** "Global" settings scoped to a site that didn't quite fit with the other storage areas */
-	SETTINGS_SITE_SCOPE_GLOBAL: "sync:siteScopeGlobal",
+	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX: "sync:siteScopeGlobal-",
 
 	/** Proxy settings scoped to a site */
-	SETTINGS_SITE_SCOPE_PROXY: "sync:siteScopeProxy",
+	SITE_SCOPE_SETTINGS_PROXY_PREFIX: "sync:siteScopeProxy-",
 
-	/** Top-level scoped site data */
-	SITE_SCOPE_PREFIX: "local:siteScope-",
-
-	/** Top-level scoped site statistics */
-	SITE_SCOPE_STATISTICS_PREFIX: "local:siteScope-",
+	/** Device-specific statistics per site */
+	SITE_SCOPE_STATISTICS_PREFIX: "local:siteScopeStatistics-",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
-
-	/** Device-specific statistics per site */
-	STATISTICS_SITE_SCOPE: "local:siteScopeStatistics",
 } as const satisfies Record<string, StorageItemKey>;
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
 

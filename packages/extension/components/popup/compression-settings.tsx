@@ -1,5 +1,4 @@
 import {
-	capitalizeString,
 	ImageCompressorEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
@@ -11,7 +10,7 @@ import { STORAGE_DEFAULTS, STORAGE_SCHEMA } from "@/models/storage";
 import { CompressionMode, StorageKey } from "@/shared/constants";
 import {
 	compressionSettingsStorageItem,
-	siteScopedCompressionSettingsStorageItem,
+	getSiteScopedCompressionSettingsStorageItem,
 } from "@/shared/storage";
 
 const COMPRESSION_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_COMPRESSION];
@@ -67,22 +66,18 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 					)
 				}
 			>
-				<For
-					each={Object.values(CompressionMode).filter(
-						(val) => typeof val === "number",
-					)}
-				>
+				<For each={Object.values(CompressionMode)}>
 					{(mode) => (
 						<option selected={props.store.mode === mode} value={mode}>
-							<Switch
-								fallback={capitalizeString(CompressionMode[mode].toLowerCase())}
-							>
+							<Switch>
 								<Match when={mode === CompressionMode.MONKEY_PATCH}>
 									Monkey Patch
 								</Match>
 								<Match when={mode === CompressionMode.WEB_REQUEST}>
 									Web Request (MV2)
 								</Match>
+								<Match when={mode === CompressionMode.PROXY}>Proxy</Match>
+								<Match when={mode === CompressionMode.SIMPLE}>Simple</Match>
 							</Switch>
 						</option>
 					)}
@@ -173,17 +168,20 @@ export function PopupCompressionSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
+	const siteScopedCompressionSettingsStorageItem = () =>
+		getSiteScopedCompressionSettingsStorageItem(props.tabUrl);
+
 	const _resolvedGlobalCompressionSettings = convertStorageItemToReadonlySignal(
 		compressionSettingsStorageItem,
 	);
 	const _resolvedSiteCompressionSettings = convertStorageItemToReadonlySignal(
-		siteScopedCompressionSettingsStorageItem,
+		siteScopedCompressionSettingsStorageItem(),
 	);
 
 	const compressionSettings = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalCompressionSettings()
-			: _resolvedSiteCompressionSettings()?.[props.tabUrl],
+			: _resolvedSiteCompressionSettings(),
 	);
 
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(
@@ -206,10 +204,9 @@ export function PopupCompressionSettings(props: {
 		if (props.scope === "global") {
 			compressionSettingsStorageItem.setValue(tempCompressionSettings);
 		} else {
-			siteScopedCompressionSettingsStorageItem.setValue({
-				..._resolvedSiteCompressionSettings(),
-				[props.tabUrl]: tempCompressionSettings,
-			});
+			siteScopedCompressionSettingsStorageItem().setValue(
+				tempCompressionSettings,
+			);
 		}
 	};
 

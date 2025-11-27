@@ -1,22 +1,24 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import {
+	getSiteScopedGlobalSettingsStorageItem,
 	globalSettingsStorageItem,
-	siteScopedGlobalSettingsStorageItem,
 } from "@/shared/storage";
 
 export function PopupDisableToggles(props: { tabUrl: UrlSchema }) {
+	const siteScopedGlobalSettingsStorageItem = () =>
+		getSiteScopedGlobalSettingsStorageItem(props.tabUrl);
+
 	const globalSettings = convertStorageItemToReadonlySignal(
 		globalSettingsStorageItem,
 	);
 
 	const siteScopeGlobalSettings = convertStorageItemToReadonlySignal(
-		siteScopedGlobalSettingsStorageItem,
+		siteScopedGlobalSettingsStorageItem(),
 	);
 
 	const isEnabledGlobally = () => globalSettings()?.enabled;
 
-	const isEnabledForSite = () =>
-		siteScopeGlobalSettings()?.[props.tabUrl]?.enabled;
+	const isEnabledForSite = () => siteScopeGlobalSettings()?.enabled;
 
 	const handleGlobalToggle = () =>
 		globalSettingsStorageItem.setValue({
@@ -27,12 +29,9 @@ export function PopupDisableToggles(props: { tabUrl: UrlSchema }) {
 	const handleSiteToggle = () => {
 		const settings = siteScopeGlobalSettings();
 
-		siteScopedGlobalSettingsStorageItem.setValue({
+		siteScopedGlobalSettingsStorageItem().setValue({
 			...settings,
-			[props.tabUrl]: {
-				...settings?.[props.tabUrl],
-				enabled: !isEnabledForSite(),
-			},
+			enabled: !isEnabledForSite(),
 		});
 	};
 

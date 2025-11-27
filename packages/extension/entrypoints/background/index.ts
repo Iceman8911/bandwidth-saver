@@ -4,16 +4,26 @@ import {
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { RuntimeMessageSchema } from "@/models/message";
-import { CompressionMode, MessageType } from "@/shared/constants";
-import { compressionSettingsStorageItem } from "@/shared/storage";
+import {
+	ACTIVE_TAB_URL,
+	CompressionMode,
+	MessageType,
+} from "@/shared/constants";
+import {
+	compressionSettingsStorageItem,
+	getSiteScopedCompressionSettingsStorageItem,
+} from "@/shared/storage";
 import { enableSaveDataForAllRequests } from "./compression/save-data";
+import { processMonitoredBandwidthData } from "./statistics/bandwidth-calculation";
 import { monitorBandwidthUsageViaBackground } from "./statistics/bandwidth-monitoring";
 
 const REDIRECT_TO_SIMPLE_COMPRESSION_PROXY_RULE_ID = 2;
 
 async function redirectToFirstCompressorEndpointIfPossible() {
 	const { enabled, mode, quality, format, preserveAnim, preferredEndpoint } =
-		await compressionSettingsStorageItem.getValue();
+		(await getSiteScopedCompressionSettingsStorageItem(
+			await ACTIVE_TAB_URL(),
+		).getValue()) ?? (await compressionSettingsStorageItem.getValue());
 
 	if (!enabled || mode !== CompressionMode.SIMPLE) {
 		await browser.declarativeNetRequest.updateDynamicRules({

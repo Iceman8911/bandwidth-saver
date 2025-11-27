@@ -4,9 +4,11 @@ import type { SettingsScope } from "@/models/context";
 import { STORAGE_DEFAULTS, STORAGE_SCHEMA } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
+	getSiteScopedProxySettingsStorageItem,
 	proxySettingsStorageItem,
-	siteScopedProxySettingsStorageItem,
 } from "@/shared/storage";
+
+const { SETTINGS_PROXY } = StorageKey;
 
 export function PopupProxySettings(props: {
 	scope: SettingsScope;
@@ -14,39 +16,38 @@ export function PopupProxySettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
+	const siteScopedProxySettingsStorageItem = () =>
+		getSiteScopedProxySettingsStorageItem(props.tabUrl);
+
 	const _resolvedGlobalProxySettings = convertStorageItemToReadonlySignal(
 		proxySettingsStorageItem,
 	);
 	const _resolvedSiteProxySettings = convertStorageItemToReadonlySignal(
-		siteScopedProxySettingsStorageItem,
+		siteScopedProxySettingsStorageItem(),
 	);
 
 	const proxySettings = createMemo(() =>
 		props.scope === "global"
 			? _resolvedGlobalProxySettings()
-			: _resolvedSiteProxySettings()?.[props.tabUrl],
+			: _resolvedSiteProxySettings(),
 	);
 
 	const [tempProxySettings, setTempProxySettings] = createStore(
-		proxySettings() ??
-			structuredClone(STORAGE_DEFAULTS[StorageKey.SETTINGS_PROXY]),
+		proxySettings() ?? structuredClone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
 	);
 
 	const handleUpdateProxySettings = (e: Event) => {
 		e.preventDefault();
 
 		const parsedProxySettings = v.parse(
-			STORAGE_SCHEMA[StorageKey.SETTINGS_PROXY],
+			STORAGE_SCHEMA[SETTINGS_PROXY],
 			tempProxySettings,
 		);
 
 		if (props.scope === "global") {
 			proxySettingsStorageItem.setValue(parsedProxySettings);
 		} else {
-			siteScopedProxySettingsStorageItem.setValue({
-				..._resolvedSiteProxySettings(),
-				[props.tabUrl]: parsedProxySettings,
-			});
+			siteScopedProxySettingsStorageItem().setValue(parsedProxySettings);
 		}
 	};
 

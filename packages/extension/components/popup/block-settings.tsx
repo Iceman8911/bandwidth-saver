@@ -7,7 +7,7 @@ import { STORAGE_SCHEMA } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
 	blockSettingsStorageItem,
-	siteScopedBlockSettingsStorageItem,
+	getSiteScopedBlockSettingsStorageItem,
 } from "@/shared/storage";
 
 const BLOCK_SETTING_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_BLOCK].item;
@@ -312,18 +312,21 @@ export function PopupBlockSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
+	const siteScopedBlockSettingsStorageItem = () =>
+		getSiteScopedBlockSettingsStorageItem(props.tabUrl);
+
 	const _resolvedGlobalBlockSettings = convertStorageItemToReadonlySignal(
 		blockSettingsStorageItem,
 	);
 	const _resolvedSiteBlockSettings = convertStorageItemToReadonlySignal(
-		siteScopedBlockSettingsStorageItem,
+		siteScopedBlockSettingsStorageItem(),
 	);
 
 	const blockSettings = createMemo(
 		() =>
 			(props.scope === "global"
 				? _resolvedGlobalBlockSettings()
-				: _resolvedSiteBlockSettings()?.[props.tabUrl]) ?? [],
+				: _resolvedSiteBlockSettings()) ?? [],
 	);
 
 	const handleAddNewBlockSetting = () => {
@@ -332,10 +335,7 @@ export function PopupBlockSettings(props: {
 		if (props.scope === "global") {
 			blockSettingsStorageItem.setValue(newSettings);
 		} else {
-			siteScopedBlockSettingsStorageItem.setValue({
-				..._resolvedSiteBlockSettings(),
-				[props.tabUrl]: newSettings,
-			});
+			siteScopedBlockSettingsStorageItem().setValue(newSettings);
 		}
 	};
 
@@ -350,10 +350,7 @@ export function PopupBlockSettings(props: {
 		if (props.scope === "global") {
 			blockSettingsStorageItem.setValue(newSettings);
 		} else {
-			siteScopedBlockSettingsStorageItem.setValue({
-				..._resolvedSiteBlockSettings(),
-				[props.tabUrl]: newSettings,
-			});
+			siteScopedBlockSettingsStorageItem().setValue(newSettings);
 		}
 	};
 
@@ -363,10 +360,7 @@ export function PopupBlockSettings(props: {
 		if (props.scope === "global") {
 			blockSettingsStorageItem.setValue(newSettings);
 		} else {
-			siteScopedBlockSettingsStorageItem.setValue({
-				..._resolvedSiteBlockSettings(),
-				[props.tabUrl]: newSettings,
-			});
+			siteScopedBlockSettingsStorageItem().setValue(newSettings);
 		}
 	};
 
