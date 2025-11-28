@@ -1,4 +1,4 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
+import { type ObjectToEnum, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 
 export const STORAGE_VERSION = 1;
@@ -92,3 +92,6 @@ export const DeclarativeNetRequestRuleIds = {
 
 	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT: 5,
 } as const;
+export type DeclarativeNetRequestRuleIds = ObjectToEnum<
+	typeof DeclarativeNetRequestRuleIds
+>;
