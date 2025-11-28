@@ -91,4 +91,4 @@ export const DeclarativeNetRequestRuleIds = {
 	REDIRECT_TO_REMOTE_PROXY: 4,
 
 	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT: 5,
-};
+} as const;
