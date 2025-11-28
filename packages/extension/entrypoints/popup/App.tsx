@@ -50,7 +50,7 @@ export default function App() {
 
 			<PopupStatistics scope={scope()} tabUrl={activeTabUrl()} />
 
-			<PopupToggles tabUrl={activeTabUrl()} />
+			<PopupToggles scope={scope()} tabUrl={activeTabUrl()} />
 
 			<PopupSettings />
 
