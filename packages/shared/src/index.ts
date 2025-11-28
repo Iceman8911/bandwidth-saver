@@ -9,3 +9,4 @@ export * from "./utils/fetch";
 export * from "./utils/image-optimization/adapter";
 export * from "./utils/random";
 export * from "./utils/string";
+export * from "./utils/type";
