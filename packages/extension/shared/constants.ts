@@ -16,7 +16,7 @@ export const MessageType = {
 
 	// MONITOR_BANDWIDTH_WITH_WEB_REQUEST = "2",
 } as const;
-export type MessageType = (typeof MessageType)[keyof typeof MessageType];
+export type MessageType = ObjectToEnum<typeof MessageType>;
 
 export const CompressionMode = {
 	/** Patches globals to redirect most image requests.
@@ -41,8 +41,7 @@ export const CompressionMode = {
 	 */
 	WEB_REQUEST: 4,
 } as const;
-export type CompressionMode =
-	(typeof CompressionMode)[keyof typeof CompressionMode];
+export type CompressionMode = ObjectToEnum<typeof CompressionMode>;
 
 export const StorageKey = {
 	SCHEMA_VERSION: "sync:schemaVersion",
@@ -77,7 +76,7 @@ export const StorageKey = {
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
 } as const satisfies Record<string, StorageItemKey>;
-export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
+export type StorageKey = ObjectToEnum<typeof StorageKey>;
 
 export const DeclarativeNetRequestRuleIds = {
 	ADD_SAVE_DATA_HEADER: 1,
