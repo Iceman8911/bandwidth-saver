@@ -94,3 +94,14 @@ export const DeclarativeNetRequestRuleIds = {
 export type DeclarativeNetRequestRuleIds = ObjectToEnum<
 	typeof DeclarativeNetRequestRuleIds
 >;
+
+export const DeclarativeNetRequestPriority = {
+	HIGH: 4,
+	HIGHEST: 5,
+	LOW: 2,
+	LOWEST: 1,
+	MID: 3,
+} as const;
+export type DeclarativeNetRequestPriority = ObjectToEnum<
+	typeof DeclarativeNetRequestPriority
+>;
