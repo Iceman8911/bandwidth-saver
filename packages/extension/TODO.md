@@ -1,7 +1,7 @@
 # Reducing Bandwidth Usage by
 
 - [x] Apply `SaveData` on every request
-	- [ ] Make this configurable
+	- [x] Make this configurable
 - [ ] Block assets above a specified size like:
   - [ ] Images
   - [ ] Gifs
