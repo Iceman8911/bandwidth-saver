@@ -3,6 +3,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
+import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
 	getSiteScopedGlobalSettingsStorageItem,
 	globalSettingsStorageItem,
@@ -115,7 +116,7 @@ function getSiteSaveDataRules(
 async function toggleSaveDataOnStartup() {
 	const { saveData } = await globalSettingsStorageItem.getValue();
 
-	declarativeNetRequest.updateDynamicRules(getGlobalSaveDataRules(saveData));
+	declarativeNetRequestSafeUpdateDynamicRules(getGlobalSaveDataRules(saveData));
 
 	const siteSaveDataOptionPromises: Promise<SiteSaveDataOption>[] = [];
 
@@ -128,7 +129,7 @@ async function toggleSaveDataOnStartup() {
 		siteSaveDataOptionPromises.push(saveDataOptionPromise);
 	}
 
-	declarativeNetRequest.updateDynamicRules(
+	declarativeNetRequestSafeUpdateDynamicRules(
 		getSiteSaveDataRules(await Promise.all(siteSaveDataOptionPromises)),
 	);
 }
@@ -137,7 +138,9 @@ export async function saveDataToggleWatcher() {
 	await toggleSaveDataOnStartup();
 
 	globalSettingsStorageItem.watch(({ saveData }) => {
-		declarativeNetRequest.updateDynamicRules(getGlobalSaveDataRules(saveData));
+		declarativeNetRequestSafeUpdateDynamicRules(
+			getGlobalSaveDataRules(saveData),
+		);
 	});
 
 	watchChangesToSiteSpecificSettings((changes) => {
@@ -155,6 +158,6 @@ export async function saveDataToggleWatcher() {
 			[],
 		);
 
-		declarativeNetRequest.updateDynamicRules(getSiteSaveDataRules(options));
+		declarativeNetRequestSafeUpdateDynamicRules(getSiteSaveDataRules(options));
 	});
 }
