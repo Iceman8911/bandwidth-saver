@@ -79,17 +79,18 @@ export const StorageKey = {
 export type StorageKey = ObjectToEnum<typeof StorageKey>;
 
 export const DeclarativeNetRequestRuleIds = {
-	ADD_SAVE_DATA_HEADER: 1,
-
 	/** Disables related rules since code for this runs on the client-page itself */
 	ENABLE_MONKEY_PATCH: 2,
 
 	/** Disables related rules since `declartiveNetRequest` will not be used */
 	ENABLE_WEB_REQUEST: 3,
+	GLOBAL_SAVE_DATA_HEADER: 1,
 
 	REDIRECT_TO_REMOTE_PROXY: 4,
 
 	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT: 5,
+
+	SITE_SAVE_DATA_HEADER: 2,
 } as const;
 export type DeclarativeNetRequestRuleIds = ObjectToEnum<
 	typeof DeclarativeNetRequestRuleIds
