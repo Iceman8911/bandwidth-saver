@@ -1,30 +1,131 @@
-import { DeclarativeNetRequestRuleIds } from "@/shared/constants";
+import type { UrlSchema } from "@bandwidth-saver/shared";
+import {
+	DeclarativeNetRequestPriority,
+	DeclarativeNetRequestRuleIds,
+} from "@/shared/constants";
+import { globalSettingsStorageItem } from "@/shared/storage";
+import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
-const { ADD_SAVE_DATA_HEADER } = DeclarativeNetRequestRuleIds;
+const declarativeNetRequest = browser.declarativeNetRequest;
 
-const resourceTypes = Object.values(browser.declarativeNetRequest.ResourceType);
+const { GLOBAL_SAVE_DATA_HEADER, SITE_SAVE_DATA_HEADER } =
+	DeclarativeNetRequestRuleIds;
+const { LOWEST, LOW } = DeclarativeNetRequestPriority;
 
-export function enableSaveDataForAllRequests() {
-	browser.declarativeNetRequest.updateDynamicRules({
-		addRules: [
-			{
-				action: {
-					requestHeaders: [
-						{
-							header: "Save-Data",
-							operation: "set",
-							value: "on",
+const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
+
+function getGlobalSaveDataRules(
+	enabled: boolean,
+): Browser.declarativeNetRequest.UpdateRuleOptions {
+	return {
+		addRules: enabled
+			? [
+					{
+						action: {
+							requestHeaders: [
+								{
+									header: "Save-Data",
+									operation: "set",
+									value: "on",
+								},
+							],
+							type: "modifyHeaders",
 						},
-					],
-					type: "modifyHeaders",
-				},
-				condition: {
-					resourceTypes,
-					urlFilter: "*",
-				},
-				id: ADD_SAVE_DATA_HEADER,
+						condition: {
+							resourceTypes: RESOURCE_TYPES,
+							urlFilter: "*",
+						},
+						id: GLOBAL_SAVE_DATA_HEADER,
+						priority: LOWEST,
+					},
+				]
+			: undefined,
+		removeRuleIds: [GLOBAL_SAVE_DATA_HEADER],
+	};
+}
+
+type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
+
+function getSiteSaveDataRules(
+	options: ReadonlyArray<SiteSaveDataOption>,
+): Browser.declarativeNetRequest.UpdateRuleOptions {
+	const [enabledSites, disabledSites] = options.reduce<
+		[UrlSchema[], UrlSchema[]]
+	>(
+		(urlGroup, { enabled, url }) => {
+			if (enabled) urlGroup[0].push(url);
+			else urlGroup[1].push(url);
+
+			return urlGroup;
+		},
+		[[], []],
+	);
+
+	return {
+		addRules: options.length
+			? [
+					{
+						action: {
+							requestHeaders: [
+								{
+									header: "Save-Data",
+									operation: "set",
+									value: "on",
+								},
+							],
+							type: "modifyHeaders",
+						},
+						condition: {
+							initiatorDomains: enabledSites,
+							resourceTypes: RESOURCE_TYPES,
+						},
+						id: SITE_SAVE_DATA_HEADER,
+						priority: LOW,
+					},
+
+					{
+						action: {
+							requestHeaders: [
+								{
+									header: "Save-Data",
+									operation: "remove",
+								},
+							],
+							type: "modifyHeaders",
+						},
+						condition: {
+							initiatorDomains: disabledSites,
+							resourceTypes: RESOURCE_TYPES,
+						},
+						id: SITE_SAVE_DATA_HEADER,
+						priority: LOW,
+					},
+				]
+			: undefined,
+		removeRuleIds: [SITE_SAVE_DATA_HEADER],
+	};
+}
+
+export function saveDataToggleWatcher() {
+	globalSettingsStorageItem.watch(({ saveData }) => {
+		declarativeNetRequest.updateDynamicRules(getGlobalSaveDataRules(saveData));
+	});
+
+	watchChangesToSiteSpecificSettings((changes) => {
+		const options = changes.reduce<SiteSaveDataOption[]>(
+			(options, settingsChange) => {
+				if (settingsChange.type === "global") {
+					options.push({
+						enabled: settingsChange.change.newValue?.saveData ?? false,
+						url: settingsChange.url,
+					});
+				}
+
+				return options;
 			},
-		],
-		removeRuleIds: [ADD_SAVE_DATA_HEADER],
+			[],
+		);
+
+		declarativeNetRequest.updateDynamicRules(getSiteSaveDataRules(options));
 	});
 }

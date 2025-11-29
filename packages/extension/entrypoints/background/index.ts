@@ -13,7 +13,7 @@ import {
 	compressionSettingsStorageItem,
 	getSiteScopedCompressionSettingsStorageItem,
 } from "@/shared/storage";
-import { enableSaveDataForAllRequests } from "./compression/save-data";
+import { saveDataToggleWatcher } from "./compression/save-data";
 import { processMonitoredBandwidthData } from "./statistics/bandwidth-calculation";
 import { monitorBandwidthUsageViaBackground } from "./statistics/bandwidth-monitoring";
 
@@ -92,7 +92,7 @@ function _checkIfCompressionUrlFromContentScriptIsValid() {
 }
 
 export default defineBackground(() => {
-	enableSaveDataForAllRequests();
+	saveDataToggleWatcher();
 
 	monitorBandwidthUsageViaBackground();
 
