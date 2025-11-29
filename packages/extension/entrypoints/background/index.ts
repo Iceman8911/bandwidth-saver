@@ -92,11 +92,10 @@ function _checkIfCompressionUrlFromContentScriptIsValid() {
 }
 
 export default defineBackground(() => {
-	saveDataToggleWatcher();
-
 	monitorBandwidthUsageViaBackground();
-
 	processMonitoredBandwidthData();
+
+	saveDataToggleWatcher();
 
 	redirectToFirstCompressorEndpointIfPossible();
 	watchCompressionSettingsChanges();
