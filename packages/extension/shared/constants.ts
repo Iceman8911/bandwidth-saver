@@ -80,12 +80,12 @@ export const StorageKey = {
 export type StorageKey = ObjectToEnum<typeof StorageKey>;
 
 export enum DeclarativeNetRequestRuleIds {
-	GLOBAL_SAVE_DATA_HEADER,
+	GLOBAL_SAVE_DATA_HEADER = 1,
 	SITE_SAVE_DATA_HEADER_ADD,
 	SITE_SAVE_DATA_HEADER_REMOVE,
 
 	/** Disables related rules since code for this runs on the client-page itself */
-	ENABLE_MONKEY_PATCH = 1,
+	ENABLE_MONKEY_PATCH,
 	/** Disables related rules since `declartiveNetRequest` will not be used */
 	ENABLE_WEB_REQUEST,
 
