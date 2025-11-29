@@ -14,6 +14,14 @@ import {
 	StorageKey,
 } from "@/shared/constants";
 
+export const StorageAreaSchema = v.picklist([
+	"local",
+	"sync",
+	"managed",
+	"session",
+]);
+export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
+
 const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
 
 const GlobalSettingsSchema = v.object({
