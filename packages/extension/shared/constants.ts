@@ -23,23 +23,24 @@ export const CompressionMode = {
 	 *
 	 * Rather brittle but it's 100% client side and MV3 compatible.
 	 */
-	MONKEY_PATCH: 1,
+	MONKEY_PATCH: "patch",
 
 	/** Uses `declartiveNetRequest` to redirect requests to a remote proxy running the code from the `proxy` package, which will handle the rest.
 	 *
 	 */
-	PROXY: 2,
+	PROXY: "proxy",
+
 	/** Uses `declartiveNetRequest` to redirect requests to a single compressor endpoint.
 	 *
 	 * 	Failed redirects on `img` elements fall back to the original url
 	 */
-	SIMPLE: 3,
+	SIMPLE: "simple",
 
 	/** Only avaible for MV2.
 	 *
 	 * Uses `webRequestBlocking` to modify and redirect requests to any working endpoint.
 	 */
-	WEB_REQUEST: 4,
+	WEB_REQUEST: "mv2",
 } as const;
 export type CompressionMode = ObjectToEnum<typeof CompressionMode>;
 
@@ -78,33 +79,24 @@ export const StorageKey = {
 } as const satisfies Record<string, StorageItemKey>;
 export type StorageKey = ObjectToEnum<typeof StorageKey>;
 
-export const DeclarativeNetRequestRuleIds = {
+export enum DeclarativeNetRequestRuleIds {
+	GLOBAL_SAVE_DATA_HEADER,
+	SITE_SAVE_DATA_HEADER_ADD,
+	SITE_SAVE_DATA_HEADER_REMOVE,
+
 	/** Disables related rules since code for this runs on the client-page itself */
-	ENABLE_MONKEY_PATCH: 1,
-
+	ENABLE_MONKEY_PATCH = 1,
 	/** Disables related rules since `declartiveNetRequest` will not be used */
-	ENABLE_WEB_REQUEST: 2,
-	GLOBAL_SAVE_DATA_HEADER: 3,
+	ENABLE_WEB_REQUEST,
 
-	REDIRECT_TO_REMOTE_PROXY: 4,
+	REDIRECT_TO_REMOTE_PROXY,
+	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT,
+}
 
-	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT: 5,
-
-	SITE_SAVE_DATA_HEADER_ADD: 6,
-
-	SITE_SAVE_DATA_HEADER_REMOVE: 7,
-} as const;
-export type DeclarativeNetRequestRuleIds = ObjectToEnum<
-	typeof DeclarativeNetRequestRuleIds
->;
-
-export const DeclarativeNetRequestPriority = {
-	HIGH: 4,
-	HIGHEST: 5,
-	LOW: 2,
-	LOWEST: 1,
-	MID: 3,
-} as const;
-export type DeclarativeNetRequestPriority = ObjectToEnum<
-	typeof DeclarativeNetRequestPriority
->;
+export enum DeclarativeNetRequestPriority {
+	LOWEST = 1,
+	LOW,
+	MID,
+	HIGH,
+	HIGHEST,
+}

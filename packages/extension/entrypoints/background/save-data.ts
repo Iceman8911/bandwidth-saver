@@ -12,13 +12,6 @@ import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
-const {
-	GLOBAL_SAVE_DATA_HEADER,
-	SITE_SAVE_DATA_HEADER_ADD,
-	SITE_SAVE_DATA_HEADER_REMOVE,
-} = DeclarativeNetRequestRuleIds;
-const { LOWEST, LOW } = DeclarativeNetRequestPriority;
-
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
 
 function getGlobalSaveDataRules(
@@ -42,12 +35,12 @@ function getGlobalSaveDataRules(
 							resourceTypes: RESOURCE_TYPES,
 							urlFilter: "*",
 						},
-						id: GLOBAL_SAVE_DATA_HEADER,
-						priority: LOWEST,
+						id: DeclarativeNetRequestRuleIds.GLOBAL_SAVE_DATA_HEADER,
+						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				]
 			: undefined,
-		removeRuleIds: [GLOBAL_SAVE_DATA_HEADER],
+		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_SAVE_DATA_HEADER],
 	};
 }
 
@@ -86,8 +79,8 @@ function getSiteSaveDataRules(
 							initiatorDomains: enabledSites,
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: SITE_SAVE_DATA_HEADER_ADD,
-						priority: LOW,
+						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+						priority: DeclarativeNetRequestPriority.LOW,
 					},
 
 					{
@@ -104,12 +97,15 @@ function getSiteSaveDataRules(
 							initiatorDomains: disabledSites,
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: SITE_SAVE_DATA_HEADER_REMOVE,
-						priority: LOW,
+						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
+						priority: DeclarativeNetRequestPriority.LOW,
 					},
 				]
 			: undefined,
-		removeRuleIds: [SITE_SAVE_DATA_HEADER_ADD, SITE_SAVE_DATA_HEADER_REMOVE],
+		removeRuleIds: [
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
+		],
 	};
 }
 
