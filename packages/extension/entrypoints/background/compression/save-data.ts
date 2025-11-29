@@ -8,8 +8,11 @@ import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
-const { GLOBAL_SAVE_DATA_HEADER, SITE_SAVE_DATA_HEADER } =
-	DeclarativeNetRequestRuleIds;
+const {
+	GLOBAL_SAVE_DATA_HEADER,
+	SITE_SAVE_DATA_HEADER_ADD,
+	SITE_SAVE_DATA_HEADER_REMOVE,
+} = DeclarativeNetRequestRuleIds;
 const { LOWEST, LOW } = DeclarativeNetRequestPriority;
 
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
@@ -79,7 +82,7 @@ function getSiteSaveDataRules(
 							initiatorDomains: enabledSites,
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: SITE_SAVE_DATA_HEADER,
+						id: SITE_SAVE_DATA_HEADER_ADD,
 						priority: LOW,
 					},
 
@@ -97,12 +100,12 @@ function getSiteSaveDataRules(
 							initiatorDomains: disabledSites,
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: SITE_SAVE_DATA_HEADER,
+						id: SITE_SAVE_DATA_HEADER_REMOVE,
 						priority: LOW,
 					},
 				]
 			: undefined,
-		removeRuleIds: [SITE_SAVE_DATA_HEADER],
+		removeRuleIds: [SITE_SAVE_DATA_HEADER_ADD, SITE_SAVE_DATA_HEADER_REMOVE],
 	};
 }
 

@@ -90,7 +90,9 @@ export const DeclarativeNetRequestRuleIds = {
 
 	REDIRECT_TO_SIMPLE_COMPRESSION_ENDPOINT: 5,
 
-	SITE_SAVE_DATA_HEADER: 6,
+	SITE_SAVE_DATA_HEADER_ADD: 6,
+
+	SITE_SAVE_DATA_HEADER_REMOVE: 7,
 } as const;
 export type DeclarativeNetRequestRuleIds = ObjectToEnum<
 	typeof DeclarativeNetRequestRuleIds
