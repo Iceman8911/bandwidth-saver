@@ -155,7 +155,7 @@ export const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
 	saveData: true,
 } as const satisfies v.InferOutput<typeof GlobalSettingsSchema>);
 
-const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
+export const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
 	enabled: true,
 	format: "auto",
 	mode: CompressionMode.SIMPLE,
@@ -164,13 +164,13 @@ const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
 	quality: 60,
 } as const satisfies v.InferOutput<typeof CompressionSettingsSchema>);
 
-const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
+export const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
 	enabled: false,
 	host: VITE_SERVER_HOST,
 	port: VITE_SERVER_PORT,
 } as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
 
-const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
+export const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
 	{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
 	{ enabled: false, fileType: "font", minSize: 50, type: "type" },
 	{ enabled: false, fileType: "image", minSize: 100, type: "type" },
