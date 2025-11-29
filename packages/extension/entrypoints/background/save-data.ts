@@ -112,7 +112,9 @@ function getSiteSaveDataRules(
 async function toggleSaveDataOnStartup() {
 	const { saveData } = await globalSettingsStorageItem.getValue();
 
-	declarativeNetRequestSafeUpdateDynamicRules(getGlobalSaveDataRules(saveData));
+	const globalPromise = declarativeNetRequestSafeUpdateDynamicRules(
+		getGlobalSaveDataRules(saveData),
+	);
 
 	const siteSaveDataOptionPromises: Promise<SiteSaveDataOption>[] = [];
 
@@ -125,9 +127,11 @@ async function toggleSaveDataOnStartup() {
 		siteSaveDataOptionPromises.push(saveDataOptionPromise);
 	}
 
-	declarativeNetRequestSafeUpdateDynamicRules(
+	const sitePromise = declarativeNetRequestSafeUpdateDynamicRules(
 		getSiteSaveDataRules(await Promise.all(siteSaveDataOptionPromises)),
 	);
+
+	await Promise.all([globalPromise, sitePromise]);
 }
 
 export async function saveDataToggleWatcher() {
