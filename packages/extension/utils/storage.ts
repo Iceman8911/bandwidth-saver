@@ -16,7 +16,14 @@ const storageArea = v.parse(
 );
 
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
-	const [_, possibleUrl] = key.split(SITE_SCOPE_SETTINGS_GLOBAL_PREFIX);
+	const [_, keyIdentifierWithoutStorageAreaDesignation] =
+		SITE_SCOPE_SETTINGS_GLOBAL_PREFIX.split(":");
+
+	if (!keyIdentifierWithoutStorageAreaDesignation) return null;
+
+	const [__, possibleUrl] = key.split(
+		keyIdentifierWithoutStorageAreaDesignation,
+	);
 
 	return possibleUrl ? v.parse(UrlSchema, possibleUrl) : null;
 }
