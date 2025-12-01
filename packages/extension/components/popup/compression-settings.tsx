@@ -62,7 +62,7 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 				onInput={(e) =>
 					props.set(
 						"mode",
-						v.parse(COMPRESSION_SCHEMA.entries.mode, Number(e.target.value)),
+						v.parse(COMPRESSION_SCHEMA.entries.mode, e.target.value),
 					)
 				}
 			>
