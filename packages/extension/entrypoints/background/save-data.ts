@@ -61,47 +61,49 @@ function getSiteSaveDataRules(
 		[[], []],
 	);
 
-	return {
-		addRules: options.length
-			? [
-					{
-						action: {
-							requestHeaders: [
-								{
-									header: "Save-Data",
-									operation: "set",
-									value: "on",
-								},
-							],
-							type: "modifyHeaders",
-						},
-						condition: {
-							initiatorDomains: enabledSites,
-							resourceTypes: RESOURCE_TYPES,
-						},
-						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
-						priority: DeclarativeNetRequestPriority.LOW,
-					},
+	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 
+	if (enabledSites.length)
+		rulesToAdd.push({
+			action: {
+				requestHeaders: [
 					{
-						action: {
-							requestHeaders: [
-								{
-									header: "Save-Data",
-									operation: "remove",
-								},
-							],
-							type: "modifyHeaders",
-						},
-						condition: {
-							initiatorDomains: disabledSites,
-							resourceTypes: RESOURCE_TYPES,
-						},
-						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
-						priority: DeclarativeNetRequestPriority.LOW,
+						header: "Save-Data",
+						operation: "set",
+						value: "on",
 					},
-				]
-			: undefined,
+				],
+				type: "modifyHeaders",
+			},
+			condition: {
+				initiatorDomains: enabledSites,
+				resourceTypes: RESOURCE_TYPES,
+			},
+			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+			priority: DeclarativeNetRequestPriority.LOW,
+		});
+
+	if (disabledSites.length)
+		rulesToAdd.push({
+			action: {
+				requestHeaders: [
+					{
+						header: "Save-Data",
+						operation: "remove",
+					},
+				],
+				type: "modifyHeaders",
+			},
+			condition: {
+				initiatorDomains: disabledSites,
+				resourceTypes: RESOURCE_TYPES,
+			},
+			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
+			priority: DeclarativeNetRequestPriority.LOW,
+		});
+
+	return {
+		addRules: rulesToAdd,
 		removeRuleIds: [
 			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
 			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
