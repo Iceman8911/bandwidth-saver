@@ -3,6 +3,13 @@ import * as v from "valibot";
 import { type STORAGE_DEFAULTS, StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 
+function removeStorageAreaIdentifier<TKey extends string>(
+	key: `${StorageAreaSchema}:${TKey}`,
+): TKey {
+	//@ts-expect-error As long as the types are strict, this can't fail
+	return key.split(":")[1];
+}
+
 const {
 	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX,
 	SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX,
@@ -10,20 +17,29 @@ const {
 	SITE_SCOPE_SETTINGS_PROXY_PREFIX,
 } = StorageKey;
 
+const EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX = removeStorageAreaIdentifier(
+	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX,
+);
+const EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX =
+	removeStorageAreaIdentifier(SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX);
+const EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX = removeStorageAreaIdentifier(
+	SITE_SCOPE_SETTINGS_BLOCK_PREFIX,
+);
+const EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX = removeStorageAreaIdentifier(
+	SITE_SCOPE_SETTINGS_PROXY_PREFIX,
+);
+
 const storageArea = v.parse(
 	StorageAreaSchema,
 	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX.split(":")[0],
 );
 
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
-	const [_, keyIdentifierWithoutStorageAreaDesignation] =
-		SITE_SCOPE_SETTINGS_GLOBAL_PREFIX.split(":");
-
-	if (!keyIdentifierWithoutStorageAreaDesignation) return null;
-
-	const [__, possibleUrl] = key.split(
-		keyIdentifierWithoutStorageAreaDesignation,
-	);
+	const possibleUrl =
+		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX)[1] ??
+		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX)[1] ??
+		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX)[1] ??
+		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX)[1];
 
 	return possibleUrl ? v.parse(UrlSchema, possibleUrl) : null;
 }
@@ -112,25 +128,27 @@ export function watchChangesToSiteSpecificSettings(
 
 			if (!url || !change) continue;
 
-			if (key.startsWith(SITE_SCOPE_SETTINGS_BLOCK_PREFIX)) {
+			if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX)) {
 				siteSpecificChanges.push({
 					change,
 					type: "block",
 					url,
 				});
-			} else if (key.startsWith(SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX)) {
+			} else if (
+				key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX)
+			) {
 				siteSpecificChanges.push({
 					change,
 					type: "compression",
 					url,
 				});
-			} else if (key.startsWith(SITE_SCOPE_SETTINGS_GLOBAL_PREFIX)) {
+			} else if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX)) {
 				siteSpecificChanges.push({
 					change,
 					type: "global",
 					url,
 				});
-			} else if (key.startsWith(SITE_SCOPE_SETTINGS_PROXY_PREFIX)) {
+			} else if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX)) {
 				siteSpecificChanges.push({
 					change,
 					type: "proxy",
