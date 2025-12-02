@@ -5,7 +5,7 @@ import {
 	DEFAULT_ASSET_STATISTICS,
 } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
-import { detectAssetTypeFromUrl } from "@/shared/url";
+import { detectAssetTypeFromUrl } from "@/utils/url";
 import { cacheBandwidthDataFromWebRequest } from "./bandwidth-calculation";
 
 const getHeader = (

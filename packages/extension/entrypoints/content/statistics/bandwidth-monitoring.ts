@@ -4,7 +4,7 @@ import { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-typ
 import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
-import { detectAssetTypeFromUrl } from "@/shared/url";
+import { detectAssetTypeFromUrl } from "@/utils/url";
 
 const observer = new PerformanceObserver((list) => {
 	const entries = list.getEntries();
