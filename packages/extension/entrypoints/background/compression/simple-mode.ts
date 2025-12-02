@@ -5,6 +5,7 @@ import {
 import type { DEFAULT_COMPRESSION_SETTINGS } from "@/models/storage";
 import {
 	ACTIVE_TAB_URL,
+	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
@@ -13,6 +14,8 @@ import {
 	compressionSettingsStorageItem,
 	getSiteScopedCompressionSettingsStorageItem,
 } from "@/shared/storage";
+
+const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
 const IMAGE_URL_REGEX =
 	"^https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)(\\?.*)?$";
@@ -64,9 +67,17 @@ async function mergeSiteOptions(
 }
 
 function getGlobalCompressionRules(
-	config: Omit<typeof DEFAULT_COMPRESSION_SETTINGS, "mode">,
+	config: typeof DEFAULT_COMPRESSION_SETTINGS,
 ): Browser.declarativeNetRequest.UpdateRuleOptions {
-	const { enabled, format, preferredEndpoint, preserveAnim, quality } = config;
+	const { enabled, format, preferredEndpoint, preserveAnim, quality, mode } =
+		config;
+
+	if (mode !== SIMPLE_MODE)
+		return {
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
+			],
+		};
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
@@ -187,7 +198,10 @@ async function toggleCompressionOnStartup() {
 		siteCompressionOptionPromises.push(
 			getSiteScopedCompressionSettingsStorageItem(url)
 				.getValue()
-				.then(({ enabled }) => ({ enabled, url })),
+				.then(({ enabled, mode }) => ({
+					enabled: enabled && mode === SIMPLE_MODE,
+					url,
+				})),
 		);
 	}
 
