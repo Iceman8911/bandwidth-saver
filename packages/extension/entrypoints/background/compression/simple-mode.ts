@@ -117,6 +117,8 @@ async function getSiteCompressionRules(
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
+	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
+
 	const { enabledDomains, disabledDomains } =
 		await mergeSiteOptions(urlOptions);
 
@@ -136,6 +138,7 @@ async function getSiteCompressionRules(
 				type: "redirect",
 			},
 			condition: {
+				excludedRequestDomains: [preferredEndpointDomain],
 				initiatorDomains: enabledDomains,
 				regexFilter: IMAGE_URL_REGEX,
 				resourceTypes: ["image"],
