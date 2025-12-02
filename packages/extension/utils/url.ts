@@ -42,3 +42,10 @@ export function detectAssetTypeFromUrl(url: URL): keyof AssetStatisticsSchema {
 export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
 	return v.parse(UrlSchema, new URL(url).origin);
 }
+
+const PROTOCOL_REGEX = /^.*\/\//;
+
+/** So something like `https://api.datamuse.com` and `api.datamuse.com` both result in `api.datamuse.com` */
+export function getHostnameForDeclarativeNetRequest(url: string): string {
+	return url.replace(PROTOCOL_REGEX, "");
+}
