@@ -21,18 +21,18 @@ type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 
 async function mergeSiteOptions(
 	newOptions: ReadonlyArray<SiteCompressionOption>,
-): Promise<{ enabledSites: UrlSchema[]; disabledSites: UrlSchema[] }> {
+): Promise<{ enabledDomains: string[]; disabledDomains: string[] }> {
 	const existingRules = await browser.declarativeNetRequest.getDynamicRules();
 
-	const oldEnabledSites = new Set<UrlSchema>();
-	const oldDisabledSites = new Set<UrlSchema>();
+	const oldEnabledSites = new Set<string>();
+	const oldDisabledSites = new Set<string>();
 
 	for (const rule of existingRules) {
 		if (
 			rule.id === DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE_ADD
 		) {
 			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldEnabledSites.add(domain as UrlSchema);
+				oldEnabledSites.add(getHostnameForDeclarativeNetRequest(domain));
 			}
 		}
 		if (
@@ -40,24 +40,26 @@ async function mergeSiteOptions(
 			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE_REMOVE
 		) {
 			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldDisabledSites.add(domain as UrlSchema);
+				oldDisabledSites.add(getHostnameForDeclarativeNetRequest(domain));
 			}
 		}
 	}
 
 	for (const { url, enabled } of newOptions) {
+		const hostName = getHostnameForDeclarativeNetRequest(url);
+
 		if (enabled) {
-			oldEnabledSites.add(url);
-			oldDisabledSites.delete(url);
+			oldEnabledSites.add(hostName);
+			oldDisabledSites.delete(hostName);
 		} else {
-			oldDisabledSites.add(url);
-			oldEnabledSites.delete(url);
+			oldDisabledSites.add(hostName);
+			oldEnabledSites.delete(hostName);
 		}
 	}
 
 	return {
-		disabledSites: Array.from(oldDisabledSites),
-		enabledSites: Array.from(oldEnabledSites),
+		disabledDomains: Array.from(oldDisabledSites),
+		enabledDomains: Array.from(oldEnabledSites),
 	};
 }
 
@@ -115,11 +117,12 @@ async function getSiteCompressionRules(
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
-	const { enabledSites, disabledSites } = await mergeSiteOptions(urlOptions);
+	const { enabledDomains, disabledDomains } =
+		await mergeSiteOptions(urlOptions);
 
 	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 
-	if (enabledSites.length) {
+	if (enabledDomains.length) {
 		rulesToAdd.push({
 			action: {
 				redirect: {
@@ -133,7 +136,7 @@ async function getSiteCompressionRules(
 				type: "redirect",
 			},
 			condition: {
-				initiatorDomains: enabledSites,
+				initiatorDomains: enabledDomains,
 				regexFilter: IMAGE_URL_REGEX,
 				resourceTypes: ["image"],
 			},
@@ -142,13 +145,13 @@ async function getSiteCompressionRules(
 		});
 	}
 
-	if (disabledSites.length) {
+	if (disabledDomains.length) {
 		rulesToAdd.push({
 			action: {
 				type: "allow",
 			},
 			condition: {
-				initiatorDomains: disabledSites,
+				initiatorDomains: disabledDomains,
 				regexFilter: IMAGE_URL_REGEX,
 				resourceTypes: ["image"],
 			},

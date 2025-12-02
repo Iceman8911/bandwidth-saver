@@ -18,38 +18,40 @@ type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
 
 async function mergeSiteOptions(
 	newOptions: ReadonlyArray<SiteSaveDataOption>,
-): Promise<{ enabledSites: UrlSchema[]; disabledSites: UrlSchema[] }> {
+): Promise<{ enabledDomains: string[]; disabledDomains: string[] }> {
 	const existingRules = await browser.declarativeNetRequest.getDynamicRules();
 
-	const oldEnabledSites = new Set<UrlSchema>();
-	const oldDisabledSites = new Set<UrlSchema>();
+	const oldEnabledSites = new Set<string>();
+	const oldDisabledSites = new Set<string>();
 
 	for (const rule of existingRules) {
 		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD) {
 			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldEnabledSites.add(domain as UrlSchema);
+				oldEnabledSites.add(getHostnameForDeclarativeNetRequest(domain));
 			}
 		}
 		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE) {
 			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldDisabledSites.add(domain as UrlSchema);
+				oldDisabledSites.add(getHostnameForDeclarativeNetRequest(domain));
 			}
 		}
 	}
 
 	for (const { url, enabled } of newOptions) {
+		const hostName = getHostnameForDeclarativeNetRequest(url);
+
 		if (enabled) {
-			oldEnabledSites.add(url);
-			oldDisabledSites.delete(url);
+			oldEnabledSites.add(hostName);
+			oldDisabledSites.delete(hostName);
 		} else {
-			oldDisabledSites.add(url);
-			oldEnabledSites.delete(url);
+			oldDisabledSites.add(hostName);
+			oldEnabledSites.delete(hostName);
 		}
 	}
 
 	return {
-		disabledSites: Array.from(oldDisabledSites),
-		enabledSites: Array.from(oldEnabledSites),
+		disabledDomains: Array.from(oldDisabledSites),
+		enabledDomains: Array.from(oldEnabledSites),
 	};
 }
 
@@ -86,11 +88,11 @@ function getGlobalSaveDataRules(
 async function getSiteSaveDataRules(
 	options: ReadonlyArray<SiteSaveDataOption>,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const { enabledSites, disabledSites } = await mergeSiteOptions(options);
+	const { enabledDomains, disabledDomains } = await mergeSiteOptions(options);
 
 	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 
-	if (enabledSites.length) {
+	if (enabledDomains.length) {
 		rulesToAdd.push({
 			action: {
 				requestHeaders: [
@@ -103,7 +105,7 @@ async function getSiteSaveDataRules(
 				type: "modifyHeaders",
 			},
 			condition: {
-				initiatorDomains: enabledSites,
+				initiatorDomains: enabledDomains,
 				resourceTypes: RESOURCE_TYPES,
 			},
 			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
@@ -111,7 +113,7 @@ async function getSiteSaveDataRules(
 		});
 	}
 
-	if (disabledSites.length) {
+	if (disabledDomains.length) {
 		rulesToAdd.push({
 			action: {
 				requestHeaders: [
@@ -123,7 +125,7 @@ async function getSiteSaveDataRules(
 				type: "modifyHeaders",
 			},
 			condition: {
-				initiatorDomains: disabledSites,
+				initiatorDomains: disabledDomains,
 				resourceTypes: RESOURCE_TYPES,
 			},
 			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
