@@ -121,6 +121,7 @@ function getGlobalCompressionRules(
 async function getSiteCompressionRules(
 	urlOptions: ReadonlyArray<SiteCompressionOption>,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
+	// Only the active tab's settings are used because potentially generating hundreds to thousands of rules may be hectic
 	const activeTabUrl = await ACTIVE_TAB_URL();
 
 	const { format, preferredEndpoint, preserveAnim, quality } =
