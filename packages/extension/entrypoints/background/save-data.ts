@@ -9,6 +9,7 @@ import {
 	globalSettingsStorageItem,
 } from "@/shared/storage";
 import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
+import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
