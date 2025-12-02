@@ -14,6 +14,45 @@ const declarativeNetRequest = browser.declarativeNetRequest;
 
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
 
+type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
+
+async function mergeSiteOptions(
+	newOptions: ReadonlyArray<SiteSaveDataOption>,
+): Promise<{ enabledSites: UrlSchema[]; disabledSites: UrlSchema[] }> {
+	const existingRules = await browser.declarativeNetRequest.getDynamicRules();
+
+	const oldEnabledSites = new Set<UrlSchema>();
+	const oldDisabledSites = new Set<UrlSchema>();
+
+	for (const rule of existingRules) {
+		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD) {
+			for (const domain of rule.condition.initiatorDomains ?? []) {
+				oldEnabledSites.add(domain as UrlSchema);
+			}
+		}
+		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE) {
+			for (const domain of rule.condition.initiatorDomains ?? []) {
+				oldDisabledSites.add(domain as UrlSchema);
+			}
+		}
+	}
+
+	for (const { url, enabled } of newOptions) {
+		if (enabled) {
+			oldEnabledSites.add(url);
+			oldDisabledSites.delete(url);
+		} else {
+			oldDisabledSites.add(url);
+			oldEnabledSites.delete(url);
+		}
+	}
+
+	return {
+		disabledSites: Array.from(oldDisabledSites),
+		enabledSites: Array.from(oldEnabledSites),
+	};
+}
+
 function getGlobalSaveDataRules(
 	enabled: boolean,
 ): Browser.declarativeNetRequest.UpdateRuleOptions {
@@ -44,49 +83,60 @@ function getGlobalSaveDataRules(
 	};
 }
 
-type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
-
-function getSiteSaveDataRules(
+async function getSiteSaveDataRules(
 	options: ReadonlyArray<SiteSaveDataOption>,
-): Browser.declarativeNetRequest.UpdateRuleOptions {
-	const [enabledSites, disabledSites] = options.reduce<
-		[UrlSchema[], UrlSchema[]]
-	>(
-		(urlGroup, { enabled, url }) => {
-			if (enabled) urlGroup[0].push(url);
-			else urlGroup[1].push(url);
+): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
+	const { enabledSites, disabledSites } = await mergeSiteOptions(options);
 
-			return urlGroup;
-		},
-		[[], []],
-	);
+	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 
-	const enabledDomains = enabledSites.length ? enabledSites : undefined;
-	const disabledDomains = disabledSites.length ? disabledSites : undefined;
+	if (enabledSites.length) {
+		rulesToAdd.push({
+			action: {
+				requestHeaders: [
+					{
+						header: "Save-Data",
+						operation: "set",
+						value: "on",
+					},
+				],
+				type: "modifyHeaders",
+			},
+			condition: {
+				initiatorDomains: enabledSites,
+				resourceTypes: RESOURCE_TYPES,
+			},
+			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+			priority: DeclarativeNetRequestPriority.LOW,
+		});
+	}
+
+	if (disabledSites.length) {
+		rulesToAdd.push({
+			action: {
+				requestHeaders: [
+					{
+						header: "Save-Data",
+						operation: "remove",
+					},
+				],
+				type: "modifyHeaders",
+			},
+			condition: {
+				initiatorDomains: disabledSites,
+				resourceTypes: RESOURCE_TYPES,
+			},
+			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
+			priority: DeclarativeNetRequestPriority.LOW,
+		});
+	}
 
 	return {
-		addRules: [
-			{
-				action: {
-					requestHeaders: [
-						{
-							header: "Save-Data",
-							operation: "set",
-							value: "on",
-						},
-					],
-					type: "modifyHeaders",
-				},
-				condition: {
-					excludedInitiatorDomains: disabledDomains,
-					initiatorDomains: enabledDomains,
-					resourceTypes: RESOURCE_TYPES,
-				},
-				id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
-				priority: DeclarativeNetRequestPriority.LOW,
-			},
+		addRules: rulesToAdd,
+		removeRuleIds: [
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
 		],
-		removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
 	};
 }
 
@@ -109,7 +159,7 @@ async function toggleSaveDataOnStartup() {
 	}
 
 	const sitePromise = declarativeNetRequestSafeUpdateDynamicRules(
-		getSiteSaveDataRules(await Promise.all(siteSaveDataOptionPromises)),
+		await getSiteSaveDataRules(await Promise.all(siteSaveDataOptionPromises)),
 	);
 
 	await Promise.all([globalPromise, sitePromise]);
@@ -124,7 +174,7 @@ export async function saveDataToggleWatcher() {
 		);
 	});
 
-	watchChangesToSiteSpecificSettings((changes) => {
+	watchChangesToSiteSpecificSettings(async (changes) => {
 		const options = changes.reduce<SiteSaveDataOption[]>(
 			(options, settingsChange) => {
 				if (settingsChange.type === "global") {
@@ -139,6 +189,8 @@ export async function saveDataToggleWatcher() {
 			[],
 		);
 
-		declarativeNetRequestSafeUpdateDynamicRules(getSiteSaveDataRules(options));
+		declarativeNetRequestSafeUpdateDynamicRules(
+			await getSiteSaveDataRules(options),
+		);
 	});
 }
