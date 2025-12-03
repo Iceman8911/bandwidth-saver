@@ -4,7 +4,6 @@ import {
 } from "@bandwidth-saver/shared";
 import type { DEFAULT_COMPRESSION_SETTINGS } from "@/models/storage";
 import {
-	ACTIVE_TAB_URL,
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
@@ -12,7 +11,8 @@ import {
 import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
 	compressionSettingsStorageItem,
-	getSiteScopedCompressionSettingsStorageItem,
+	getSiteSpecificSettingsStorageItem,
+	globalSettingsStorageItem,
 } from "@/shared/storage";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
@@ -67,10 +67,10 @@ async function mergeSiteOptions(
 }
 
 function getGlobalCompressionRules(
+	enabled: boolean,
 	config: typeof DEFAULT_COMPRESSION_SETTINGS,
 ): Browser.declarativeNetRequest.UpdateRuleOptions {
-	const { enabled, format, preferredEndpoint, preserveAnim, quality, mode } =
-		config;
+	const { format, preferredEndpoint, preserveAnim, quality, mode } = config;
 
 	if (mode !== SIMPLE_MODE)
 		return {
@@ -119,13 +119,10 @@ function getGlobalCompressionRules(
 }
 
 async function getSiteCompressionRules(
+	config: Omit<typeof DEFAULT_COMPRESSION_SETTINGS, "mode">,
 	urlOptions: ReadonlyArray<SiteCompressionOption>,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	// Only the active tab's settings are used because potentially generating hundreds to thousands of rules may be hectic
-	const activeTabUrl = await ACTIVE_TAB_URL();
-
-	const { format, preferredEndpoint, preserveAnim, quality } =
-		await getSiteScopedCompressionSettingsStorageItem(activeTabUrl).getValue();
+	const { format, preferredEndpoint, preserveAnim, quality } = config;
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
@@ -190,17 +187,21 @@ async function getSiteCompressionRules(
 }
 
 async function toggleCompressionOnStartup() {
-	const globalCompressionSettings =
-		await compressionSettingsStorageItem.getValue();
+	const [{ compression: globallyEnabled }, globalCompressionSettings] =
+		await Promise.all([
+			globalSettingsStorageItem.getValue(),
+			compressionSettingsStorageItem.getValue(),
+		]);
 
 	const siteCompressionOptionPromises: Promise<SiteCompressionOption>[] = [];
 
 	for (const url of await getSiteUrlOriginsFromStorage()) {
 		siteCompressionOptionPromises.push(
-			getSiteScopedCompressionSettingsStorageItem(url)
+			getSiteSpecificSettingsStorageItem(url)
 				.getValue()
-				.then(({ enabled, mode }) => ({
-					enabled: enabled && mode === SIMPLE_MODE,
+				.then(({ compression }) => ({
+					enabled:
+						compression && globalCompressionSettings.mode === SIMPLE_MODE,
 					url,
 				})),
 		);
@@ -208,10 +209,11 @@ async function toggleCompressionOnStartup() {
 
 	await Promise.all([
 		declarativeNetRequestSafeUpdateDynamicRules(
-			getGlobalCompressionRules(globalCompressionSettings),
+			getGlobalCompressionRules(globallyEnabled, globalCompressionSettings),
 		),
 		declarativeNetRequestSafeUpdateDynamicRules(
 			await getSiteCompressionRules(
+				globalCompressionSettings,
 				await Promise.all(siteCompressionOptionPromises),
 			),
 		),
@@ -221,28 +223,52 @@ async function toggleCompressionOnStartup() {
 export async function compressionModeSimpleToggleWatcher() {
 	await toggleCompressionOnStartup();
 
+	let globallyEnabled: boolean | undefined;
+	let globalCompressionSettings:
+		| typeof DEFAULT_COMPRESSION_SETTINGS
+		| undefined;
+
+	function updateGlobalCompressionRules(
+		enabled: boolean | undefined,
+		settings: typeof globalCompressionSettings,
+	) {
+		if (enabled != null && settings != null) {
+			declarativeNetRequestSafeUpdateDynamicRules(
+				getGlobalCompressionRules(enabled, settings),
+			);
+		}
+	}
+
+	globalSettingsStorageItem.watch(({ compression: compressionEnabled }) => {
+		globallyEnabled = compressionEnabled;
+
+		updateGlobalCompressionRules(globallyEnabled, globalCompressionSettings);
+	});
+
 	compressionSettingsStorageItem.watch((settings) => {
-		declarativeNetRequestSafeUpdateDynamicRules(
-			getGlobalCompressionRules(settings),
-		);
+		globalCompressionSettings = settings;
+
+		updateGlobalCompressionRules(globallyEnabled, globalCompressionSettings);
 	});
 
 	watchChangesToSiteSpecificSettings(async (changes) => {
 		const options = changes.reduce<SiteCompressionOption[]>(
 			(options, settingsChange) => {
-				if (settingsChange.type === "compression") {
-					options.push({
-						enabled: settingsChange.change.newValue?.enabled ?? false,
-						url: settingsChange.url,
-					});
-				}
+				options.push({
+					enabled: settingsChange.change.newValue?.compression ?? false,
+					url: settingsChange.url,
+				});
+
 				return options;
 			},
 			[],
 		);
 
 		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteCompressionRules(options),
+			await getSiteCompressionRules(
+				await compressionSettingsStorageItem.getValue(),
+				options,
+			),
 		);
 	});
 }

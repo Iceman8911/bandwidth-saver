@@ -10,36 +10,18 @@ function removeStorageAreaIdentifier<TKey extends string>(
 	return key.split(":")[1];
 }
 
-const {
-	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX,
-	SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX,
-	SITE_SCOPE_SETTINGS_BLOCK_PREFIX,
-	SITE_SCOPE_SETTINGS_PROXY_PREFIX,
-} = StorageKey;
+const { SITE_SPECIFIC_SETTINGS_PREFIX } = StorageKey;
 
-const EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX = removeStorageAreaIdentifier(
-	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX,
+const EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX = removeStorageAreaIdentifier(
+	SITE_SPECIFIC_SETTINGS_PREFIX,
 );
-const EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX =
-	removeStorageAreaIdentifier(SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX);
-const EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX = removeStorageAreaIdentifier(
-	SITE_SCOPE_SETTINGS_BLOCK_PREFIX,
-);
-const EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX = removeStorageAreaIdentifier(
-	SITE_SCOPE_SETTINGS_PROXY_PREFIX,
-);
-
 const storageArea = v.parse(
 	StorageAreaSchema,
-	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX.split(":")[0],
+	SITE_SPECIFIC_SETTINGS_PREFIX.split(":")[0],
 );
 
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
-	const possibleUrl =
-		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX)[1] ??
-		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX)[1] ??
-		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX)[1] ??
-		key.split(EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX)[1];
+	const possibleUrl = key.split(EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX)[1];
 
 	return possibleUrl ? v.parse(UrlSchema, possibleUrl) : null;
 }
@@ -76,32 +58,10 @@ type StorageChange<TStorageValue> =
 			newValue: TStorageValue;
 	  };
 
-type SiteSpecificStorageChange = (
-	| {
-			type: "global";
-			change: StorageChange<
-				(typeof STORAGE_DEFAULTS)[typeof SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]
-			>;
-	  }
-	| {
-			type: "compression";
-			change: StorageChange<
-				(typeof STORAGE_DEFAULTS)[typeof SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]
-			>;
-	  }
-	| {
-			type: "block";
-			change: StorageChange<
-				(typeof STORAGE_DEFAULTS)[typeof SITE_SCOPE_SETTINGS_BLOCK_PREFIX]
-			>;
-	  }
-	| {
-			type: "proxy";
-			change: StorageChange<
-				(typeof STORAGE_DEFAULTS)[typeof SITE_SCOPE_SETTINGS_PROXY_PREFIX]
-			>;
-	  }
-) & {
+type SiteSpecificStorageChange = {
+	change: StorageChange<
+		(typeof STORAGE_DEFAULTS)[typeof SITE_SPECIFIC_SETTINGS_PREFIX]
+	>;
 	url: UrlSchema;
 };
 
@@ -128,30 +88,9 @@ export function watchChangesToSiteSpecificSettings(
 
 			if (!url || !change) continue;
 
-			if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_BLOCK_PREFIX)) {
+			if (key.startsWith(EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX)) {
 				siteSpecificChanges.push({
 					change,
-					type: "block",
-					url,
-				});
-			} else if (
-				key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX)
-			) {
-				siteSpecificChanges.push({
-					change,
-					type: "compression",
-					url,
-				});
-			} else if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_GLOBAL_PREFIX)) {
-				siteSpecificChanges.push({
-					change,
-					type: "global",
-					url,
-				});
-			} else if (key.startsWith(EXTRACTED_SITE_SCOPE_SETTINGS_PROXY_PREFIX)) {
-				siteSpecificChanges.push({
-					change,
-					type: "proxy",
 					url,
 				});
 			}

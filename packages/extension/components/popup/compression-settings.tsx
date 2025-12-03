@@ -6,11 +6,16 @@ import { createMemo, For, Match, Switch } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
-import { STORAGE_DEFAULTS, STORAGE_SCHEMA } from "@/models/storage";
+import {
+	DEFAULT_COMPRESSION_SETTINGS,
+	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	STORAGE_SCHEMA,
+} from "@/models/storage";
 import { CompressionMode, StorageKey } from "@/shared/constants";
 import {
 	compressionSettingsStorageItem,
-	getSiteScopedCompressionSettingsStorageItem,
+	getSiteSpecificSettingsStorageItem,
+	globalSettingsStorageItem,
 } from "@/shared/storage";
 
 const COMPRESSION_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_COMPRESSION];
@@ -148,17 +153,21 @@ function PreserveAnimationToggle(props: TempCompressionSettingsProps) {
 	);
 }
 
-function CompressionEnabledToggle(props: TempCompressionSettingsProps) {
+function CompressionEnabledToggle(props: {
+	enabled: boolean;
+	scope: SettingsScope;
+	onInput: (enabled: boolean) => void;
+}) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Enabled?</legend>
+		<label class="flex gap-2">
+			<span class="label">Enabled?</span>
 			<input
-				checked={props.store.enabled}
-				class="toggle toggle-primary"
-				onInput={(e) => props.set("enabled", e.target.checked)}
+				checked={props.enabled}
+				class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
+				onInput={(e) => props.onInput(e.target.checked)}
 				type="checkbox"
 			/>
-		</fieldset>
+		</label>
 	);
 }
 
@@ -168,48 +177,70 @@ export function PopupCompressionSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteScopedCompressionSettingsStorageItem = () =>
-		getSiteScopedCompressionSettingsStorageItem(props.tabUrl);
+	const siteSpecificSettingsSignal = createMemo(() => {
+		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
+		const [signal] = convertStorageItemToReadonlySignal(
+			storageItem,
+			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+		);
+		return signal;
+	});
 
-	const _resolvedGlobalCompressionSettings = convertStorageItemToReadonlySignal(
+	const siteSpecificSettingsStore = () => siteSpecificSettingsSignal()();
+
+	const siteSpecificCompressionToggle = () =>
+		siteSpecificSettingsStore().compression;
+
+	const [globalCompressionSettings] = convertStorageItemToReadonlySignal(
 		compressionSettingsStorageItem,
+		DEFAULT_COMPRESSION_SETTINGS,
 	);
 
-	const _resolvedSiteCompressionSettingsAccessor = createMemo(() =>
-		convertStorageItemToReadonlySignal(
-			siteScopedCompressionSettingsStorageItem(),
-		),
+	const [globalSettingsStore] = convertStorageItemToReadonlySignal(
+		globalSettingsStorageItem,
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	);
 
-	const compressionSettings = createMemo(() =>
+	const globalCompressionToggle = () => globalSettingsStore().compression;
+
+	const compressionToggle = () =>
 		props.scope === "global"
-			? _resolvedGlobalCompressionSettings()
-			: _resolvedSiteCompressionSettingsAccessor()(),
-	);
+			? globalCompressionToggle()
+			: siteSpecificCompressionToggle();
 
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(
-		compressionSettings() ??
-			structuredClone(STORAGE_DEFAULTS[StorageKey.SETTINGS_COMPRESSION]),
+		globalCompressionSettings() ??
+			structuredClone(DEFAULT_COMPRESSION_SETTINGS),
 	);
 
-	// Sync whenever the scope is changed
-	createEffect(
-		on(
-			compressionSettings,
-			(compressionSettings) =>
-				compressionSettings && setTempCompressionSettings(compressionSettings),
-		),
-	);
+	// // Sync whenever the scope is changed
+	// createEffect(
+	// 	on(
+	// 		compressionSettings,
+	// 		(compressionSettings) =>
+	// 			compressionSettings && setTempCompressionSettings(compressionSettings),
+	// 	),
+	// );
 
 	const handleUpdateCompressionSettings = (e: SubmitEvent) => {
 		e.preventDefault();
 
+		compressionSettingsStorageItem.setValue(tempCompressionSettings);
+	};
+
+	const handleUpdateCompressionToggle = () => {
 		if (props.scope === "global") {
-			compressionSettingsStorageItem.setValue(tempCompressionSettings);
+			const store = globalSettingsStore();
+			globalSettingsStorageItem.setValue({
+				...store,
+				compression: !store.compression,
+			});
 		} else {
-			siteScopedCompressionSettingsStorageItem().setValue(
-				tempCompressionSettings,
-			);
+			const store = siteSpecificSettingsStore();
+			getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
+				...store,
+				compression: !store.compression,
+			});
 		}
 	};
 
@@ -218,8 +249,14 @@ export function PopupCompressionSettings(props: {
 			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
 			name={props.name}
 		>
-			<summary class="collapse-title font-semibold">
-				Image Compression Settings
+			<summary class="collapse-title flex justify-between font-semibold">
+				<span>Compression Settings</span>
+
+				<CompressionEnabledToggle
+					enabled={compressionToggle()}
+					onInput={handleUpdateCompressionToggle}
+					scope={props.scope}
+				/>
 			</summary>
 			<div class="collapse-content text-sm">
 				<form
@@ -243,10 +280,6 @@ export function PopupCompressionSettings(props: {
 						store={tempCompressionSettings}
 					/>
 					<PreserveAnimationToggle
-						set={setTempCompressionSettings}
-						store={tempCompressionSettings}
-					/>
-					<CompressionEnabledToggle
 						set={setTempCompressionSettings}
 						store={tempCompressionSettings}
 					/>

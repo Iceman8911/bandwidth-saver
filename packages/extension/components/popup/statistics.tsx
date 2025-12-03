@@ -1,10 +1,13 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { createMemo } from "solid-js";
 import type { SettingsScope } from "@/models/context";
+import { DEFAULT_STATISTICS } from "@/models/storage";
 import {
-	getSiteScopedStatisticsStorageItem,
+	getSiteSpecificStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
+import { DEFAULT_SITE_SPECIFIC_STATISTICS } from "../../models/storage";
 
 function convertBytesToMB(bytes: number): number {
 	return Math.round((bytes * 100) / (1024 * 1024)) / 100;
@@ -14,21 +17,24 @@ export function PopupStatistics(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
 }) {
-	const siteStatisticsStorageItem = () =>
-		getSiteScopedStatisticsStorageItem(props.tabUrl);
+	const siteStatisticsSignal = createMemo(() => {
+		const storageItem = getSiteSpecificStatisticsStorageItem(props.tabUrl);
+		const [signal] = convertStorageItemToReadonlySignal(
+			storageItem,
+			DEFAULT_SITE_SPECIFIC_STATISTICS,
+		);
+		return signal;
+	});
 
-	const _resolvedGlobalStatistics = convertStorageItemToReadonlySignal(
+	const siteStatistics = () => siteStatisticsSignal()();
+
+	const [globalStatistics] = convertStorageItemToReadonlySignal(
 		statisticsStorageItem,
-	);
-
-	const _resolvedSiteStatisticsAccessor = createMemo(() =>
-		convertStorageItemToReadonlySignal(siteStatisticsStorageItem()),
+		DEFAULT_STATISTICS,
 	);
 
 	const statistics = createMemo(() =>
-		props.scope === "global"
-			? _resolvedGlobalStatistics()
-			: _resolvedSiteStatisticsAccessor()(),
+		props.scope === "global" ? globalStatistics() : siteStatistics(),
 	);
 
 	const bytesSaved = createMemo(() =>

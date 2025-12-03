@@ -1,13 +1,17 @@
 import { capitalizeString, type UrlSchema } from "@bandwidth-saver/shared";
-import { For, Index, Match, Switch } from "solid-js";
+import { createMemo, For, Index, Match, Switch } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
-import { STORAGE_SCHEMA } from "@/models/storage";
+import {
+	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	STORAGE_SCHEMA,
+} from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
 	blockSettingsStorageItem,
-	getSiteScopedBlockSettingsStorageItem,
+	getSiteSpecificSettingsStorageItem,
+	globalSettingsStorageItem,
 } from "@/shared/storage";
 
 const BLOCK_SETTING_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_BLOCK].item;
@@ -312,57 +316,67 @@ export function PopupBlockSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteScopedBlockSettingsStorageItem = () =>
-		getSiteScopedBlockSettingsStorageItem(props.tabUrl);
+	const siteSpecificSettingsSignal = createMemo(() => {
+		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
+		const [signal] = convertStorageItemToReadonlySignal(
+			storageItem,
+			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+		);
+		return signal;
+	});
 
-	const _resolvedGlobalBlockSettings = convertStorageItemToReadonlySignal(
+	const siteSpecificSettingsStore = () => siteSpecificSettingsSignal()();
+
+	const [globalBlockSettingsStore] = convertStorageItemToReadonlySignal(
 		blockSettingsStorageItem,
+		[DEFAULT_BLOCK_SETTING],
 	);
 
-	const _resolvedSiteBlockSettingsAccessor = createMemo(() =>
-		convertStorageItemToReadonlySignal(siteScopedBlockSettingsStorageItem()),
+	const [globalToggleSettingsStore] = convertStorageItemToReadonlySignal(
+		globalSettingsStorageItem,
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	);
 
-	const blockSettings = createMemo(
-		() =>
-			(props.scope === "global"
-				? _resolvedGlobalBlockSettings()
-				: _resolvedSiteBlockSettingsAccessor()()) ?? [],
-	);
+	const toggleMode = () =>
+		props.scope === "global"
+			? globalToggleSettingsStore().block
+			: siteSpecificSettingsStore().block;
+
+	const handleToggleBlockSettings = (enabled: boolean) => {
+		if (props.scope === "global") {
+			globalSettingsStorageItem.setValue({
+				...globalToggleSettingsStore(),
+				block: enabled,
+			});
+		} else {
+			getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
+				...siteSpecificSettingsStore(),
+				block: enabled,
+			});
+		}
+	};
 
 	const handleAddNewBlockSetting = () => {
-		const newSettings = [...blockSettings(), DEFAULT_BLOCK_SETTING];
+		const newSettings = [...globalBlockSettingsStore(), DEFAULT_BLOCK_SETTING];
 
-		if (props.scope === "global") {
-			blockSettingsStorageItem.setValue(newSettings);
-		} else {
-			siteScopedBlockSettingsStorageItem().setValue(newSettings);
-		}
+		blockSettingsStorageItem.setValue(newSettings);
 	};
 
 	const handleUpdateBlockSetting = (
 		idxToUpdate: number,
 		value: BLOCK_SETTING_SCHEMA,
 	) => {
-		const newSettings = blockSettings().map((setting, idx) =>
+		const newSettings = globalBlockSettingsStore().map((setting, idx) =>
 			idx === idxToUpdate ? v.parse(BLOCK_SETTING_SCHEMA, value) : setting,
 		);
 
-		if (props.scope === "global") {
-			blockSettingsStorageItem.setValue(newSettings);
-		} else {
-			siteScopedBlockSettingsStorageItem().setValue(newSettings);
-		}
+		blockSettingsStorageItem.setValue(newSettings);
 	};
 
 	const handleRemoveBlockSetting = (idxToRemove: number) => {
-		const newSettings = blockSettings().toSpliced(idxToRemove);
+		const newSettings = globalBlockSettingsStore().toSpliced(idxToRemove);
 
-		if (props.scope === "global") {
-			blockSettingsStorageItem.setValue(newSettings);
-		} else {
-			siteScopedBlockSettingsStorageItem().setValue(newSettings);
-		}
+		blockSettingsStorageItem.setValue(newSettings);
 	};
 
 	return (
@@ -370,7 +384,20 @@ export function PopupBlockSettings(props: {
 			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
 			name={props.name}
 		>
-			<summary class="collapse-title font-semibold">Block Settings</summary>
+			<summary class="collapse-title flex justify-between font-semibold">
+				<span>Block Settings</span>
+
+				<label class="flex gap-2">
+					<span class="label">Enabled?</span>
+
+					<input
+						checked={toggleMode()}
+						class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
+						onInput={(e) => handleToggleBlockSettings(e.target.checked)}
+						type="checkbox"
+					/>
+				</label>
+			</summary>
 			<div class="collapse-content text-sm">
 				<BaseButton
 					class="btn-primary btn-sm"
@@ -381,7 +408,7 @@ export function PopupBlockSettings(props: {
 
 				<BlockSettingsList
 					removeSettings={handleRemoveBlockSetting}
-					settings={blockSettings()}
+					settings={globalBlockSettingsStore()}
 					updateSettings={handleUpdateBlockSetting}
 				/>
 			</div>

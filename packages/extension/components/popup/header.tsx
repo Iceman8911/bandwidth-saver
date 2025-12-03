@@ -1,4 +1,5 @@
 import type { Setter } from "solid-js";
+import { createSelector } from "solid-js";
 import * as v from "valibot";
 import { SettingsScope } from "@/models/context";
 

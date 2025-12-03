@@ -8,13 +8,10 @@ const {
 	SCHEMA_VERSION,
 	SETTINGS_BLOCK,
 	SETTINGS_COMPRESSION,
-	SETTINGS_GLOBAL,
 	SETTINGS_PROXY,
-	SITE_SCOPE_SETTINGS_BLOCK_PREFIX,
-	SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX,
-	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX,
-	SITE_SCOPE_SETTINGS_PROXY_PREFIX,
-	SITE_SCOPE_STATISTICS_PREFIX,
+	SITE_SPECIFIC_STATISTICS_PREFIX,
+	SETTINGS_GLOBAL,
+	SITE_SPECIFIC_SETTINGS_PREFIX,
 	STATISTICS,
 } = StorageKey;
 
@@ -41,49 +38,13 @@ export const blockSettingsStorageItem = storage.defineItem(SETTINGS_BLOCK, {
 	init: () => clone(STORAGE_DEFAULTS[SETTINGS_BLOCK]),
 });
 
-export const getSiteScopedBlockSettingsStorageItem = (url: UrlSchema) => {
+export const getSiteSpecificSettingsStorageItem = (url: UrlSchema) => {
 	const key =
-		`${SITE_SCOPE_SETTINGS_BLOCK_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+		`${SITE_SPECIFIC_SETTINGS_PREFIX}${getUrlSchemaOrigin(url)}` as const;
 
 	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_BLOCK_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_BLOCK_PREFIX]),
-	});
-
-	return storageItem;
-};
-
-export const getSiteScopedCompressionSettingsStorageItem = (url: UrlSchema) => {
-	const key =
-		`${SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX}${getUrlSchemaOrigin(url)}` as const;
-
-	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]),
-	});
-
-	return storageItem;
-};
-
-export const getSiteScopedGlobalSettingsStorageItem = (url: UrlSchema) => {
-	const key =
-		`${SITE_SCOPE_SETTINGS_GLOBAL_PREFIX}${getUrlSchemaOrigin(url)}` as const;
-
-	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]),
-	});
-
-	return storageItem;
-};
-
-export const getSiteScopedProxySettingsStorageItem = (url: UrlSchema) => {
-	const key =
-		`${SITE_SCOPE_SETTINGS_PROXY_PREFIX}${getUrlSchemaOrigin(url)}` as const;
-
-	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_PROXY_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SCOPE_SETTINGS_PROXY_PREFIX]),
+		fallback: clone(STORAGE_DEFAULTS[SITE_SPECIFIC_SETTINGS_PREFIX]),
+		init: () => clone(STORAGE_DEFAULTS[SITE_SPECIFIC_SETTINGS_PREFIX]),
 	});
 
 	return storageItem;
@@ -94,13 +55,13 @@ export const statisticsStorageItem = storage.defineItem(STATISTICS, {
 	init: () => clone(STORAGE_DEFAULTS[STATISTICS]),
 });
 
-export const getSiteScopedStatisticsStorageItem = (url: UrlSchema) => {
+export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	const key =
-		`${SITE_SCOPE_STATISTICS_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+		`${SITE_SPECIFIC_STATISTICS_PREFIX}${getUrlSchemaOrigin(url)}` as const;
 
 	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SCOPE_STATISTICS_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SCOPE_STATISTICS_PREFIX]),
+		fallback: clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
+		init: () => clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
 	});
 
 	return storageItem;

@@ -22,17 +22,21 @@ export const StorageAreaSchema = v.picklist([
 ]);
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
-const EnabledSettingsSchema = v.object({ enabled: v.boolean() });
-
 const GlobalSettingsSchema = v.object({
-	...EnabledSettingsSchema.entries,
+	/** If  disabled, all blocking rules are effectively disabled */
+	block: v.boolean(),
+
+	/** If disabled, no compression at all is applied */
+	compression: v.boolean(),
+
+	/** If diabled, any setting requiring proxies fail */
+	proxy: v.boolean(),
+
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 });
 
 const CompressionSettingsSchema = v.object({
-	...EnabledSettingsSchema.entries,
-
 	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
 	format: ImageFormatSchema,
 	mode: v.enum(CompressionMode),
@@ -44,13 +48,12 @@ const CompressionSettingsSchema = v.object({
 });
 
 const ProxySettingsSchema = v.object({
-	...EnabledSettingsSchema.entries,
 	host: v.pipe(v.string(), v.minLength(1), v.trim()),
 	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
 });
 
 const BlockedAssetSharedSchema = v.object({
-	...EnabledSettingsSchema.entries,
+	enabled: v.boolean(),
 	minSize: v.pipe(v.number(), v.minValue(0)),
 });
 
@@ -134,29 +137,19 @@ const DetailedStatisticsSchema = v.object({
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const STORAGE_SCHEMA = {
-	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
 	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SITE_SCOPE_SETTINGS_BLOCK_PREFIX]: BlockSettingsSchema,
-	[StorageKey.SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]:
-		CompressionSettingsSchema,
-	[StorageKey.SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]: GlobalSettingsSchema,
-	[StorageKey.SITE_SCOPE_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
+	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
+	[StorageKey.SITE_SPECIFIC_SETTINGS_PREFIX]: GlobalSettingsSchema,
 	[StorageKey.STATISTICS]: StatisticsSchema,
-	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: DetailedStatisticsSchema,
+	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: DetailedStatisticsSchema,
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
-export const DEFAULT_GLOBAL_SETTINGS = v.parse(GlobalSettingsSchema, {
-	enabled: true,
-	saveData: true,
-} as const satisfies v.InferOutput<typeof GlobalSettingsSchema>);
-
 export const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
-	enabled: true,
 	format: "auto",
 	mode: CompressionMode.SIMPLE,
 	preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
@@ -165,7 +158,6 @@ export const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
 } as const satisfies v.InferOutput<typeof CompressionSettingsSchema>);
 
 export const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
-	enabled: false,
 	host: VITE_SERVER_HOST,
 	port: VITE_SERVER_PORT,
 } as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
@@ -176,6 +168,16 @@ export const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
 	{ enabled: false, fileType: "image", minSize: 100, type: "type" },
 	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
 ] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
+
+export const DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = v.parse(
+	GlobalSettingsSchema,
+	{
+		block: true,
+		compression: true,
+		proxy: false,
+		saveData: true,
+	} as const satisfies v.InferOutput<typeof GlobalSettingsSchema>,
+);
 
 export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
 	audio: 0,
@@ -196,27 +198,30 @@ export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	requestsMade: 0,
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 
+export const DEFAULT_SITE_SPECIFIC_STATISTICS = v.parse(
+	DetailedStatisticsSchema,
+	{ ...DEFAULT_STATISTICS, crossOrigin: {} } as const satisfies v.InferOutput<
+		typeof DetailedStatisticsSchema
+	>,
+);
+
 const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
 
 export const STORAGE_DEFAULTS = {
-	[StorageKey.SETTINGS_GLOBAL]: clone(DEFAULT_GLOBAL_SETTINGS),
 	[StorageKey.SETTINGS_COMPRESSION]: clone(DEFAULT_COMPRESSION_SETTINGS),
 	[StorageKey.SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
 	[StorageKey.SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
 	[StorageKey.STATISTICS]: clone(DEFAULT_STATISTICS),
-	[StorageKey.SITE_SCOPE_STATISTICS_PREFIX]: {
-		...clone(DEFAULT_STATISTICS),
-		crossOrigin: {},
-	} as v.InferOutput<typeof DetailedStatisticsSchema>,
+	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: clone(
+		DEFAULT_SITE_SPECIFIC_STATISTICS,
+	),
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
-	[StorageKey.SITE_SCOPE_SETTINGS_BLOCK_PREFIX]: clone(DEFAULT_BLOCK_SETTINGS),
-	[StorageKey.SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX]: clone(
-		DEFAULT_COMPRESSION_SETTINGS,
+	[StorageKey.SITE_SPECIFIC_SETTINGS_PREFIX]: clone(
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	),
-	[StorageKey.SITE_SCOPE_SETTINGS_GLOBAL_PREFIX]: clone(
-		DEFAULT_GLOBAL_SETTINGS,
+	[StorageKey.SETTINGS_GLOBAL]: clone(
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	),
-	[StorageKey.SITE_SCOPE_SETTINGS_PROXY_PREFIX]: clone(DEFAULT_PROXY_SETTINGS),
 } as const satisfies {
 	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
 		(typeof STORAGE_SCHEMA)[STORAGE_KEY]

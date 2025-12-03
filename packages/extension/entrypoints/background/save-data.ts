@@ -5,7 +5,7 @@ import {
 } from "@/shared/constants";
 import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
-	getSiteScopedGlobalSettingsStorageItem,
+	getSiteSpecificSettingsStorageItem,
 	globalSettingsStorageItem,
 } from "@/shared/storage";
 import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
@@ -154,9 +154,9 @@ async function toggleSaveDataOnStartup() {
 
 	for (const url of await getSiteUrlOriginsFromStorage()) {
 		const saveDataOptionPromise: Promise<SiteSaveDataOption> =
-			getSiteScopedGlobalSettingsStorageItem(url)
+			getSiteSpecificSettingsStorageItem(url)
 				.getValue()
-				.then((setting) => ({ enabled: setting.saveData, url }));
+				.then(({ saveData }) => ({ enabled: saveData, url }));
 
 		siteSaveDataOptionPromises.push(saveDataOptionPromise);
 	}
@@ -180,12 +180,10 @@ export async function saveDataToggleWatcher() {
 	watchChangesToSiteSpecificSettings(async (changes) => {
 		const options = changes.reduce<SiteSaveDataOption[]>(
 			(options, settingsChange) => {
-				if (settingsChange.type === "global") {
-					options.push({
-						enabled: settingsChange.change.newValue?.saveData ?? false,
-						url: settingsChange.url,
-					});
-				}
+				options.push({
+					enabled: settingsChange.change.newValue?.saveData ?? false,
+					url: settingsChange.url,
+				});
 
 				return options;
 			},

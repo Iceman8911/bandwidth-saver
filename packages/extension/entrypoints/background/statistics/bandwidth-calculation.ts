@@ -3,7 +3,7 @@ import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
 import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
 import {
-	getSiteScopedStatisticsStorageItem,
+	getSiteSpecificStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
@@ -24,7 +24,9 @@ async function storeBandwidthDataFromPayload(
 	globalStore: Awaited<ReturnType<typeof statisticsStorageItem.getValue>>,
 	siteScopedStore: Awaited<
 		ReturnType<
-			Awaited<ReturnType<typeof getSiteScopedStatisticsStorageItem>>["getValue"]
+			Awaited<
+				ReturnType<typeof getSiteSpecificStatisticsStorageItem>
+			>["getValue"]
 		>
 	>,
 ) {
@@ -53,7 +55,7 @@ async function storeBandwidthDataFromPayload(
 	}
 
 	const siteScopedStatisticsSavePromise =
-		getSiteScopedStatisticsStorageItem(hostOrigin).setValue(siteScopedStore);
+		getSiteSpecificStatisticsStorageItem(hostOrigin).setValue(siteScopedStore);
 
 	await Promise.all([
 		globalStatisticsSavePromise,
@@ -96,7 +98,7 @@ async function processCachedBandwidthData(
 
 	const [globalStatisticsValue, siteStatisticsValue] = await Promise.all([
 		statisticsStorageItem.getValue(),
-		getSiteScopedStatisticsStorageItem(
+		getSiteSpecificStatisticsStorageItem(
 			getUrlSchemaOrigin(hostOrigin),
 		).getValue(),
 	]);

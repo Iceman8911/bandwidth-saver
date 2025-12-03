@@ -1,10 +1,17 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { createMemo } from "solid-js";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
-import { STORAGE_DEFAULTS, STORAGE_SCHEMA } from "@/models/storage";
+import {
+	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	DEFAULT_PROXY_SETTINGS,
+	STORAGE_DEFAULTS,
+	STORAGE_SCHEMA,
+} from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
-	getSiteScopedProxySettingsStorageItem,
+	getSiteSpecificSettingsStorageItem,
+	globalSettingsStorageItem,
 	proxySettingsStorageItem,
 } from "@/shared/storage";
 
@@ -16,28 +23,38 @@ export function PopupProxySettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteScopedProxySettingsStorageItem = () =>
-		getSiteScopedProxySettingsStorageItem(props.tabUrl);
+	const siteSpecificSettingsSignal = createMemo(() => {
+		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
+		const [signal] = convertStorageItemToReadonlySignal(
+			storageItem,
+			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+		);
+		return signal;
+	});
 
-	const _resolvedGlobalProxySettings = convertStorageItemToReadonlySignal(
-		proxySettingsStorageItem,
+	const siteSpecificSettings = () => siteSpecificSettingsSignal()();
+
+	const [globalProxySettingsSignal] = convertStorageItemToReadonlySignal(
+		globalSettingsStorageItem,
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	);
 
-	const _resolvedSiteProxySettingsAccessor = createMemo(() =>
-		convertStorageItemToReadonlySignal(siteScopedProxySettingsStorageItem()),
-	);
-
-	const proxySettings = createMemo(() =>
+	const proxyToggle = createMemo(() =>
 		props.scope === "global"
-			? _resolvedGlobalProxySettings()
-			: _resolvedSiteProxySettingsAccessor()(),
+			? globalProxySettingsSignal().proxy
+			: siteSpecificSettings().proxy,
+	);
+
+	const [proxySettings] = convertStorageItemToReadonlySignal(
+		proxySettingsStorageItem,
+		DEFAULT_PROXY_SETTINGS,
 	);
 
 	const [tempProxySettings, setTempProxySettings] = createStore(
 		proxySettings() ?? structuredClone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
 	);
 
-	const handleUpdateProxySettings = (e: Event) => {
+	const handleUpdateGeneralProxySettings = (e: Event) => {
 		e.preventDefault();
 
 		const parsedProxySettings = v.parse(
@@ -45,31 +62,62 @@ export function PopupProxySettings(props: {
 			tempProxySettings,
 		);
 
-		if (props.scope === "global") {
-			proxySettingsStorageItem.setValue(parsedProxySettings);
-		} else {
-			siteScopedProxySettingsStorageItem().setValue(parsedProxySettings);
-		}
+		proxySettingsStorageItem.setValue(parsedProxySettings);
+	};
+
+	const handleUpdateProxyEnabledOrDisabled = (enabled: boolean) => {
+		props.scope === "global"
+			? globalSettingsStorageItem.setValue({
+					...globalProxySettingsSignal(),
+					proxy: enabled,
+				})
+			: getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
+					...siteSpecificSettings(),
+					proxy: enabled,
+				});
 	};
 
 	// Whenever the scope is changed, refresh the displayed proxy settings
-	createEffect(
-		on(
-			[proxySettings],
-			([proxySettings]) => proxySettings && setTempProxySettings(proxySettings),
-		),
-	);
+	// createEffect(
+	// 	on([proxySettings, proxyToggle], ([proxySettings, proxyToggle]) => {
+	// 		setTempProxySettings(proxySettings);
+
+	// 		props.scope === "global"
+	// 			? globalSettingsStorageItem.setValue({
+	// 					...globalProxySettingsSignalWithDefault(),
+	// 					proxy: proxyToggle,
+	// 				})
+	// 			: siteSpecificSettingsStorageItem().setValue({
+	// 					...siteSpecificSettingsSignalWithDefault(),
+	// 					proxy: proxyToggle,
+	// 				});
+	// 	}),
+	// );
 
 	return (
 		<details
 			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
 			name={props.name}
 		>
-			<summary class="collapse-title font-semibold">Proxy Settings</summary>
+			<summary class="collapse-title flex justify-between font-semibold">
+				<span>Proxy Settings</span>
+
+				<label class="flex gap-2">
+					<span class="label">Enabled?</span>
+					<input
+						checked={proxyToggle()}
+						class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
+						onInput={(e) =>
+							handleUpdateProxyEnabledOrDisabled(e.target.checked)
+						}
+						type="checkbox"
+					/>
+				</label>
+			</summary>
 			<div class="collapse-content text-sm">
 				<form
 					class="grid grid-cols-2 gap-4"
-					onSubmit={handleUpdateProxySettings}
+					onSubmit={handleUpdateGeneralProxySettings}
 				>
 					{/* Host */}
 					<fieldset class="fieldset">
@@ -96,17 +144,6 @@ export function PopupProxySettings(props: {
 							placeholder="3001"
 							type="number"
 							value={tempProxySettings.port}
-						/>
-					</fieldset>
-
-					{/* Enabled */}
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Enabled</legend>
-						<input
-							checked={tempProxySettings.enabled}
-							class="toggle toggle-primary"
-							onInput={(e) => setTempProxySettings("enabled", e.target.checked)}
-							type="checkbox"
 						/>
 					</fieldset>
 

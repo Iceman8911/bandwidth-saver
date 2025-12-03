@@ -53,26 +53,17 @@ export const StorageKey = {
 	/** Settings for customizing compression */
 	SETTINGS_COMPRESSION: "sync:compression",
 
-	/** Other settings that affect all site domains that didn't fit with the others */
+	/** Other generic settings beyond the other classifications */
 	SETTINGS_GLOBAL: "sync:global",
 
 	/** Settings for the remote proxy that requests will be redirected to */
 	SETTINGS_PROXY: "sync:proxy",
 
-	/** Block settings scoped to a site */
-	SITE_SCOPE_SETTINGS_BLOCK_PREFIX: "sync:siteScopeBlock-",
-
-	/** Compression settings scoped to a site */
-	SITE_SCOPE_SETTINGS_COMPRESSION_PREFIX: "sync:siteScopeCompression-",
-
-	/** "Global" settings scoped to a site that didn't quite fit with the other storage areas */
-	SITE_SCOPE_SETTINGS_GLOBAL_PREFIX: "sync:siteScopeGlobal-",
-
-	/** Proxy settings scoped to a site */
-	SITE_SCOPE_SETTINGS_PROXY_PREFIX: "sync:siteScopeProxy-",
+	/** Settings toggles scoped to a site */
+	SITE_SPECIFIC_SETTINGS_PREFIX: "sync:siteScopeSettings-",
 
 	/** Device-specific statistics per site */
-	SITE_SCOPE_STATISTICS_PREFIX: "local:siteScopeStatistics-",
+	SITE_SPECIFIC_STATISTICS_PREFIX: "local:siteScopeStatistics-",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",
