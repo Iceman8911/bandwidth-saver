@@ -1,5 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
-import { Show } from "solid-js";
+import { type JSXElement, Show } from "solid-js";
 import type { SettingsScope } from "@/models/context";
 import { DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS } from "@/models/storage";
 import {
@@ -37,6 +37,28 @@ const globalSettingsStore = convertStorageItemToReadonlySignal(
 	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 );
 
+type BaseToggleContainerProps = {
+	label: JSXElement;
+	checked: boolean;
+	onInput: (checked: boolean) => void;
+	class?: string;
+};
+
+function BaseToggleContainer(props: BaseToggleContainerProps) {
+	return (
+		<label class="grid w-1/2 grid-cols-[70%_1fr] items-center gap-2 space-x-2">
+			<span class="label overflow-auto">{props.label}</span>
+
+			<input
+				checked={props.checked}
+				class={`toggle ${props.class ?? ""}`}
+				onInput={(e) => props.onInput(e.target.checked)}
+				type="checkbox"
+			/>
+		</label>
+	);
+}
+
 function GlobalEnabledToggle(props: {
 	settings: typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
 }) {
@@ -48,16 +70,12 @@ function GlobalEnabledToggle(props: {
 		);
 
 	return (
-		<label class="space-x-2">
-			<span class="label">Enabled globally</span>
-
-			<input
-				checked={!doAllPropsMatchBoolean(props.settings, false)}
-				class="toggle toggle-primary"
-				onInput={(e) => handleGlobalToggle(e.target.checked)}
-				type="checkbox"
-			/>
-		</label>
+		<BaseToggleContainer
+			checked={!doAllPropsMatchBoolean(props.settings, false)}
+			class="toggle-primary"
+			label="Enabled for all sites?"
+			onInput={handleGlobalToggle}
+		/>
 	);
 }
 
@@ -74,16 +92,16 @@ function DomainEnabledToggle(props: {
 	};
 
 	return (
-		<label class="space-x-2">
-			<span class="label">Enabled on this site</span>
-
-			<input
-				checked={!doAllPropsMatchBoolean(props.settings, false)}
-				class="toggle toggle-secondary"
-				onInput={(e) => handleSiteToggle(e.target.checked)}
-				type="checkbox"
-			/>
-		</label>
+		<BaseToggleContainer
+			checked={!doAllPropsMatchBoolean(props.settings, false)}
+			class="toggle-secondary"
+			label={
+				<span class="flex flex-wrap break-all">
+					Enabled for <span class="text-info">{props.tabUrl}</span>
+				</span>
+			}
+			onInput={handleSiteToggle}
+		/>
 	);
 }
 
@@ -97,16 +115,12 @@ function GlobalSaveDataToggle(props: {
 		});
 
 	return (
-		<label class="space-x-2">
-			<span class="label">Add "Save-Data" header?</span>
-
-			<input
-				checked={props.settings.saveData}
-				class="toggle toggle-primary"
-				onInput={handleGlobalToggle}
-				type="checkbox"
-			/>
-		</label>
+		<BaseToggleContainer
+			checked={props.settings.saveData}
+			class="toggle-primary"
+			label='Add "Save-Data" header?'
+			onInput={handleGlobalToggle}
+		/>
 	);
 }
 
@@ -122,16 +136,12 @@ function DomainSaveDataToggle(props: {
 	};
 
 	return (
-		<label class="space-x-2">
-			<span class="label">Add "Save-Data" header?</span>
-
-			<input
-				checked={props.settings.saveData}
-				class="toggle toggle-secondary"
-				onInput={handleSiteToggle}
-				type="checkbox"
-			/>
-		</label>
+		<BaseToggleContainer
+			checked={props.settings.saveData}
+			class="toggle-secondary"
+			label='Add "Save-Data" header?'
+			onInput={handleSiteToggle}
+		/>
 	);
 }
 
