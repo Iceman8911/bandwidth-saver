@@ -11,8 +11,8 @@
   - [ ] Support more fine-grained blocking like blocking specific extensions, urls,  domains, etc
   - [ ] Blocked elements should be replaced with a transparent, but visible broder that can be clicked to load the resource.
 - [ ] Compress / reduce resolution of assets like:
-  - [ ] Images
-  - [ ] Gifs
+  - [x] Images
+  - [x] Gifs
   - [ ] Videos
   - [ ] Audios
 - [ ] Prevent autoplay
