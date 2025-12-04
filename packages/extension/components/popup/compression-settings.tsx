@@ -188,7 +188,7 @@ export function PopupCompressionSettings(props: {
 	const siteSpecificCompressionToggle = () =>
 		siteSpecificSettingsSignal().compression;
 
-	const globalCompressionSettings = convertStorageItemToReadonlySignal(
+	const compressionSettings = convertStorageItemToReadonlySignal(
 		compressionSettingsStorageItem,
 		DEFAULT_COMPRESSION_SETTINGS,
 	);
@@ -206,8 +206,7 @@ export function PopupCompressionSettings(props: {
 			: siteSpecificCompressionToggle();
 
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(
-		globalCompressionSettings() ??
-			structuredClone(DEFAULT_COMPRESSION_SETTINGS),
+		compressionSettings() ?? structuredClone(DEFAULT_COMPRESSION_SETTINGS),
 	);
 
 	// // Sync whenever the scope is changed
@@ -234,7 +233,7 @@ export function PopupCompressionSettings(props: {
 			});
 		} else {
 			const store = siteSpecificSettingsSignal();
-			getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
+			siteSpecificSettingsStorageItem().setValue({
 				...store,
 				compression: !store.compression,
 			});
