@@ -51,6 +51,9 @@ export function PopupProxySettings(props: {
 		proxySettings() ?? structuredClone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
 	);
 
+	// Sync external proxy changes
+	createEffect(on(proxySettings, (settings) => setTempProxySettings(settings)));
+
 	const handleUpdateGeneralProxySettings = (e: Event) => {
 		e.preventDefault();
 

@@ -209,6 +209,11 @@ export function PopupCompressionSettings(props: {
 		compressionSettings() ?? structuredClone(DEFAULT_COMPRESSION_SETTINGS),
 	);
 
+	// Sync external changes
+	createEffect(
+		on(compressionSettings, (settings) => setTempCompressionSettings(settings)),
+	);
+
 	// // Sync whenever the scope is changed
 	// createEffect(
 	// 	on(
