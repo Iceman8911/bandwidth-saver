@@ -2,7 +2,7 @@ import {
 	ImageCompressorEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import { createMemo, For, Match, Switch } from "solid-js";
+import { For, Match, Switch } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
@@ -177,31 +177,28 @@ export function PopupCompressionSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteSpecificSettingsSignal = createMemo(() => {
-		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
-		const [signal] = convertStorageItemToReadonlySignal(
-			storageItem,
-			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-		);
-		return signal;
-	});
+	const siteSpecificSettingsStorageItem = () =>
+		getSiteSpecificSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettingsStore = () => siteSpecificSettingsSignal()();
+	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
+		siteSpecificSettingsStorageItem(),
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	);
 
 	const siteSpecificCompressionToggle = () =>
-		siteSpecificSettingsStore().compression;
+		siteSpecificSettingsSignal().compression;
 
-	const [globalCompressionSettings] = convertStorageItemToReadonlySignal(
+	const globalCompressionSettings = convertStorageItemToReadonlySignal(
 		compressionSettingsStorageItem,
 		DEFAULT_COMPRESSION_SETTINGS,
 	);
 
-	const [globalSettingsStore] = convertStorageItemToReadonlySignal(
+	const globalSettingsSignal = convertStorageItemToReadonlySignal(
 		globalSettingsStorageItem,
 		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	);
 
-	const globalCompressionToggle = () => globalSettingsStore().compression;
+	const globalCompressionToggle = () => globalSettingsSignal().compression;
 
 	const compressionToggle = () =>
 		props.scope === "global"
@@ -230,13 +227,13 @@ export function PopupCompressionSettings(props: {
 
 	const handleUpdateCompressionToggle = () => {
 		if (props.scope === "global") {
-			const store = globalSettingsStore();
+			const store = globalSettingsSignal();
 			globalSettingsStorageItem.setValue({
 				...store,
 				compression: !store.compression,
 			});
 		} else {
-			const store = siteSpecificSettingsStore();
+			const store = siteSpecificSettingsSignal();
 			getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
 				...store,
 				compression: !store.compression,

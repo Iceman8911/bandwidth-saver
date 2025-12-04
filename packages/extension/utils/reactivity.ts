@@ -1,26 +1,17 @@
-import { type Accessor, createSignal } from "solid-js";
-import type { Unwatch } from "wxt/utils/storage";
+import { type Accessor, createSignal, onCleanup } from "solid-js";
 
 type AnyRecord = Record<string, any>;
-
-const signalAndCleanupCache = new WeakMap<
-	WxtStorageItem<any, AnyRecord>,
-	readonly [Accessor<any>, Unwatch]
->();
 
 export function convertStorageItemToReadonlySignal<
 	TStorageItem extends WxtStorageItem<any, AnyRecord>,
 >(
 	storageItem: TStorageItem,
 	defaultValue?: undefined,
-): readonly [
-	Accessor<
-		TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-			? TStorageValue | undefined
-			: never
-	>,
-	Unwatch,
-];
+): Accessor<
+	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
+		? TStorageValue | undefined
+		: never
+>;
 export function convertStorageItemToReadonlySignal<
 	TStorageItem extends WxtStorageItem<any, AnyRecord>,
 >(
@@ -31,14 +22,11 @@ export function convertStorageItemToReadonlySignal<
 	>
 		? TStorageValue
 		: never,
-): readonly [
-	Accessor<
-		TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-			? TStorageValue
-			: never
-	>,
-	Unwatch,
-];
+): Accessor<
+	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
+		? TStorageValue
+		: never
+>;
 export function convertStorageItemToReadonlySignal<
 	TStorageItem extends WxtStorageItem<any, AnyRecord>,
 >(
@@ -49,32 +37,24 @@ export function convertStorageItemToReadonlySignal<
 	>
 		? TStorageValue
 		: never,
-): readonly [
-	Accessor<
-		TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-			? TStorageValue | undefined
-			: never
-	>,
-	Unwatch,
-] {
-	const possibleCachedSignalAndCleanup = signalAndCleanupCache.get(storageItem);
-
-	if (possibleCachedSignalAndCleanup) {
-		return possibleCachedSignalAndCleanup;
-	}
-
+): Accessor<
+	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
+		? TStorageValue | undefined
+		: never
+> {
 	const [storageValue, setStorageValue] = createSignal(defaultValue);
 
-	storageItem.getValue().then((val) => setStorageValue(() => val));
-
-	const cleanup = storageItem.watch((val) => {
+	const cleanup = storage.watch(storageItem.key, (val) => {
+		//@ts-expect-error TS can't figure it out
 		setStorageValue(() => val);
 	});
 
-	const signalAndCleanup = [storageValue, cleanup] as const;
+	onCleanup(cleanup);
 
-	signalAndCleanupCache.set(storageItem, signalAndCleanup);
+	storageItem.getValue().then((val) => {
+		setStorageValue(() => val);
+	});
 
-	//@ts-expect-error THis is alright, me thinks
-	return signalAndCleanup;
+	//@ts-expect-error TS can't figure it out
+	return storageValue;
 }

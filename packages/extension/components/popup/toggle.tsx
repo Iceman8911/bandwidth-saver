@@ -1,5 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
-import { createMemo, Show } from "solid-js";
+import { Show } from "solid-js";
 import type { SettingsScope } from "@/models/context";
 import { DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS } from "@/models/storage";
 import {
@@ -32,10 +32,7 @@ const doAllPropsMatchBoolean = (
 	return true;
 };
 
-const siteSpecificSettingsStorageItem = (tabUrl: UrlSchema) =>
-	getSiteSpecificSettingsStorageItem(tabUrl);
-
-const [globalSettingsStore] = convertStorageItemToReadonlySignal(
+const globalSettingsStore = convertStorageItemToReadonlySignal(
 	globalSettingsStorageItem,
 	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 );
@@ -69,7 +66,7 @@ function DomainEnabledToggle(props: {
 	tabUrl: UrlSchema;
 }) {
 	const handleSiteToggle = (enabled: boolean) => {
-		siteSpecificSettingsStorageItem(props.tabUrl).setValue(
+		getSiteSpecificSettingsStorageItem(props.tabUrl).setValue(
 			enabled
 				? DEFAULT_ENABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS
 				: DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
@@ -118,7 +115,7 @@ function DomainSaveDataToggle(props: {
 	tabUrl: UrlSchema;
 }) {
 	const handleSiteToggle = () => {
-		siteSpecificSettingsStorageItem(props.tabUrl).setValue({
+		getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
 			...props.settings,
 			saveData: !props.settings.saveData,
 		});
@@ -142,14 +139,13 @@ export function PopupToggles(props: {
 	tabUrl: UrlSchema;
 	scope: SettingsScope;
 }) {
-	const siteSpecificSettingsSignal = createMemo(() => {
-		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
-		const [signal] = convertStorageItemToReadonlySignal(
-			storageItem,
-			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-		);
-		return signal();
-	});
+	const siteSpecificSettingsStorageItem = () =>
+		getSiteSpecificSettingsStorageItem(props.tabUrl);
+
+	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
+		siteSpecificSettingsStorageItem(),
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	);
 
 	return (
 		<div class="flex justify-around gap-4">

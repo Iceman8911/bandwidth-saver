@@ -23,18 +23,15 @@ export function PopupProxySettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteSpecificSettingsSignal = createMemo(() => {
-		const storageItem = getSiteSpecificSettingsStorageItem(props.tabUrl);
-		const [signal] = convertStorageItemToReadonlySignal(
-			storageItem,
-			DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-		);
-		return signal;
-	});
+	const siteSpecificSettingsStorageItem = () =>
+		getSiteSpecificSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettings = () => siteSpecificSettingsSignal()();
+	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
+		siteSpecificSettingsStorageItem(),
+		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	);
 
-	const [globalProxySettingsSignal] = convertStorageItemToReadonlySignal(
+	const globalProxySettingsSignal = convertStorageItemToReadonlySignal(
 		globalSettingsStorageItem,
 		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	);
@@ -42,10 +39,10 @@ export function PopupProxySettings(props: {
 	const proxyToggle = createMemo(() =>
 		props.scope === "global"
 			? globalProxySettingsSignal().proxy
-			: siteSpecificSettings().proxy,
+			: siteSpecificSettingsSignal().proxy,
 	);
 
-	const [proxySettings] = convertStorageItemToReadonlySignal(
+	const proxySettings = convertStorageItemToReadonlySignal(
 		proxySettingsStorageItem,
 		DEFAULT_PROXY_SETTINGS,
 	);
@@ -72,7 +69,7 @@ export function PopupProxySettings(props: {
 					proxy: enabled,
 				})
 			: getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
-					...siteSpecificSettings(),
+					...siteSpecificSettingsSignal(),
 					proxy: enabled,
 				});
 	};

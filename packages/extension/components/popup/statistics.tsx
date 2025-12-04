@@ -17,24 +17,23 @@ export function PopupStatistics(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
 }) {
-	const siteStatisticsSignal = createMemo(() => {
-		const storageItem = getSiteSpecificStatisticsStorageItem(props.tabUrl);
-		const [signal] = convertStorageItemToReadonlySignal(
-			storageItem,
-			DEFAULT_SITE_SPECIFIC_STATISTICS,
-		);
-		return signal;
-	});
+	const siteSpecificStatisticsStorageItem = () =>
+		getSiteSpecificStatisticsStorageItem(props.tabUrl);
 
-	const siteStatistics = () => siteStatisticsSignal()();
+	const siteStatisticsStatisticsSignal = convertStorageItemToReadonlySignal(
+		siteSpecificStatisticsStorageItem(),
+		DEFAULT_SITE_SPECIFIC_STATISTICS,
+	);
 
-	const [globalStatistics] = convertStorageItemToReadonlySignal(
+	const globalStatistics = convertStorageItemToReadonlySignal(
 		statisticsStorageItem,
 		DEFAULT_STATISTICS,
 	);
 
 	const statistics = createMemo(() =>
-		props.scope === "global" ? globalStatistics() : siteStatistics(),
+		props.scope === "global"
+			? globalStatistics()
+			: siteStatisticsStatisticsSignal(),
 	);
 
 	const bytesSaved = createMemo(() =>
