@@ -5,7 +5,11 @@ import { defineConfig } from "wxt";
 // See https://wxt.dev/api/config.html
 export default defineConfig({
 	manifest: {
+		author: { email: "wuchijss3@gmail.com" },
+		description:
+			"MV3-compatible browser extension for monitoring and reducing bandwidth usage online",
 		host_permissions: ["<all_urls>"],
+		name: "Bandwidth Saver & Monitor",
 		permissions: [
 			"webRequest",
 			"declarativeNetRequest",
@@ -13,6 +17,8 @@ export default defineConfig({
 			"storage",
 			"tabs",
 		],
+		short_name: "Bandwidth Saver",
+		version: "0.0.1",
 	},
 	modules: ["@wxt-dev/module-solid"],
 	vite: () => ({
