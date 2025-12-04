@@ -1,4 +1,7 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import {
+	ImageCompressorEndpoint,
+	type UrlSchema,
+} from "@bandwidth-saver/shared";
 import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
 import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
@@ -10,6 +13,10 @@ import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getUrlSchemaOrigin } from "@/utils/url";
 
 const DELAY_TILL_RAW_DATA_PROCESSING_IN_MS = 1000;
+
+const IMAGE_COMPRESSOR_ENDPOINTS: ReadonlyArray<string> = Object.values(
+	ImageCompressorEndpoint,
+);
 
 type BandwidthRawDataFromMessages = {
 	perfApi: Readonly<BandwidthMonitoringMessagePayload | null>;
@@ -52,6 +59,12 @@ async function storeBandwidthDataFromPayload(
 			siteScopedStore.crossOrigin[assetUrlOrigin] ?? DEFAULT_ASSET_STATISTICS;
 		crossOriginData[type] += assetSize;
 		siteScopedStore.crossOrigin[assetUrlOrigin] = crossOriginData;
+	}
+
+	// TODO: This may result in false positives if this compressor endpoints ccan be accessed as functional websites
+	if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
+		globalStore.requestsCompressed[type]++;
+		siteScopedStore.requestsCompressed[type]++;
 	}
 
 	const siteScopedStatisticsSavePromise =
