@@ -101,3 +101,5 @@ export enum DeclarativeNetRequestPriority {
 	HIGH,
 	HIGHEST,
 }
+
+export const UPDATE_INTERVAL_IN_MS = 1000 * 60 * 60;

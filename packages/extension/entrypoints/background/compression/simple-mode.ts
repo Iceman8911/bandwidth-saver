@@ -2,11 +2,15 @@ import {
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
+import * as v from "valibot";
+import DEFAULT_COMPRESSION_WHITELISTED_DOMAINS from "@/data/compression-whilelisted-domains.json";
+import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
 import type { DEFAULT_COMPRESSION_SETTINGS } from "@/models/storage";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
+	UPDATE_INTERVAL_IN_MS,
 } from "@/shared/constants";
 import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
@@ -26,12 +30,30 @@ const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
 
 const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_FLAG}` as UrlSchema;
 
-const WHITELISTED_REQUEST_DOMAINS = [
-	"cloudinary.com",
-	"reddit.com",
-	"preview.redd.it",
-	"styles.redditmedia.com",
-] as const;
+let {
+	domains: WHITELISTED_REQUEST_DOMAINS,
+}: CompressionWhitelistedDomainSchema = (() => {
+	setInterval(async () => {
+		try {
+			const possibleUpdatedJson = v.parse(
+				CompressionWhitelistedDomainSchema,
+				await (
+					await fetch(
+						"https://raw.githubusercontent.com/iceman8911/bandwidth-saver/main/packages/extension/data/compression-whilelisted-domains.json",
+					)
+				).json(),
+			);
+
+			if (
+				possibleUpdatedJson.version >
+				DEFAULT_COMPRESSION_WHITELISTED_DOMAINS.version
+			)
+				WHITELISTED_REQUEST_DOMAINS = possibleUpdatedJson.domains;
+		} catch {}
+	}, UPDATE_INTERVAL_IN_MS);
+
+	return DEFAULT_COMPRESSION_WHITELISTED_DOMAINS;
+})();
 
 /** These rules are basically to prevent useless redirects / redirect looping */
 function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {

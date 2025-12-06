@@ -1,0 +1,10 @@
+{
+	"domains": [
+		"cloudinary.com",
+		"reddit.com",
+		"preview.redd.it",
+		"external-preview.redd.it",
+		"media.discordapp.net"
+	],
+	"version": 1
+}
