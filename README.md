@@ -11,7 +11,7 @@ Using both the observational `webRequest` and the `Performance API`, the bandwid
 ### Why use both of them?
 
 - `webRequest` doesn't help here if the request is lacking the `Content-Length` header.
-- `Performance API` has issues with cross-origin resources that don't have the  `Timing-Allow-Origin` properly set.
+- `Performance API` has issues with cross-origin resources that don't have the  `Timing-Allow-Origin` header properly set.
 
 ## Blocking
 
