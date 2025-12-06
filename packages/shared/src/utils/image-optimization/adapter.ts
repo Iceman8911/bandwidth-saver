@@ -23,6 +23,7 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 	quality,
 	preserveAnim,
 	format,
+	default: defaultValue,
 }) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
@@ -39,6 +40,8 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 		// Fall back to webp since avif is not yet supported
 		result += "&output=webp";
 	}
+
+	if (defaultValue) result += `&default=${defaultValue}`;
 
 	return v.parse(UrlSchema, result);
 };

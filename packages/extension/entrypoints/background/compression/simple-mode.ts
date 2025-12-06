@@ -17,12 +17,54 @@ import {
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-/** Captures the image url (where possible) without the query string. If it can't, just defaults to the original string since they should have auto-optimization already
- *
- * Doesn't match cloudinary optimized urls.
- */
+const REDIRECTED_FLAG = "bandwidth-saver-flag-8911=no-redirect";
+
 const IMAGE_URL_REGEX =
-	"^(?!.*cloudinary\\.com)(https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
+	"(https?://.+\\.(png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
+
+const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
+
+const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_FLAG}` as UrlSchema;
+
+const WHITELISTED_REQUEST_DOMAINS = ["cloudinary.com"] as const;
+
+/** These rules are basically to prevent useless redirects / redirect looping */
+function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {
+	return [
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: {
+						requestDomains: [...WHITELISTED_REQUEST_DOMAINS],
+						resourceTypes: ["image"],
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.MID,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
+			],
+		},
+
+		// To prevent looping when the default image that failed to be compressed is returned
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: {
+						regexFilter: REDIRECTED_FLAG,
+						resourceTypes: ["image"],
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
+					priority: DeclarativeNetRequestPriority.MID,
+				},
+			],
+			removeRuleIds: [DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS],
+		},
+	];
+}
 
 type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 
@@ -94,10 +136,11 @@ function getGlobalCompressionRules(
 						action: {
 							redirect: {
 								regexSubstitution: urlConstructor({
+									default: BASE_URL_WITH_FLAG,
 									format,
 									preserveAnim,
 									quality,
-									url: "\\1" as UrlSchema,
+									url: BASE_URL_WITHOUT_QUERY_STRING,
 								}),
 							},
 							type: "redirect",
@@ -142,10 +185,11 @@ async function getSiteCompressionRules(
 			action: {
 				redirect: {
 					regexSubstitution: urlConstructor({
+						default: BASE_URL_WITH_FLAG,
 						format,
 						preserveAnim,
 						quality,
-						url: "\\1" as UrlSchema,
+						url: BASE_URL_WITHOUT_QUERY_STRING,
 					}),
 				},
 				type: "redirect",
@@ -191,6 +235,10 @@ async function getSiteCompressionRules(
 }
 
 async function toggleCompressionOnStartup() {
+	for (const rule of createStaticRules()) {
+		declarativeNetRequestSafeUpdateDynamicRules(rule);
+	}
+
 	const [{ compression: globallyEnabled }, globalCompressionSettings] =
 		await Promise.all([
 			globalSettingsStorageItem.getValue(),

@@ -89,6 +89,9 @@ export enum DeclarativeNetRequestRuleIds {
 
 	GLOBAL_COMPRESSION_MODE_MV2,
 	SITE_COMPRESSION_MODE_MV2_REMOVE,
+
+	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
+	EXEMPT_FLAGGED_REQUESTS,
 }
 
 export enum DeclarativeNetRequestPriority {
