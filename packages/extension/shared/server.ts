@@ -5,6 +5,6 @@ import { treaty } from "@elysiajs/eden";
 const env = getExtensionEnv();
 
 //@ts-expect-error - Elysia version mismatch between @elysiajs/eden and @bandwidth-saver/proxy dependencies
-export const clientProxy = treaty<ElysiaApp>(
+export const CLIENT_PROXY = treaty<ElysiaApp>(
 	`https://${env.VITE_SERVER_HOST}:${env.VITE_SERVER_PORT}`,
 );
