@@ -6,10 +6,6 @@ export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
 
 export const ImageCompressionPayloadSchema = v.object({
 	format: v.optional(ImageFormatSchema, "auto"),
-	/** What to do if the compression fails
-	 *
-	 * May be ignored by an implementation*/
-	onFail: v.optional(v.picklist(["useOriginal"])),
 	/** If false, animated webp and gif assets will be reduced to their first frame.
 	 *
 	 * May be ignored by an implementation
