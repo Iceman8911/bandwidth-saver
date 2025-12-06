@@ -19,8 +19,10 @@ const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
 /** Doesn't match urls with query strings in simple mode, since, due to `declarativeNetRequest` limitatons, we cannot properly encode the original url's query string. Those urls would have caching anyway
  *
+ * Doesn't match cloudinary optimized urls.
  */
-const IMAGE_URL_REGEX = "^https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)$";
+const IMAGE_URL_REGEX =
+	"^(?!.*cloudinary\\.com)https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)$";
 
 type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 
