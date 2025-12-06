@@ -91,6 +91,7 @@ function getGlobalCompressionRules(
 							redirect: {
 								regexSubstitution: urlConstructor({
 									format,
+									onFail: "useOriginal",
 									preserveAnim,
 									quality,
 									url: "\\0" as UrlSchema,

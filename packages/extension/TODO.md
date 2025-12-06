@@ -15,6 +15,8 @@
   - [x] Gifs
   - [ ] Videos
   - [ ] Audios
+  - [x] Fix ORB / CORB errors on sites like Reddit and discord.
+    - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.
 - [ ] Prevent autoplay
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
