@@ -17,6 +17,7 @@
   - [ ] Audios
   - [x] Fix ORB / CORB errors on sites like Reddit and discord.
     - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.
+  - [ ] Exempt request domains with `**res.cloudinary.com**` and urls with query strings since they may have optimization built in that we may affect.
 - [ ] Prevent autoplay
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
@@ -26,11 +27,17 @@
 
 # Statistics
 
-- [ ] Split data usage into categories; image, audio, font, video, script.
-- [ ] Requests made to cross-origin sources by a page need to be aggregated and related somehow...
+- [x] Split data usage into categories; image, audio, font, video, script.
+- [x] Requests made to cross-origin sources by a page need to be aggregated and related somehow...
 - [ ] Monitor unbounded growth by occasionally archiving statistics (making them less specific about their cross origin hosts or asset type).
   - [ ] Also consider lightweight gzip compression with native apis.
 - [ ] Use big ints over numbers.
+- [ ] Add specific statistics like "dataUsed" per tab session (refreshed whenever the tab is reloaded / navigated away and to)
+  - [ ] Maybe some other time ranges would be nice, like daily, weekly, monthly, etc.
+
+# Monitoring
+
+- [ ] Add websocket statistics
 
 # Optimization
 
