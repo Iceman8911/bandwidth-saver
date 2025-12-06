@@ -24,6 +24,7 @@ export const PerformanceResourceTimingIntiatorTypeSchema = v.picklist([
 	"video",
 	"xmlhttprequest",
 	"other",
+	"use",
 ]);
 export type PerformanceResourceTimingIntiatorTypeSchema = v.InferOutput<
 	typeof PerformanceResourceTimingIntiatorTypeSchema
