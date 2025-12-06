@@ -26,7 +26,12 @@ const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
 
 const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_FLAG}` as UrlSchema;
 
-const WHITELISTED_REQUEST_DOMAINS = ["cloudinary.com"] as const;
+const WHITELISTED_REQUEST_DOMAINS = [
+	"cloudinary.com",
+	"reddit.com",
+	"preview.redd.it",
+	"styles.redditmedia.com",
+] as const;
 
 /** These rules are basically to prevent useless redirects / redirect looping */
 function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {
