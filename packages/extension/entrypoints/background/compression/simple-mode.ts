@@ -17,8 +17,10 @@ import {
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX =
-	"^https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)(\\?.*)?$";
+/** Doesn't match urls with query strings in simple mode, since, due to `declarativeNetRequest` limitatons, we cannot properly encode the original url's query string. Those urls would have caching anyway
+ *
+ */
+const IMAGE_URL_REGEX = "^https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)$";
 
 type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 

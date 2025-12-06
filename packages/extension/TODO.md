@@ -16,7 +16,8 @@
   - [ ] Videos
   - [ ] Audios
   - [x] Fix ORB / CORB errors on sites like Reddit and discord.
-    - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.
+    - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. ~~So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.~~
+      - Due to the way the code works, this will result in endless redirects since the compressor returns the original url which the code picks up and redirects again >~<. Our best bet is to simply ignore urls with query strings entirely.
   - [ ] Exempt request domains with `**res.cloudinary.com**` and urls with query strings since they may have optimization built in that we may affect.
 - [ ] Prevent autoplay
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
