@@ -17,12 +17,12 @@ import {
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-/** Doesn't match urls with query strings in simple mode, since, due to `declarativeNetRequest` limitatons, we cannot properly encode the original url's query string. Those urls would have caching anyway
+/** Captures the image url (where possible) without the query string. If it can't, just defaults to the original string since they should have auto-optimization already
  *
  * Doesn't match cloudinary optimized urls.
  */
 const IMAGE_URL_REGEX =
-	"^(?!.*cloudinary\\.com)https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif)$";
+	"^(?!.*cloudinary\\.com)(https?://.+\\.(?:png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
 
 type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 
@@ -97,7 +97,7 @@ function getGlobalCompressionRules(
 									format,
 									preserveAnim,
 									quality,
-									url: "\\0" as UrlSchema,
+									url: "\\1" as UrlSchema,
 								}),
 							},
 							type: "redirect",
@@ -145,7 +145,7 @@ async function getSiteCompressionRules(
 						format,
 						preserveAnim,
 						quality,
-						url: "\\0" as UrlSchema,
+						url: "\\1" as UrlSchema,
 					}),
 				},
 				type: "redirect",
