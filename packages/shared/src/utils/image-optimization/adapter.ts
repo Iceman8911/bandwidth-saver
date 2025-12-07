@@ -112,3 +112,16 @@ export async function getCompressedImageUrlWithFallback(
 
 	return v.parse(UrlSchema, `${payload.url}`);
 }
+
+export const customProxyUrlConstructor = (
+	payload: ImageCompressionPayloadSchema,
+	proxy: { host: string; port: `${number}` | number },
+): UrlSchema => {
+	const urlWithoutQueryString = `http://${proxy.host}:${proxy.port}/${ServerAPIEndpoint.COMPRESS_IMAGE}`;
+
+	const queryString = Object.entries(payload)
+		.map(([key, entry]) => `${key}=${entry}`)
+		.join("&");
+
+	return v.parse(UrlSchema, `${urlWithoutQueryString}?${queryString}`);
+};
