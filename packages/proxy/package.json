@@ -1,21 +1,22 @@
 {
-	"name": "@bandwidth-saver/proxy",
-	"version": "1.0.50",
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"module": "src/index.ts",
 	"dependencies": {
 		"@bandwidth-saver/shared": "workspace:*",
+		"dotenv": "^17.2.3",
 		"elysia": "latest",
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
 		"bun-types": "latest"
 	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"module": "src/index.ts",
+	"name": "@bandwidth-saver/proxy",
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"test": "echo \"Error: no test specified\" && exit 1"
-	}
+	},
+	"type": "module",
+	"version": "1.0.50"
 }
