@@ -1,10 +1,8 @@
 import type { ElysiaApp } from "@bandwidth-saver/proxy";
-import { getExtensionEnv } from "@bandwidth-saver/shared";
 import { treaty } from "@elysiajs/eden";
+import type { DEFAULT_PROXY_SETTINGS } from "@/models/storage";
 
-const env = getExtensionEnv();
-
-//@ts-expect-error - Elysia version mismatch between @elysiajs/eden and @bandwidth-saver/proxy dependencies
-export const CLIENT_PROXY = treaty<ElysiaApp>(
-	`https://${env.VITE_SERVER_HOST}:${env.VITE_SERVER_PORT}`,
-);
+export function getEdenClient({ host, port }: typeof DEFAULT_PROXY_SETTINGS) {
+	//@ts-expect-error - Elysia version mismatch between @elysiajs/eden and @bandwidth-saver/proxy dependencies
+	return treaty<ElysiaApp>(`http://${host}:${port}`);
+}
