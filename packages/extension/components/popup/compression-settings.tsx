@@ -1,4 +1,5 @@
 import {
+	deduplicateArrayElements,
 	ImageCompressorEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
@@ -108,7 +109,11 @@ function PreferredEndpointSelect(props: TempCompressionSettingsProps) {
 					)
 				}
 			>
-				<For each={Object.values(ImageCompressorEndpoint)}>
+				<For
+					each={deduplicateArrayElements(
+						Object.values(ImageCompressorEndpoint),
+					)}
+				>
 					{(endpoint) => (
 						<option
 							selected={props.store.preferredEndpoint === endpoint}
