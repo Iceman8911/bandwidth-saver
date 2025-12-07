@@ -9,3 +9,9 @@ export function getRandomElementInArray<TArrayElement>(
 ): TArrayElement | undefined {
 	return array[Math.floor(Math.random() * array.length)];
 }
+
+export function deduplicateArrayElements<TElement>(
+	array: ReadonlyArray<TElement>,
+): Array<TElement> {
+	return [...new Set(array)];
+}
