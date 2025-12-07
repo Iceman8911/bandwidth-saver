@@ -9,6 +9,7 @@ import {
 
 const DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = {
 	block: false,
+	bypassCsp: false,
 	compression: false,
 	proxy: false,
 	saveData: false,
@@ -16,6 +17,7 @@ const DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = {
 
 const DEFAULT_ENABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = {
 	block: true,
+	bypassCsp: false,
 	compression: true,
 	proxy: true,
 	saveData: true,

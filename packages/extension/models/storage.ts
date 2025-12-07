@@ -26,6 +26,12 @@ const GlobalSettingsSchema = v.object({
 	/** If  disabled, all blocking rules are effectively disabled */
 	block: v.boolean(),
 
+	/** Whether the csp headers should be removed.
+	 *
+	 * NOT ADVISED unless you know what you're doing.
+	 */
+	bypassCsp: v.boolean(),
+
 	/** If disabled, no compression at all is applied */
 	compression: v.boolean(),
 
@@ -173,6 +179,7 @@ export const DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = v.parse(
 	GlobalSettingsSchema,
 	{
 		block: true,
+		bypassCsp: false,
 		compression: true,
 		proxy: false,
 		saveData: true,

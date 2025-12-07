@@ -4,6 +4,7 @@ import { PopupBlockSettings } from "@/components/popup/block-settings";
 import { PopupCompressionSettings } from "@/components/popup/compression-settings";
 import { PopupFooter } from "@/components/popup/footer";
 import { PopupHeader } from "@/components/popup/header";
+import { PopupOtherSettings } from "@/components/popup/other-settings";
 import { PopupProxySettings } from "@/components/popup/proxy-settings";
 import { PopupStatistics } from "@/components/popup/statistics";
 import { PopupToggles } from "@/components/popup/toggle";
@@ -32,6 +33,12 @@ function PopupSettings() {
 			/>
 
 			<PopupProxySettings
+				name={accordionName}
+				scope={scope()}
+				tabUrl={activeTabUrl}
+			/>
+
+			<PopupOtherSettings
 				name={accordionName}
 				scope={scope()}
 				tabUrl={activeTabUrl}

@@ -92,6 +92,15 @@ export enum DeclarativeNetRequestRuleIds {
 
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,
+
+	/** CSP removal for sites that block external image sources
+	 *
+	 * I've only seen need of it for sites like discord, and ofc I'll warn the user of the dangers of enabling this
+	 *
+	 */
+	GLOBAL_BYPASS_CSP_BLOCKING,
+	SITE_BYPASS_CSP_BLOCKING_ADD,
+	SITE_BYPASS_CSP_BLOCKING_REMOVE,
 }
 
 export enum DeclarativeNetRequestPriority {
