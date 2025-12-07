@@ -8,6 +8,7 @@ import {
 	getSiteSpecificSettingsStorageItem,
 	globalSettingsStorageItem,
 } from "@/shared/storage";
+import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "./utils";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -50,52 +51,15 @@ function getGlobalCspRule(
 
 type SiteCspOption = { url: UrlSchema; enabled: boolean };
 
-async function mergeSiteOptions(
-	newOptions: ReadonlyArray<SiteCspOption>,
-): Promise<{ enabledDomains: string[]; disabledDomains: string[] }> {
-	const existingRules = await browser.declarativeNetRequest.getDynamicRules();
-
-	const oldEnabledSites = new Set<string>();
-	const oldDisabledSites = new Set<string>();
-
-	for (const rule of existingRules) {
-		if (rule.id === DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_ADD) {
-			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldEnabledSites.add(getHostnameForDeclarativeNetRequest(domain));
-			}
-		}
-		if (
-			rule.id === DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_REMOVE
-		) {
-			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldDisabledSites.add(getHostnameForDeclarativeNetRequest(domain));
-			}
-		}
-	}
-
-	for (const { url, enabled } of newOptions) {
-		const hostName = getHostnameForDeclarativeNetRequest(url);
-
-		if (enabled) {
-			oldEnabledSites.add(hostName);
-			oldDisabledSites.delete(hostName);
-		} else {
-			oldDisabledSites.add(hostName);
-			oldEnabledSites.delete(hostName);
-		}
-	}
-
-	return {
-		disabledDomains: Array.from(oldDisabledSites),
-		enabledDomains: Array.from(oldEnabledSites),
-	};
-}
-
 async function getSiteSpecificCspRule(
 	urlOptions: ReadonlyArray<SiteCspOption>,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const { enabledDomains, disabledDomains } =
-		await mergeSiteOptions(urlOptions);
+		await getEnabledAndDisabledDomainsFromNewAndOldSiteOptions(
+			urlOptions,
+			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_ADD,
+			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_REMOVE,
+		);
 
 	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 

@@ -9,52 +9,13 @@ import {
 	globalSettingsStorageItem,
 } from "@/shared/storage";
 import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
-import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
+import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "./utils";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
 
 type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
-
-async function mergeSiteOptions(
-	newOptions: ReadonlyArray<SiteSaveDataOption>,
-): Promise<{ enabledDomains: string[]; disabledDomains: string[] }> {
-	const existingRules = await browser.declarativeNetRequest.getDynamicRules();
-
-	const oldEnabledSites = new Set<string>();
-	const oldDisabledSites = new Set<string>();
-
-	for (const rule of existingRules) {
-		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD) {
-			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldEnabledSites.add(getHostnameForDeclarativeNetRequest(domain));
-			}
-		}
-		if (rule.id === DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE) {
-			for (const domain of rule.condition.initiatorDomains ?? []) {
-				oldDisabledSites.add(getHostnameForDeclarativeNetRequest(domain));
-			}
-		}
-	}
-
-	for (const { url, enabled } of newOptions) {
-		const hostName = getHostnameForDeclarativeNetRequest(url);
-
-		if (enabled) {
-			oldEnabledSites.add(hostName);
-			oldDisabledSites.delete(hostName);
-		} else {
-			oldDisabledSites.add(hostName);
-			oldEnabledSites.delete(hostName);
-		}
-	}
-
-	return {
-		disabledDomains: Array.from(oldDisabledSites),
-		enabledDomains: Array.from(oldEnabledSites),
-	};
-}
 
 function getGlobalSaveDataRules(
 	enabled: boolean,
@@ -89,7 +50,12 @@ function getGlobalSaveDataRules(
 async function getSiteSaveDataRules(
 	options: ReadonlyArray<SiteSaveDataOption>,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const { enabledDomains, disabledDomains } = await mergeSiteOptions(options);
+	const { enabledDomains, disabledDomains } =
+		await getEnabledAndDisabledDomainsFromNewAndOldSiteOptions(
+			options,
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
+			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
+		);
 
 	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
 
