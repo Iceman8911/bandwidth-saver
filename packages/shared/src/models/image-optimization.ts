@@ -6,7 +6,7 @@ export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
 
 export const ImageCompressionPayloadSchema = v.object({
 	/** An optional url to fallback to, or a number that tells the compressor endpoint what to do */
-	default: UrlSchema,
+	default: v.optional(UrlSchema),
 	format: v.optional(ImageFormatSchema, "auto"),
 	/** If false, animated webp and gif assets will be reduced to their first frame.
 	 *
