@@ -47,8 +47,13 @@ let {
 			if (
 				possibleUpdatedJson.version >
 				DEFAULT_COMPRESSION_WHITELISTED_DOMAINS.version
-			)
+			) {
 				WHITELISTED_REQUEST_DOMAINS = possibleUpdatedJson.domains;
+
+				for (const rule of createStaticRules()) {
+					declarativeNetRequestSafeUpdateDynamicRules(rule);
+				}
+			}
 		} catch {}
 	}, UPDATE_INTERVAL_IN_MS);
 
