@@ -10,8 +10,31 @@ import {
 	getSiteSpecificSettingsStorageItem,
 	globalSettingsStorageItem,
 } from "@/shared/storage";
+import { InformativeTooltip } from "../tooltip";
 
 const { SETTINGS_PROXY } = StorageKey;
+
+function CspBypassTooltip() {
+	return (
+		<InformativeTooltip
+			dir="right"
+			tip={
+				<div class="max-w-44 space-y-2 text-error text-xs">
+					<p>
+						This <strong>WILL</strong> weaken the site's security and make it
+						more susceptible to XSS attacks.
+					</p>
+
+					<p>
+						{" "}
+						Do <strong>NOT</strong> enable this unless you know what you're
+						doing.
+					</p>
+				</div>
+			}
+		/>
+	);
+}
 
 export function PopupOtherSettings(props: {
 	scope: SettingsScope;
@@ -64,9 +87,12 @@ export function PopupOtherSettings(props: {
 			<div class="collapse-content text-sm">
 				<form class="grid grid-cols-2 gap-4" onSubmit={handleUpdateSettings}>
 					{/* CSP Bypass Toggle */}
-					{/* TODO: Put a big o'l warning here */}
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Bypass CSP</legend>
+						<legend class="fieldset-legend">
+							<span>Bypass CSP</span>
+
+							<CspBypassTooltip />
+						</legend>
 						<input
 							checked={tempSettings.bypassCsp}
 							class="toggle toggle-error"
