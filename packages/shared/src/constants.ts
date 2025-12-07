@@ -9,3 +9,7 @@ export enum ImageCompressorEndpoint {
 	DEFAULT = WSRV_NL,
 }
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
+
+export enum ServerAPIEndpoint {
+	COMPRESS_IMAGE = "compress-image",
+}

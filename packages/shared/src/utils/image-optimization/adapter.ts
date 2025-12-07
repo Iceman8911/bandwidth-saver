@@ -1,4 +1,7 @@
-import { ImageCompressorEndpoint } from "@bandwidth-saver/shared";
+import {
+	ImageCompressorEndpoint,
+	ServerAPIEndpoint,
+} from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import type {
 	ImageCompressionAdapter,
