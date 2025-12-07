@@ -1,3 +1,4 @@
+import { compressionModeProxyToggleWatcher } from "./compression/proxy";
 import { compressionModeSimpleToggleWatcher } from "./compression/simple-mode";
 import { cspBypassToggleWatcher } from "./csp-workaround";
 import { saveDataToggleWatcher } from "./save-data";
@@ -10,5 +11,6 @@ export default defineBackground(() => {
 
 	saveDataToggleWatcher();
 	compressionModeSimpleToggleWatcher();
+	compressionModeProxyToggleWatcher();
 	cspBypassToggleWatcher();
 });
