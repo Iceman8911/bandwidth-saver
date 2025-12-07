@@ -147,10 +147,7 @@ export function PopupProxySettings(props: {
 						/>
 					</fieldset>
 
-					<BaseButton
-						class="btn-primary btn-sm place-self-center"
-						type="submit"
-					>
+					<BaseButton class="btn-primary btn-sm self-center" type="submit">
 						Save Changes
 					</BaseButton>
 				</form>
