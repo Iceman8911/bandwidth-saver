@@ -3,14 +3,14 @@
 		"declaration": true,
 		"declarationMap": true,
 		"isolatedModules": true,
-		"lib": ["ES2022", "DOM", "WebWorker"],
-		"module": "ES2022",
+		"lib": ["ESNext", "DOM", "WebWorker"],
+		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"noImplicitOverride": true,
 		"noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true,
 		"strict": true,
-		"target": "ES2022"
+		"target": "ESNext"
 	},
 	"include": ["src"]
 }
