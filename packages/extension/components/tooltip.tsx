@@ -7,7 +7,7 @@ const TOOLTIP_DIRECTION_MAPPING = {
 	top: "tooltip-top",
 } as const;
 
-export function Tooltip(props: {
+type BaseTooltipProps = {
 	/** The content to display in the tooltip */
 	tip: JSXElement;
 	/** What the tooltip will wrap around */
@@ -17,7 +17,9 @@ export function Tooltip(props: {
 	 * @default "top"
 	 */
 	dir?: keyof typeof TOOLTIP_DIRECTION_MAPPING;
-}) {
+};
+
+export function BaseTooltip(props: BaseTooltipProps) {
 	return (
 		<div class={`tooltip ${TOOLTIP_DIRECTION_MAPPING[props.dir ?? "top"]}`}>
 			<div class="tooltip-content">{props.tip}</div>
@@ -25,4 +27,8 @@ export function Tooltip(props: {
 			{props.children}
 		</div>
 	);
+}
+
+export function InformativeTooltip(props: Omit<BaseTooltipProps, "children">) {
+	return <BaseTooltip {...props}>ⓘ</BaseTooltip>;
 }
