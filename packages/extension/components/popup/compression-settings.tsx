@@ -18,6 +18,7 @@ import {
 	getSiteSpecificSettingsStorageItem,
 	globalSettingsStorageItem,
 } from "@/shared/storage";
+import { InformativeTooltip } from "../tooltip";
 
 const COMPRESSION_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_COMPRESSION];
 type COMPRESSION_SCHEMA = v.InferOutput<typeof COMPRESSION_SCHEMA>;
@@ -59,10 +60,60 @@ function CompressionFormatSelect(props: TempCompressionSettingsProps) {
 	);
 }
 
+function CompressionModeTooltip(props: { mode: CompressionMode }) {
+	return (
+		<Switch>
+			<Match when={props.mode === CompressionMode.MONKEY_PATCH}>
+				<p>
+					Brittle attempt at patching Javascript and DOM globals so the relevant
+					requests are compressed.
+				</p>
+
+				<em>May likely not work well.</em>
+			</Match>
+
+			<Match when={props.mode === CompressionMode.PROXY}>
+				<p>Redirects all relevant requests to the given remote proxy.</p>
+
+				<em> Free from all limitations by MV3 but requires a server.</em>
+			</Match>
+
+			<Match when={props.mode === CompressionMode.SIMPLE}>
+				<p>Simple MV3 way of compressing images with DNR.</p>
+
+				<em>
+					Due to limitations in MV3, some images might be broken, and need to
+					have their request domains whitelisted.
+				</em>
+			</Match>
+
+			<Match when={props.mode === CompressionMode.WEB_REQUEST}>
+				<p>
+					(TODO) Only available in MV2, but is otherwise free from limitations
+					that would require a server for feature parity.
+				</p>
+
+				<em>May affect loading speed.</em>
+			</Match>
+		</Switch>
+	);
+}
+
 function CompressionModeSelect(props: TempCompressionSettingsProps) {
 	return (
 		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Compression Mode</legend>
+			<legend class="fieldset-legend">
+				<span>Compression Mode</span>
+
+				<InformativeTooltip
+					dir="left"
+					tip={
+						<div class="w-3xs space-y-2 text-xs">
+							<CompressionModeTooltip mode={props.store.mode} />
+						</div>
+					}
+				/>
+			</legend>
 			<select
 				class="select"
 				onInput={(e) =>
