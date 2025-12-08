@@ -12,7 +12,10 @@ export const ImageCompressionPayloadSchema = v.object({
 	 *
 	 * May be ignored by an implementation
 	 */
-	preserveAnim: v.boolean(),
+	preserveAnim: v.pipe(
+		v.string(),
+		v.transform((input) => Boolean(input)),
+	),
 	quality: v.pipe(
 		v.string(),
 		v.transform(Number),
