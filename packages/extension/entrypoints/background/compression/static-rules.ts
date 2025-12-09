@@ -72,7 +72,7 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
-					priority: DeclarativeNetRequestPriority.MID,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
 				},
 			],
 			removeRuleIds: [DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS],
@@ -89,7 +89,7 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						regexFilter: ".*\\.ico$",
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
-					priority: DeclarativeNetRequestPriority.MID,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
 				},
 			],
 			removeRuleIds: [
