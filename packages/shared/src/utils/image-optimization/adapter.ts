@@ -9,7 +9,7 @@ import type {
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
 import { UrlSchema } from "../../models/shared";
-import { checkIfUrlReturnsValidResponse } from "../fetch";
+import { checkIfUrlReturnsValidImage } from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
@@ -77,7 +77,7 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 ) => {
 	const newUrl = urlConstructor(payload);
 
-	const isValid = await checkIfUrlReturnsValidResponse(newUrl);
+	const isValid = await checkIfUrlReturnsValidImage(newUrl);
 	if (!isValid) return null;
 
 	return v.parse(UrlSchema, newUrl);
