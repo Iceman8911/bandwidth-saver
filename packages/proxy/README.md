@@ -1,15 +1,7 @@
-# Elysia with Bun runtime
+# Bandwidth Saver Proxy
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
-```bash
-bun create elysia ./elysia-example
-```
+## How it works
 
-## Development
-To start the development server run:
-```bash
-bun run dev
-```
+### Compression
 
-Open http://localhost:3000/ with your browser to see the result.
+It checks if any external compressor endpoints return valid image data and redirects to them if true, otherwise, it fetches the uncompressed image from the given url and uses the `sharp` library to dynamically compress it and return it.

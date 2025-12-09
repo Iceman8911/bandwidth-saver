@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 const SharedEnvSchema = v.object({
 	VITE_SERVER_HOST: v.optional(v.pipe(v.string()), "localhost"),
-	VITE_SERVER_PORT: v.optional(v.pipe(v.string(), v.transform(Number)), "3000"),
+	VITE_SERVER_PORT: v.optional(v.pipe(v.string(), v.transform(Number)), "8080"),
 });
 
 /**
