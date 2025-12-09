@@ -13,3 +13,7 @@ export enum ImageCompressorEndpoint {
 export enum ServerAPIEndpoint {
 	COMPRESS_IMAGE = "compress-image",
 }
+
+/** Any urls with this query param will not be redirected by the extension */
+export const REDIRECTED_SEARCH_PARAM_FLAG =
+	"bandwidth-saver-flag-8911=no-redirect";

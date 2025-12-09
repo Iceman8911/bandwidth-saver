@@ -1,5 +1,6 @@
 import {
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
+	REDIRECTED_SEARCH_PARAM_FLAG,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
@@ -22,14 +23,12 @@ import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "../utils";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-const REDIRECTED_FLAG = "bandwidth-saver-flag-8911=no-redirect";
-
 const IMAGE_URL_REGEX =
 	"(https?://.+\\.(png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
 
 const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
 
-const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_FLAG}` as UrlSchema;
+const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
 
 let {
 	domains: WHITELISTED_REQUEST_DOMAINS,
@@ -87,7 +86,7 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 				{
 					action: { type: "allow" },
 					condition: {
-						regexFilter: REDIRECTED_FLAG,
+						regexFilter: REDIRECTED_SEARCH_PARAM_FLAG,
 						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
