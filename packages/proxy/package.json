@@ -3,6 +3,7 @@
 		"@bandwidth-saver/shared": "workspace:*",
 		"dotenv": "^17.2.3",
 		"elysia": "latest",
+		"sharp": "^0.34.5",
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
