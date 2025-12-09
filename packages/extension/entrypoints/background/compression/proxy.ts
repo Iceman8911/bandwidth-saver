@@ -149,7 +149,7 @@ async function getSiteProxyRules(
 }
 
 async function toggleProxyCompressionOnStartup() {
-	const [{ compression, proxy }, globalCompressionSettings, proxySettings] =
+	const [{ compression }, globalCompressionSettings, proxySettings] =
 		await Promise.all([
 			globalSettingsStorageItem.getValue(),
 			compressionSettingsStorageItem.getValue(),
@@ -162,11 +162,8 @@ async function toggleProxyCompressionOnStartup() {
 		siteCompressionOptionPromises.push(
 			getSiteSpecificSettingsStorageItem(url)
 				.getValue()
-				.then(({ proxy, compression }) => ({
-					enabled:
-						proxy &&
-						compression &&
-						globalCompressionSettings.mode === PROXY_MODE,
+				.then(({ compression }) => ({
+					enabled: compression && globalCompressionSettings.mode === PROXY_MODE,
 					url,
 				})),
 		);
@@ -175,7 +172,7 @@ async function toggleProxyCompressionOnStartup() {
 	await Promise.all([
 		declarativeNetRequestSafeUpdateDynamicRules(
 			getGlobalProxyRules(
-				compression && proxy,
+				compression,
 				globalCompressionSettings,
 				proxySettings,
 			),
@@ -211,8 +208,8 @@ export async function compressionModeProxyToggleWatcher() {
 		}
 	}
 
-	globalSettingsStorageItem.watch(({ proxy, compression }) => {
-		globallyEnabled = proxy && compression;
+	globalSettingsStorageItem.watch(({ compression }) => {
+		globallyEnabled = compression;
 
 		updateGlobalCompressionRules(
 			globallyEnabled,
@@ -245,7 +242,7 @@ export async function compressionModeProxyToggleWatcher() {
 		const options = changes.reduce<SiteCompressionOption[]>(
 			(options, { change: { newValue }, url }) => {
 				options.push({
-					enabled: (newValue?.proxy && newValue?.compression) ?? false,
+					enabled: newValue?.compression ?? false,
 					url: url,
 				});
 

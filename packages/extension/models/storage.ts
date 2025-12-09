@@ -35,9 +35,6 @@ const GlobalSettingsSchema = v.object({
 	/** If disabled, no compression at all is applied */
 	compression: v.boolean(),
 
-	/** If diabled, any setting requiring proxies fail */
-	proxy: v.boolean(),
-
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 });
@@ -181,7 +178,6 @@ export const DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = v.parse(
 		block: true,
 		bypassCsp: false,
 		compression: true,
-		proxy: false,
 		saveData: true,
 	} as const satisfies v.InferOutput<typeof GlobalSettingsSchema>,
 );

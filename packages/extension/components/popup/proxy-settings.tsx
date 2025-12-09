@@ -1,19 +1,13 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
-import { createMemo } from "solid-js";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
 import {
-	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
 	DEFAULT_PROXY_SETTINGS,
 	STORAGE_DEFAULTS,
 	STORAGE_SCHEMA,
 } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
-import {
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
-	proxySettingsStorageItem,
-} from "@/shared/storage";
+import { proxySettingsStorageItem } from "@/shared/storage";
 
 const { SETTINGS_PROXY } = StorageKey;
 
@@ -23,25 +17,6 @@ export function PopupProxySettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteSpecificSettingsStorageItem = () =>
-		getSiteSpecificSettingsStorageItem(props.tabUrl);
-
-	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificSettingsStorageItem(),
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	);
-
-	const globalProxySettingsSignal = convertStorageItemToReadonlySignal(
-		globalSettingsStorageItem,
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	);
-
-	const proxyToggle = createMemo(() =>
-		props.scope === "global"
-			? globalProxySettingsSignal().proxy
-			: siteSpecificSettingsSignal().proxy,
-	);
-
 	const proxySettings = convertStorageItemToReadonlySignal(
 		proxySettingsStorageItem,
 		DEFAULT_PROXY_SETTINGS,
@@ -63,18 +38,6 @@ export function PopupProxySettings(props: {
 		);
 
 		proxySettingsStorageItem.setValue(parsedProxySettings);
-	};
-
-	const handleUpdateProxyEnabledOrDisabled = (enabled: boolean) => {
-		props.scope === "global"
-			? globalSettingsStorageItem.setValue({
-					...globalProxySettingsSignal(),
-					proxy: enabled,
-				})
-			: getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
-					...siteSpecificSettingsSignal(),
-					proxy: enabled,
-				});
 	};
 
 	// Whenever the scope is changed, refresh the displayed proxy settings
@@ -99,21 +62,7 @@ export function PopupProxySettings(props: {
 			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
 			name={props.name}
 		>
-			<summary class="collapse-title flex justify-between font-semibold">
-				<span>Proxy Settings</span>
-
-				<label class="flex gap-2">
-					<span class="label">Enabled?</span>
-					<input
-						checked={proxyToggle()}
-						class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
-						onInput={(e) =>
-							handleUpdateProxyEnabledOrDisabled(e.target.checked)
-						}
-						type="checkbox"
-					/>
-				</label>
-			</summary>
+			<summary class="collapse-title font-semibold">Proxy Settings</summary>
 			<div class="collapse-content text-sm">
 				<form
 					class="grid grid-cols-2 gap-4"
