@@ -1,4 +1,7 @@
-import { REDIRECTED_SEARCH_PARAM_FLAG } from "@bandwidth-saver/shared";
+import {
+	ImageCompressorEndpoint,
+	REDIRECTED_SEARCH_PARAM_FLAG,
+} from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import DEFAULT_COMPRESSION_WHITELISTED_DOMAINS from "@/data/compression-whilelisted-domains.json";
 import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
@@ -91,6 +94,28 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 			],
 			removeRuleIds: [
 				DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
+			],
+		},
+
+		// Don't bother compressing already compressed requests
+		{
+			addRules: [
+				{
+					action: {
+						type: "allow",
+					},
+					condition: {
+						requestDomains: Object.values(ImageCompressorEndpoint).map(
+							(endpoint) => new URL(endpoint).host,
+						),
+						urlFilter: "*",
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
 			],
 		},
 	];
