@@ -21,7 +21,15 @@ export const ImageCompressionPayloadSchema = v.object({
 		v.transform(Number),
 		NumberBetween1and100Inclusively,
 	),
-	url: UrlSchema,
+	url: v.union([
+		UrlSchema,
+		// For some reason, some image urls with commas get split into an array, so this normalizes them
+		v.pipe(
+			v.array(v.string()),
+			v.transform((arr) => arr.join(",")),
+			UrlSchema,
+		),
+	]),
 });
 export type ImageCompressionPayloadSchema = v.InferOutput<
 	typeof ImageCompressionPayloadSchema
