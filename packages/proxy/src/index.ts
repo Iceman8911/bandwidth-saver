@@ -6,6 +6,7 @@ import {
 	ServerAPIEndpoint,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
+import { compressImage } from "./compression";
 
 const env = getProxyEnv();
 
@@ -16,7 +17,7 @@ const app = new Elysia()
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
-		async ({ query, redirect }) => {
+		async ({ query, redirect, set }) => {
 			const redirectedUrl = await getCompressedImageUrlWithFallback(query);
 
 			if (redirectedUrl !== query.url) {
@@ -27,9 +28,21 @@ const app = new Elysia()
 					REDIRECTED_SEARCH_PARAM_VALUE,
 				);
 
-				return redirect(String(redirectedUrlObject));
+				return redirect(`${redirectedUrlObject}`);
 			} else {
-				// custom compression
+				// Compress the image ourselves
+				const response = await fetch(redirectedUrl);
+
+				const imgBuffer = await response.arrayBuffer();
+
+				const [compressedImgBuffer, contentType] = await compressImage(
+					imgBuffer,
+					query,
+				);
+
+				set.headers["content-type"] = contentType;
+
+				return compressedImgBuffer;
 			}
 		},
 		{

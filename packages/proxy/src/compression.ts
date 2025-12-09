@@ -4,11 +4,12 @@ import sharp from "sharp";
 export async function compressImage(
 	imageBuffer: ArrayBuffer,
 	{ format, preserveAnim, quality }: ImageCompressionPayloadSchema,
-): Promise<Uint8Array> {
+): Promise<[Uint8Array, `image/${typeof formatToUse}`]> {
 	const formatToUse =
 		format === "auto" ? "avif" : format === "jpg" ? "jpeg" : format;
 
 	return sharp(imageBuffer, { animated: preserveAnim })
 		[formatToUse]({ quality })
-		.toBuffer();
+		.toBuffer()
+		.then((buffer) => [buffer, `image/${formatToUse}`]);
 }
