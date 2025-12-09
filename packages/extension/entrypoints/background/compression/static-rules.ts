@@ -74,6 +74,25 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 			],
 			removeRuleIds: [DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS],
 		},
+
+		// Don't process favicons
+		{
+			addRules: [
+				{
+					action: {
+						type: "allow",
+					},
+					condition: {
+						regexFilter: ".*\\.ico$",
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.MID,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
+			],
+		},
 	];
 }
 

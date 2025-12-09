@@ -92,6 +92,7 @@ export enum DeclarativeNetRequestRuleIds {
 
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,
+	EXEMPT_FAVICONS_FROM_COMPRESSION,
 
 	/** CSP removal for sites that block external image sources
 	 *
