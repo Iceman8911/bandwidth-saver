@@ -3,15 +3,11 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import * as v from "valibot";
-import DEFAULT_COMPRESSION_WHITELISTED_DOMAINS from "@/data/compression-whilelisted-domains.json";
-import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
 import type { DEFAULT_COMPRESSION_SETTINGS } from "@/models/storage";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
-	UPDATE_INTERVAL_IN_MS,
 } from "@/shared/constants";
 import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
@@ -29,74 +25,6 @@ const IMAGE_URL_REGEX =
 const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
 
 const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
-
-let {
-	domains: WHITELISTED_REQUEST_DOMAINS,
-}: CompressionWhitelistedDomainSchema = (() => {
-	setInterval(async () => {
-		try {
-			const possibleUpdatedJson = v.parse(
-				CompressionWhitelistedDomainSchema,
-				await (
-					await fetch(
-						"https://raw.githubusercontent.com/iceman8911/bandwidth-saver/main/packages/extension/data/compression-whilelisted-domains.json",
-					)
-				).json(),
-			);
-
-			if (
-				possibleUpdatedJson.version >
-				DEFAULT_COMPRESSION_WHITELISTED_DOMAINS.version
-			) {
-				WHITELISTED_REQUEST_DOMAINS = possibleUpdatedJson.domains;
-
-				for (const rule of createStaticRules()) {
-					declarativeNetRequestSafeUpdateDynamicRules(rule);
-				}
-			}
-		} catch {}
-	}, UPDATE_INTERVAL_IN_MS);
-
-	return DEFAULT_COMPRESSION_WHITELISTED_DOMAINS;
-})();
-
-/** These rules are basically to prevent useless redirects / redirect looping */
-function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {
-	return [
-		{
-			addRules: [
-				{
-					action: { type: "allow" },
-					condition: {
-						requestDomains: [...WHITELISTED_REQUEST_DOMAINS],
-						resourceTypes: ["image"],
-					},
-					id: DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
-					priority: DeclarativeNetRequestPriority.MID,
-				},
-			],
-			removeRuleIds: [
-				DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
-			],
-		},
-
-		// To prevent looping when the default image that failed to be compressed is returned
-		{
-			addRules: [
-				{
-					action: { type: "allow" },
-					condition: {
-						regexFilter: REDIRECTED_SEARCH_PARAM_FLAG,
-						resourceTypes: ["image"],
-					},
-					id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
-					priority: DeclarativeNetRequestPriority.MID,
-				},
-			],
-			removeRuleIds: [DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS],
-		},
-	];
-}
 
 type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
 
@@ -227,10 +155,6 @@ async function getSiteCompressionRules(
 }
 
 async function toggleCompressionOnStartup() {
-	for (const rule of createStaticRules()) {
-		declarativeNetRequestSafeUpdateDynamicRules(rule);
-	}
-
 	const [{ compression: globallyEnabled }, globalCompressionSettings] =
 		await Promise.all([
 			globalSettingsStorageItem.getValue(),
