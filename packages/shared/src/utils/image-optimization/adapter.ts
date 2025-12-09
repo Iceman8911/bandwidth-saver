@@ -77,8 +77,8 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 ) => {
 	const newUrl = urlConstructor(payload);
 
-	const isValid = await checkIfUrlReturnsValidImage(newUrl);
-	if (!isValid) return null;
+	const { success } = await checkIfUrlReturnsValidImage(newUrl);
+	if (!success) return null;
 
 	return v.parse(UrlSchema, newUrl);
 };
