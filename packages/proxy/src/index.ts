@@ -7,6 +7,7 @@ import {
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { compressImage } from "./compression";
+import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
 
 const env = getProxyEnv();
 
@@ -18,7 +19,11 @@ const app = new Elysia()
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
 		async ({ query, redirect, set }) => {
-			const redirectedUrl = await getCompressedImageUrlWithFallback(query);
+			// I'll make this cleaner later
+			const redirectedUrl = await getCompressedImageUrlWithFallback({
+				...query,
+				url: cleanlyExtractUrlFromImageCompressorPayload(query),
+			});
 
 			if (redirectedUrl !== query.url) {
 				const redirectedUrlObject = new URL(redirectedUrl);
@@ -27,22 +32,35 @@ const app = new Elysia()
 					REDIRECTED_SEARCH_PARAM_KEY,
 					REDIRECTED_SEARCH_PARAM_VALUE,
 				);
-
-				return redirect(`${redirectedUrlObject}`);
+				return redirect(decodeURIComponent(`${redirectedUrlObject}`));
 			} else {
-				// Compress the image ourselves
-				const response = await fetch(redirectedUrl);
+				try {
+					// Compress the image ourselves
+					const response = await fetch(redirectedUrl);
 
-				const imgBuffer = await response.arrayBuffer();
+					const imgBuffer = await response.arrayBuffer();
 
-				const [compressedImgBuffer, contentType] = await compressImage(
-					imgBuffer,
-					query,
-				);
+					const [compressedImgBuffer, contentType] = await compressImage(
+						imgBuffer,
+						query,
+					);
 
-				set.headers["content-type"] = contentType;
+					set.headers["content-type"] = contentType;
 
-				return compressedImgBuffer;
+					return compressedImgBuffer;
+				} catch (e) {
+					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
+
+					// Default to the original url
+					const redirectedUrlObject = new URL(query.url);
+
+					redirectedUrlObject.searchParams.append(
+						REDIRECTED_SEARCH_PARAM_KEY,
+						REDIRECTED_SEARCH_PARAM_VALUE,
+					);
+
+					return redirect(decodeURIComponent(`${redirectedUrlObject}`));
+				}
 			}
 		},
 		{
