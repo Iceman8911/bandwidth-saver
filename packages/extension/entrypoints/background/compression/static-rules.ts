@@ -10,7 +10,6 @@ import {
 	DeclarativeNetRequestRuleIds,
 	UPDATE_INTERVAL_IN_MS,
 } from "@/shared/constants";
-import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 
 let {
 	domains: WHITELISTED_REQUEST_DOMAINS,
@@ -33,7 +32,7 @@ let {
 				WHITELISTED_REQUEST_DOMAINS = possibleUpdatedJson.domains;
 
 				for (const rule of createStaticRules()) {
-					declarativeNetRequestSafeUpdateDynamicRules(rule);
+					browser.declarativeNetRequest.updateSessionRules(rule);
 				}
 			}
 		} catch {}
@@ -86,7 +85,8 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						type: "allow",
 					},
 					condition: {
-						regexFilter: ".*\\.ico$",
+						regexFilter: ".*\\.ico(?:[?#].*)?$",
+						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.HIGHEST,
@@ -105,10 +105,15 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						type: "allow",
 					},
 					condition: {
-						requestDomains: Object.values(ImageCompressorEndpoint).map(
-							(endpoint) => new URL(endpoint).host,
-						),
-						urlFilter: "*",
+						// Deduplicate domains since ImageCompressorEndpoint.DEFAULT equals WSRV_NL
+						requestDomains: [
+							...new Set(
+								Object.values(ImageCompressorEndpoint).map(
+									(endpoint) => new URL(endpoint).host,
+								),
+							),
+						],
+						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.HIGHEST,
@@ -123,6 +128,6 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 
 export function registerStaticRules() {
 	for (const rule of createStaticRules()) {
-		declarativeNetRequestSafeUpdateDynamicRules(rule);
+		browser.declarativeNetRequest.updateSessionRules(rule);
 	}
 }

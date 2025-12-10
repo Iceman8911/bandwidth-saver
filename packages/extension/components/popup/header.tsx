@@ -30,11 +30,11 @@ export function PopupHeader(props: HeaderProps) {
 				<span class="label">Scope</span>
 
 				<select onInput={handleScopeSelect}>
-					<option selected={isScopeSelected("domain")} value="domain">
-						Domain
+					<option selected={isScopeSelected("site")} value="site">
+						Site-Specific
 					</option>
-					<option selected={isScopeSelected("global")} value="global">
-						Global
+					<option selected={isScopeSelected("default")} value="default">
+						Default
 					</option>
 				</select>
 			</label>

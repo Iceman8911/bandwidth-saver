@@ -3,18 +3,18 @@ import { For, Index, Match, Switch } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
-import {
-	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	STORAGE_SCHEMA,
-} from "@/models/storage";
+import { DEFAULT_GENERAL_SETTINGS, STORAGE_SCHEMA } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
-	blockSettingsStorageItem,
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultBlockSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificBlockSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 
-const BLOCK_SETTING_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_BLOCK].item;
+const BLOCK_SETTING_SCHEMA =
+	STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_BLOCK].item;
 type BLOCK_SETTING_SCHEMA = v.InferOutput<typeof BLOCK_SETTING_SCHEMA>;
 
 const DEFAULT_BLOCK_SETTING = v.parse(BLOCK_SETTING_SCHEMA, {
@@ -316,64 +316,91 @@ export function PopupBlockSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteSpecificSettingsStorageItem = () =>
-		getSiteSpecificSettingsStorageItem(props.tabUrl);
+	const siteSpecificGeneralSettingsStorageItem = () =>
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
+	const siteSpecificBlockSettingsStorageItem = () =>
+		getSiteSpecificBlockSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificSettingsStorageItem(),
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
 	);
 
-	const globalBlockSettingsSignal = convertStorageItemToReadonlySignal(
-		blockSettingsStorageItem,
+	const siteSpecificBlockSettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificBlockSettingsStorageItem,
 		[DEFAULT_BLOCK_SETTING],
 	);
 
-	const globalToggleSettingsSignal = convertStorageItemToReadonlySignal(
-		globalSettingsStorageItem,
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const defaultBlockSettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultBlockSettingsStorageItem,
+		[DEFAULT_BLOCK_SETTING],
 	);
 
-	const toggleMode = () =>
-		props.scope === "global"
-			? globalToggleSettingsSignal().block
-			: siteSpecificSettingsSignal().block;
+	const defaultGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
+	);
+
+	const blockToggle = () =>
+		props.scope === "default"
+			? defaultGeneralSettingsSignal().block
+			: siteSpecificGeneralSettingsSignal().block;
+
+	const blockSettings = () =>
+		props.scope === "default"
+			? defaultBlockSettingsSignal()
+			: siteSpecificBlockSettingsSignal();
 
 	const handleToggleBlockSettings = (enabled: boolean) => {
-		if (props.scope === "global") {
-			globalSettingsStorageItem.setValue({
-				...globalToggleSettingsSignal(),
+		if (props.scope === "default") {
+			defaultGeneralSettingsStorageItem.setValue({
+				...defaultGeneralSettingsSignal(),
 				block: enabled,
 			});
 		} else {
-			siteSpecificSettingsStorageItem().setValue({
-				...siteSpecificSettingsSignal(),
+			siteSpecificGeneralSettingsStorageItem().setValue({
+				...siteSpecificGeneralSettingsSignal(),
 				block: enabled,
 			});
 		}
 	};
 
 	const handleAddNewBlockSetting = () => {
-		const newSettings = [...globalBlockSettingsSignal(), DEFAULT_BLOCK_SETTING];
+		const currentSettings = blockSettings();
+		const newSettings = [...currentSettings, DEFAULT_BLOCK_SETTING];
 
-		blockSettingsStorageItem.setValue(newSettings);
+		if (props.scope === "default") {
+			defaultBlockSettingsStorageItem.setValue(newSettings);
+		} else {
+			siteSpecificBlockSettingsStorageItem().setValue(newSettings);
+		}
 	};
 
 	const handleUpdateBlockSetting = (
 		idxToUpdate: number,
 		value: BLOCK_SETTING_SCHEMA,
 	) => {
-		const newSettings = globalBlockSettingsSignal().map((setting, idx) =>
+		const currentSettings = blockSettings();
+		const newSettings = currentSettings.map((setting, idx) =>
 			idx === idxToUpdate ? v.parse(BLOCK_SETTING_SCHEMA, value) : setting,
 		);
 
-		blockSettingsStorageItem.setValue(newSettings);
+		if (props.scope === "default") {
+			defaultBlockSettingsStorageItem.setValue(newSettings);
+		} else {
+			siteSpecificBlockSettingsStorageItem().setValue(newSettings);
+		}
 	};
 
 	const handleRemoveBlockSetting = (idxToRemove: number) => {
-		const newSettings = globalBlockSettingsSignal().toSpliced(idxToRemove);
+		const currentSettings = blockSettings();
+		const newSettings = currentSettings.toSpliced(idxToRemove, 1);
 
-		blockSettingsStorageItem.setValue(newSettings);
+		if (props.scope === "default") {
+			defaultBlockSettingsStorageItem.setValue(newSettings);
+		} else {
+			siteSpecificBlockSettingsStorageItem().setValue(newSettings);
+		}
 	};
 
 	return (
@@ -388,8 +415,8 @@ export function PopupBlockSettings(props: {
 					<span class="label">Enabled?</span>
 
 					<input
-						checked={toggleMode()}
-						class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
+						checked={blockToggle()}
+						class={`toggle toggle-sm ${props.scope === "default" ? "toggle-primary" : "toggle-secondary"}`}
 						onInput={(e) => handleToggleBlockSettings(e.target.checked)}
 						type="checkbox"
 					/>
@@ -405,7 +432,7 @@ export function PopupBlockSettings(props: {
 
 				<BlockSettingsList
 					removeSettings={handleRemoveBlockSetting}
-					settings={globalBlockSettingsSignal()}
+					settings={blockSettings()}
 					updateSettings={handleUpdateBlockSetting}
 				/>
 			</div>

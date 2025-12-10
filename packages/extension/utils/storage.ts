@@ -2,6 +2,7 @@ import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { type STORAGE_DEFAULTS, StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
+import { getSiteSpecificGeneralSettingsStorageItem } from "@/shared/storage";
 
 function removeStorageAreaIdentifier<TKey extends string>(
 	key: `${StorageAreaSchema}:${TKey}`,
@@ -10,7 +11,8 @@ function removeStorageAreaIdentifier<TKey extends string>(
 	return key.split(":")[1];
 }
 
-const { SITE_SPECIFIC_SETTINGS_PREFIX } = StorageKey;
+const { SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX: SITE_SPECIFIC_SETTINGS_PREFIX } =
+	StorageKey;
 
 const EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX = removeStorageAreaIdentifier(
 	SITE_SPECIFIC_SETTINGS_PREFIX,
@@ -102,4 +104,21 @@ export function watchChangesToSiteSpecificSettings(
 	onChanged.addListener(listener);
 
 	return () => onChanged.removeListener(listener);
+}
+
+export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
+	ReadonlyArray<string>
+> {
+	const urls = await getSiteUrlOriginsFromStorage();
+
+	const domains: string[] = [];
+
+	for (const url of urls) {
+		const { useDefaultRules } =
+			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
+
+		if (!useDefaultRules) domains.push(new URL(url).host);
+	}
+
+	return domains;
 }

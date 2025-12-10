@@ -1,14 +1,17 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
+	NOOP_RULE_CONDITION,
 } from "@/shared/constants";
-import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "./utils";
+import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
+import {
+	getSiteDomainsToNotApplyDefaultRule,
+	watchChangesToSiteSpecificSettings,
+} from "@/utils/storage";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -29,15 +32,27 @@ const RESOURCE_TYPES = [
 	"sub_frame",
 ] as const satisfies Browser.declarativeNetRequest.RuleCondition["resourceTypes"];
 
-function getGlobalCspRule(
-	enabled: boolean,
-): Browser.declarativeNetRequest.UpdateRuleOptions {
-	return {
+/**
+ * Applies both default and site-specific CSP bypass rules.
+ * This ensures excludedInitiatorDomains stays in sync when site settings change.
+ */
+async function applyAllCspRules(enabled: boolean): Promise<void> {
+	await applyDefaultCspRules(enabled);
+	await applySiteCspRules();
+}
+
+async function applyDefaultCspRules(enabled: boolean): Promise<void> {
+	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+
+	await browser.declarativeNetRequest.updateSessionRules({
 		addRules: enabled
 			? [
 					{
 						action: REMOVE_CSP_HEADER_RULES,
 						condition: {
+							excludedInitiatorDomains: excludedDomains.length
+								? excludedDomains
+								: undefined,
 							resourceTypes: RESOURCE_TYPES,
 						},
 						id: DeclarativeNetRequestRuleIds.GLOBAL_BYPASS_CSP_BLOCKING,
@@ -46,107 +61,54 @@ function getGlobalCspRule(
 				]
 			: undefined,
 		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_BYPASS_CSP_BLOCKING],
-	};
+	});
 }
 
-type SiteCspOption = { url: UrlSchema; enabled: boolean };
+async function applySiteCspRules() {
+	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
+		async (url) => {
+			const { bypassCsp } =
+				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-async function getSiteSpecificCspRule(
-	urlOptions: ReadonlyArray<SiteCspOption>,
-): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const { enabledDomains, disabledDomains } =
-		await getEnabledAndDisabledDomainsFromNewAndOldSiteOptions(
-			urlOptions,
-			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_ADD,
-			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_REMOVE,
-		);
-
-	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
-
-	if (enabledDomains.length) {
-		rulesToAdd.push({
-			action: REMOVE_CSP_HEADER_RULES,
-			condition: {
-				requestDomains: enabledDomains,
-				resourceTypes: RESOURCE_TYPES,
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_ADD,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	if (disabledDomains.length) {
-		rulesToAdd.push({
-			action: { type: "allow" },
-			condition: {
-				requestDomains: disabledDomains,
-				resourceTypes: RESOURCE_TYPES,
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_REMOVE,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	return {
-		addRules: rulesToAdd.length ? rulesToAdd : undefined,
-		removeRuleIds: [
-			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_ADD,
-			DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING_REMOVE,
-		],
-	};
+			return {
+				action: REMOVE_CSP_HEADER_RULES,
+				condition: {
+					resourceTypes: RESOURCE_TYPES,
+					...(bypassCsp ? {} : NOOP_RULE_CONDITION),
+				},
+				priority: DeclarativeNetRequestPriority.LOWEST,
+			};
+		},
+		DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
+		DeclarativeNetRequestRuleIds._$END_SITE_BYPASS_CSP_BLOCKING,
+	);
 }
 
 async function toggleCspBlockingOnStartup() {
-	const { bypassCsp: globallyEnabled } =
-		await globalSettingsStorageItem.getValue();
+	const { bypassCsp } = await defaultGeneralSettingsStorageItem.getValue();
 
-	const siteCompressionOptionPromises: Promise<SiteCspOption>[] = [];
+	const defaultCspRulePromise = applyDefaultCspRules(bypassCsp);
 
-	for (const url of await getSiteUrlOriginsFromStorage()) {
-		siteCompressionOptionPromises.push(
-			getSiteSpecificSettingsStorageItem(url)
-				.getValue()
-				.then(({ bypassCsp }) => ({
-					enabled: bypassCsp,
-					url,
-				})),
-		);
-	}
+	const siteCspOptionPromises = applySiteCspRules();
 
-	await Promise.all([
-		declarativeNetRequestSafeUpdateDynamicRules(
-			getGlobalCspRule(globallyEnabled),
-		),
-		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteSpecificCspRule(
-				await Promise.all(siteCompressionOptionPromises),
-			),
-		),
-	]);
+	await Promise.all([defaultCspRulePromise, siteCspOptionPromises]);
 }
 
 export async function cspBypassToggleWatcher() {
 	await toggleCspBlockingOnStartup();
 
-	globalSettingsStorageItem.watch(({ bypassCsp: isEnabled }) => {
-		declarativeNetRequestSafeUpdateDynamicRules(getGlobalCspRule(isEnabled));
+	// Cache enabled state for use in site settings change handler
+	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
+		.bypassCsp;
+
+	defaultGeneralSettingsStorageItem.watch(({ bypassCsp }) => {
+		cachedEnabled = bypassCsp;
+		applyDefaultCspRules(bypassCsp);
 	});
 
-	watchChangesToSiteSpecificSettings(async (changes) => {
-		const options = changes.reduce<SiteCspOption[]>(
-			(options, settingsChange) => {
-				options.push({
-					enabled: settingsChange.change.newValue?.bypassCsp ?? false,
-					url: settingsChange.url,
-				});
-
-				return options;
-			},
-			[],
-		);
-
-		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteSpecificCspRule(options),
-		);
+	// Reapply BOTH default and site rules when site settings change
+	// This fixes stale excludedInitiatorDomains when useDefaultRules changes
+	watchChangesToSiteSpecificSettings(async () => {
+		await applyAllCspRules(cachedEnabled);
 	});
 }

@@ -1,60 +1,33 @@
-import { type Accessor, createSignal, onCleanup } from "solid-js";
+import {
+	type Accessor,
+	createEffect,
+	createSignal,
+	on,
+	onCleanup,
+} from "solid-js";
 
-type AnyRecord = Record<string, any>;
+export function convertStorageItemToReactiveSignal<TValue>(
+	getStorageItem: Accessor<WxtStorageItem<TValue, Record<string, any>>>,
+	defaultValue: TValue,
+): Accessor<TValue> {
+	const [storageValue, setStorageValue] = createSignal<TValue>(defaultValue);
 
-export function convertStorageItemToReadonlySignal<
-	TStorageItem extends WxtStorageItem<any, AnyRecord>,
->(
-	storageItem: TStorageItem,
-	defaultValue?: undefined,
-): Accessor<
-	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-		? TStorageValue | undefined
-		: never
->;
-export function convertStorageItemToReadonlySignal<
-	TStorageItem extends WxtStorageItem<any, AnyRecord>,
->(
-	storageItem: TStorageItem,
-	defaultValue: TStorageItem extends WxtStorageItem<
-		infer TStorageValue,
-		AnyRecord
-	>
-		? TStorageValue
-		: never,
-): Accessor<
-	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-		? TStorageValue
-		: never
->;
-export function convertStorageItemToReadonlySignal<
-	TStorageItem extends WxtStorageItem<any, AnyRecord>,
->(
-	storageItem: TStorageItem,
-	defaultValue?: TStorageItem extends WxtStorageItem<
-		infer TStorageValue,
-		AnyRecord
-	>
-		? TStorageValue
-		: never,
-): Accessor<
-	TStorageItem extends WxtStorageItem<infer TStorageValue, AnyRecord>
-		? TStorageValue | undefined
-		: never
-> {
-	const [storageValue, setStorageValue] = createSignal(defaultValue);
+	createEffect(
+		on(getStorageItem, (storageItem) => {
+			// Get initial value when storage item changes
+			storageItem.getValue().then((val) => {
+				setStorageValue(() => val ?? defaultValue);
+			});
 
-	const cleanup = storage.watch(storageItem.key, (val) => {
-		//@ts-expect-error TS can't figure it out
-		setStorageValue(() => val);
-	});
+			// Watch for changes to this specific storage item
+			const cleanup = storage.watch(storageItem.key, (val) => {
+				//@ts-expect-error Unknown stuff
+				setStorageValue(() => val ?? defaultValue);
+			});
 
-	onCleanup(cleanup);
+			onCleanup(cleanup);
+		}),
+	);
 
-	storageItem.getValue().then((val) => {
-		setStorageValue(() => val);
-	});
-
-	//@ts-expect-error TS can't figure it out
-	return storageValue;
+	return storageValue as Accessor<TValue>;
 }

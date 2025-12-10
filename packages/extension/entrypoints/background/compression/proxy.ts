@@ -10,35 +10,52 @@ import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
+	NOOP_RULE_CONDITION,
 } from "@/shared/constants";
-import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
-	compressionSettingsStorageItem,
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
-	proxySettingsStorageItem,
+	defaultProxySettingsStorageItem,
+	getSiteSpecificCompressionSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
+	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
-import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "../utils";
+import {
+	getSiteDomainsToNotApplyDefaultRule,
+	getSiteUrlOriginsFromStorage,
+} from "@/utils/storage";
+
+const declarativeNetRequest = browser.declarativeNetRequest;
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX = ".*";
+const IMAGE_URL_REGEX =
+	"(https?://.+\\.(png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
 
-type SiteCompressionOption = { url: UrlSchema; enabled: boolean };
-
-function getGlobalProxyRules(
+/**
+ * Applies the default (global) proxy compression rule.
+ *
+ * This rule redirects image requests to the custom proxy server
+ * for all sites that don't have site-specific settings (useDefaultRules=true).
+ *
+ * @param enabled - Whether compression is globally enabled
+ * @param config - Current compression settings
+ * @param proxy - Current proxy settings
+ */
+export async function applyDefaultProxyCompressionRules(
 	enabled: boolean,
 	config: typeof DEFAULT_COMPRESSION_SETTINGS,
 	proxy: typeof DEFAULT_PROXY_SETTINGS,
-): Browser.declarativeNetRequest.UpdateRuleOptions {
+): Promise<void> {
 	const { format, preserveAnim, quality, mode } = config;
 
-	if (mode !== PROXY_MODE)
-		return {
+	// Only apply if PROXY mode is active
+	if (mode !== PROXY_MODE) {
+		await declarativeNetRequest.updateSessionRules({
 			removeRuleIds: [
 				DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
 			],
-		};
+		});
+		return;
+	}
 
 	const proxyUrl = customProxyUrlConstructor(
 		{
@@ -52,7 +69,10 @@ function getGlobalProxyRules(
 
 	const proxyDomain = proxy.host.replace(/^https?:\/\//, "");
 
-	return {
+	// Get domains that have custom settings (useDefaultRules=false)
+	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+
+	await declarativeNetRequest.updateSessionRules({
 		addRules: enabled
 			? [
 					{
@@ -63,211 +83,124 @@ function getGlobalProxyRules(
 							type: "redirect",
 						},
 						condition: {
-							excludedInitiatorDomains: [proxyDomain],
+							excludedInitiatorDomains: [
+								proxyDomain,
+								...(excludedDomains.length ? excludedDomains : []),
+							],
 							excludedRequestDomains: [proxyDomain],
 							regexFilter: IMAGE_URL_REGEX,
 							resourceTypes: ["image"],
 						},
-						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PATCH,
+						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				]
-			: [],
-		removeRuleIds: [
-			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
-			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PATCH,
-			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
-			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_MV2,
-		],
-	};
+			: undefined,
+		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY],
+	});
 }
 
-async function getSiteProxyRules(
-	config: Omit<typeof DEFAULT_COMPRESSION_SETTINGS, "mode">,
-	urlOptions: ReadonlyArray<SiteCompressionOption>,
-	proxy: typeof DEFAULT_PROXY_SETTINGS,
-): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const { format, preserveAnim, quality } = config;
+/**
+ * Applies site-specific proxy compression rules.
+ *
+ * These rules are applied to sites that have custom settings (useDefaultRules=false).
+ * Each site gets its own rule with its specific compression and proxy settings.
+ *
+ * Note: The unified compression manager in index.ts is responsible for clearing
+ * all site compression rule IDs before calling this function.
+ */
+export async function applySiteProxyCompressionRules(): Promise<void> {
+	const globalProxySettings = await defaultProxySettingsStorageItem.getValue();
+	const proxyDomain = globalProxySettings.host.replace(/^https?:\/\//, "");
 
-	const proxyUrl = customProxyUrlConstructor(
-		{
-			format_bwsvr8911: format,
-			preserveAnim_bwsvr8911: preserveAnim,
-			quality_bwsvr8911: quality,
-			url_bwsvr8911: "\\0" as UrlSchema,
-		},
-		proxy,
-	);
-
-	const proxyDomain = proxy.host.replace(/^https?:\/\//, "");
-
-	const { enabledDomains, disabledDomains } =
-		await getEnabledAndDisabledDomainsFromNewAndOldSiteOptions(
-			urlOptions,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_ADD,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_REMOVE,
-		);
+	const urls = await getSiteUrlOriginsFromStorage();
 
 	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
+	let ruleIncrementer = 0;
 
-	if (enabledDomains.length) {
-		rulesToAdd.push({
-			action: {
-				redirect: {
-					regexSubstitution: proxyUrl,
-				},
-				type: "redirect",
-			},
-			condition: {
-				excludedRequestDomains: [proxyDomain],
-				initiatorDomains: enabledDomains,
-				regexFilter: IMAGE_URL_REGEX,
-				resourceTypes: ["image"],
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_ADD,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	if (disabledDomains.length) {
-		rulesToAdd.push({
-			action: {
-				type: "allow",
-			},
-			condition: {
-				initiatorDomains: disabledDomains,
-				regexFilter: IMAGE_URL_REGEX,
-				resourceTypes: ["image"],
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_REMOVE,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	return {
-		addRules: rulesToAdd,
-		removeRuleIds: [
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE_ADD,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE_REMOVE,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PATCH_ADD,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PATCH_REMOVE,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_ADD,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY_REMOVE,
-			DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_MV2_REMOVE,
-		],
-	};
-}
-
-async function toggleProxyCompressionOnStartup() {
-	const [{ compression }, globalCompressionSettings, proxySettings] =
-		await Promise.all([
-			globalSettingsStorageItem.getValue(),
-			compressionSettingsStorageItem.getValue(),
-			proxySettingsStorageItem.getValue(),
+	for (const url of urls) {
+		const [
+			{ useDefaultRules, compression },
+			compressionSettings,
+			proxySettings,
+		] = await Promise.all([
+			getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
+			getSiteSpecificCompressionSettingsStorageItem(url).getValue(),
+			getSiteSpecificProxySettingsStorageItem(url).getValue(),
 		]);
 
-	const siteCompressionOptionPromises: Promise<SiteCompressionOption>[] = [];
+		// Only create rules for sites with custom settings
+		if (!useDefaultRules) {
+			const { format, preserveAnim, quality, mode } = compressionSettings;
 
-	for (const url of await getSiteUrlOriginsFromStorage()) {
-		siteCompressionOptionPromises.push(
-			getSiteSpecificSettingsStorageItem(url)
-				.getValue()
-				.then(({ compression }) => ({
-					enabled: compression && globalCompressionSettings.mode === PROXY_MODE,
-					url,
-				})),
-		);
-	}
+			// Check if this site should use PROXY mode and has compression enabled
+			const shouldApplyRule = compression && mode === PROXY_MODE;
 
-	await Promise.all([
-		declarativeNetRequestSafeUpdateDynamicRules(
-			getGlobalProxyRules(
-				compression,
-				globalCompressionSettings,
-				proxySettings,
-			),
-		),
-		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteProxyRules(
-				globalCompressionSettings,
-				await Promise.all(siteCompressionOptionPromises),
-				proxySettings,
-			),
-		),
-	]);
-}
+			if (shouldApplyRule) {
+				const proxyUrl = customProxyUrlConstructor(
+					{
+						format_bwsvr8911: format,
+						preserveAnim_bwsvr8911: preserveAnim,
+						quality_bwsvr8911: quality,
+						url_bwsvr8911: "\\0" as UrlSchema,
+					},
+					proxySettings,
+				);
 
-export async function compressionModeProxyToggleWatcher() {
-	await toggleProxyCompressionOnStartup();
+				const rule: Browser.declarativeNetRequest.Rule = {
+					action: {
+						redirect: {
+							regexSubstitution: proxyUrl,
+						},
+						type: "redirect",
+					},
+					condition: {
+						excludedRequestDomains: [proxyDomain],
+						initiatorDomains: [new URL(url).host],
+						regexFilter: IMAGE_URL_REGEX,
+						resourceTypes: ["image"],
+					},
+					id:
+						DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
+						ruleIncrementer,
+					priority: DeclarativeNetRequestPriority.LOWEST,
+				};
 
-	let globallyEnabled: boolean | undefined;
-	let globalCompressionSettings:
-		| typeof DEFAULT_COMPRESSION_SETTINGS
-		| undefined;
-	let globalProxySettings: typeof DEFAULT_PROXY_SETTINGS | undefined;
+				rulesToAdd.push(rule);
+			} else {
+				// Add NOOP rule for sites that have custom settings but don't use PROXY mode
+				// or have compression disabled
+				const rule: Browser.declarativeNetRequest.Rule = {
+					action: {
+						redirect: {
+							regexSubstitution: "\\0",
+						},
+						type: "redirect",
+					},
+					condition: {
+						...NOOP_RULE_CONDITION,
+						excludedRequestDomains: [proxyDomain],
+						initiatorDomains: [new URL(url).host],
+						regexFilter: IMAGE_URL_REGEX,
+						resourceTypes: ["image"],
+					},
+					id:
+						DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
+						ruleIncrementer,
+					priority: DeclarativeNetRequestPriority.LOWEST,
+				};
 
-	function updateGlobalCompressionRules(
-		enabled: boolean | undefined,
-		settings: typeof globalCompressionSettings,
-		proxy: typeof globalProxySettings,
-	) {
-		if (enabled != null && settings && proxy) {
-			declarativeNetRequestSafeUpdateDynamicRules(
-				getGlobalProxyRules(enabled, settings, proxy),
-			);
+				rulesToAdd.push(rule);
+			}
+
+			ruleIncrementer++;
 		}
 	}
 
-	globalSettingsStorageItem.watch(({ compression }) => {
-		globallyEnabled = compression;
-
-		updateGlobalCompressionRules(
-			globallyEnabled,
-			globalCompressionSettings,
-			globalProxySettings,
-		);
-	});
-
-	compressionSettingsStorageItem.watch((settings) => {
-		globalCompressionSettings = settings;
-
-		updateGlobalCompressionRules(
-			globallyEnabled,
-			globalCompressionSettings,
-			globalProxySettings,
-		);
-	});
-
-	proxySettingsStorageItem.watch((settings) => {
-		globalProxySettings = settings;
-
-		updateGlobalCompressionRules(
-			globallyEnabled,
-			globalCompressionSettings,
-			globalProxySettings,
-		);
-	});
-
-	watchChangesToSiteSpecificSettings(async (changes) => {
-		const options = changes.reduce<SiteCompressionOption[]>(
-			(options, { change: { newValue }, url }) => {
-				options.push({
-					enabled: newValue?.compression ?? false,
-					url: url,
-				});
-
-				return options;
-			},
-			[],
-		);
-
-		const [compressionSettings, proxySettings] = await Promise.all([
-			compressionSettingsStorageItem.getValue(),
-			proxySettingsStorageItem.getValue(),
-		]);
-
-		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteProxyRules(compressionSettings, options, proxySettings),
-		);
-	});
+	// Add all rules in a single batch for efficiency
+	if (rulesToAdd.length > 0) {
+		await declarativeNetRequest.updateSessionRules({
+			addRules: rulesToAdd,
+		});
+	}
 }

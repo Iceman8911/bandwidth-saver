@@ -7,6 +7,7 @@ import {
 	statisticsStorageItem,
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { DEFAULT_SITE_SPECIFIC_STATISTICS } from "../../models/storage";
 
 function convertBytesToMB(bytes: number): number {
@@ -20,20 +21,20 @@ export function PopupStatistics(props: {
 	const siteSpecificStatisticsStorageItem = () =>
 		getSiteSpecificStatisticsStorageItem(props.tabUrl);
 
-	const siteStatisticsStatisticsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificStatisticsStorageItem(),
+	const siteSpecificStatisticsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificStatisticsStorageItem,
 		DEFAULT_SITE_SPECIFIC_STATISTICS,
 	);
 
-	const globalStatistics = convertStorageItemToReadonlySignal(
-		statisticsStorageItem,
+	const defaultStatisticsSignal = convertStorageItemToReactiveSignal(
+		() => statisticsStorageItem,
 		DEFAULT_STATISTICS,
 	);
 
 	const statistics = createMemo(() =>
-		props.scope === "global"
-			? globalStatistics()
-			: siteStatisticsStatisticsSignal(),
+		props.scope === "default"
+			? defaultStatisticsSignal()
+			: siteSpecificStatisticsSignal(),
 	);
 
 	const bytesSaved = createMemo(() =>

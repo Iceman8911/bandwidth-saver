@@ -1,18 +1,17 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import type { SettingsScope } from "@/models/context";
-import {
-	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	STORAGE_DEFAULTS,
-} from "@/models/storage";
+import { DEFAULT_GENERAL_SETTINGS, STORAGE_DEFAULTS } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import {
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { InformativeTooltip } from "../tooltip";
 
-const { SETTINGS_PROXY } = StorageKey;
+const { DEFAULT_SETTINGS_PROXY: SETTINGS_PROXY } = StorageKey;
 
 function CspBypassTooltip() {
 	return (
@@ -43,21 +42,21 @@ export function PopupOtherSettings(props: {
 	name: string;
 }) {
 	const siteSpecificSettingsStorageItem = () =>
-		getSiteSpecificSettingsStorageItem(props.tabUrl);
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificSettingsStorageItem(),
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificSettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
 	);
 
-	const globalSettingsSignal = convertStorageItemToReadonlySignal(
-		globalSettingsStorageItem,
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const defaultSettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
 	);
 
 	const originalSettings = createMemo(() =>
-		props.scope === "global"
-			? globalSettingsSignal()
+		props.scope === "default"
+			? defaultSettingsSignal()
 			: siteSpecificSettingsSignal(),
 	);
 
@@ -65,15 +64,17 @@ export function PopupOtherSettings(props: {
 		originalSettings() ?? structuredClone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
 	);
 
-	// Sync external proxy changes
+	// Sync external changes
 	createEffect(on(originalSettings, (settings) => setTempSettings(settings)));
 
 	const handleUpdateSettings = (e: Event) => {
 		e.preventDefault();
 
-		props.scope === "global"
-			? globalSettingsStorageItem.setValue(tempSettings)
-			: getSiteSpecificSettingsStorageItem(props.tabUrl).setValue(tempSettings);
+		if (props.scope === "default") {
+			defaultGeneralSettingsStorageItem.setValue(tempSettings);
+		} else {
+			siteSpecificSettingsStorageItem().setValue(tempSettings);
+		}
 	};
 
 	return (

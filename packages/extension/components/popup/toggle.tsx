@@ -1,27 +1,30 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import { capitalizeString, type UrlSchema } from "@bandwidth-saver/shared";
+import { createAsync } from "@solidjs/router";
 import { type JSXElement, Show } from "solid-js";
 import type { SettingsScope } from "@/models/context";
-import { DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS } from "@/models/storage";
+import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import {
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { getSiteSpecificRuleAllocationUsage } from "@/utils/dnr-rules";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 
-const DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = {
+const DEFAULT_DISABLED_SETTINGS = {
 	block: false,
 	bypassCsp: false,
 	compression: false,
-	proxy: false,
 	saveData: false,
-} as const satisfies typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+	useDefaultRules: true,
+} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
 
-const DEFAULT_ENABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = {
+const DEFAULT_ENABLED_SETTINGS = {
 	block: true,
 	bypassCsp: false,
 	compression: true,
-	proxy: true,
 	saveData: true,
-} as const satisfies typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+	useDefaultRules: true,
+} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
 
 const doAllPropsMatchBoolean = (
 	obj: Record<string, boolean>,
@@ -34,10 +37,16 @@ const doAllPropsMatchBoolean = (
 	return true;
 };
 
-const globalSettingsStore = convertStorageItemToReadonlySignal(
-	globalSettingsStorageItem,
-	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-);
+function BaseContainer(props: { children: JSXElement; class?: string }) {
+	return (
+		// biome-ignore lint/a11y/noLabelWithoutControl: <The input will be inserted later>
+		<label
+			class={`grid w-1/2 grid-cols-[70%_1fr] items-center gap-2 space-x-2 ${props.class || ""}`}
+		>
+			{props.children}
+		</label>
+	);
+}
 
 type BaseToggleContainerProps = {
 	label: JSXElement;
@@ -48,7 +57,7 @@ type BaseToggleContainerProps = {
 
 function BaseToggleContainer(props: BaseToggleContainerProps) {
 	return (
-		<label class="grid w-1/2 grid-cols-[70%_1fr] items-center gap-2 space-x-2">
+		<BaseContainer>
 			<span class="label overflow-auto">{props.label}</span>
 
 			<input
@@ -57,18 +66,50 @@ function BaseToggleContainer(props: BaseToggleContainerProps) {
 				onInput={(e) => props.onInput(e.target.checked)}
 				type="checkbox"
 			/>
-		</label>
+		</BaseContainer>
 	);
 }
 
-function GlobalEnabledToggle(props: {
-	settings: typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+type BaseSelectContainerProps<TOption extends string> = {
+	label: JSXElement;
+	selected: TOption;
+	onInput: (val: TOption) => void;
+	class?: string;
+	options: TOption[];
+};
+
+function BaseSelectContainer<TOption extends string>(
+	props: BaseSelectContainerProps<TOption>,
+) {
+	return (
+		<BaseContainer
+			class={`grid-cols-[50%_1fr]! ${props.selected !== "site-specific" ? "w-full!" : ""}`}
+		>
+			<span class="label overflow-auto">{props.label}</span>
+
+			<select
+				class={`select ${props.class ?? ""}`}
+				//@ts-expect-error This will be right in practice
+				onInput={(e) => props.onInput(e.target.value)}
+			>
+				<Index each={props.options}>
+					{(option) => (
+						<option selected={props.selected === option()} value={option()}>
+							{capitalizeString(option())}
+						</option>
+					)}
+				</Index>
+			</select>
+		</BaseContainer>
+	);
+}
+
+function DefaultEnabledToggle(props: {
+	settings: typeof DEFAULT_GENERAL_SETTINGS;
 }) {
-	const handleGlobalToggle = (enabled: boolean) =>
-		globalSettingsStorageItem.setValue(
-			enabled
-				? DEFAULT_ENABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS
-				: DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const handleDefaultToggle = (enabled: boolean) =>
+		defaultGeneralSettingsStorageItem.setValue(
+			enabled ? DEFAULT_ENABLED_SETTINGS : DEFAULT_DISABLED_SETTINGS,
 		);
 
 	return (
@@ -76,42 +117,70 @@ function GlobalEnabledToggle(props: {
 			checked={!doAllPropsMatchBoolean(props.settings, false)}
 			class="toggle-primary"
 			label="Enabled for all sites?"
-			onInput={handleGlobalToggle}
+			onInput={handleDefaultToggle}
 		/>
 	);
 }
 
-function DomainEnabledToggle(props: {
-	settings: typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+type SiteEnabledSelectValues = "site-specific" | "default" | "none";
+
+function SiteEnabledSelect(props: {
+	settings: typeof DEFAULT_GENERAL_SETTINGS;
 	tabUrl: UrlSchema;
 }) {
-	const handleSiteToggle = (enabled: boolean) => {
-		getSiteSpecificSettingsStorageItem(props.tabUrl).setValue(
-			enabled
-				? DEFAULT_ENABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS
-				: DEFAULT_DISABLED_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificGeneralSettingsStorageItem = () =>
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
+
+	const selectOptions = createAsync<SiteEnabledSelectValues[]>(
+		async () => {
+			if ((await getSiteSpecificRuleAllocationUsage()).left > 0)
+				return ["default", "none", "site-specific"];
+
+			return ["default", "none"];
+		},
+		{ initialValue: ["default", "none"] },
+	);
+
+	const selectedOption = (): SiteEnabledSelectValues =>
+		doAllPropsMatchBoolean({ ...props.settings, useDefaultRules: false }, false)
+			? "none"
+			: props.settings.useDefaultRules
+				? "default"
+				: "site-specific";
+
+	const handleSiteToggle = async (val: SiteEnabledSelectValues) => {
+		const storageItem = siteSpecificGeneralSettingsStorageItem();
+		const prevValue = await storageItem.getValue();
+
+		storageItem.setValue(
+			val === "none"
+				? DEFAULT_DISABLED_SETTINGS
+				: val === "site-specific"
+					? { ...prevValue, useDefaultRules: false }
+					: { ...prevValue, useDefaultRules: true },
 		);
 	};
 
 	return (
-		<BaseToggleContainer
-			checked={!doAllPropsMatchBoolean(props.settings, false)}
-			class="toggle-secondary"
+		<BaseSelectContainer
+			class="select-secondary select-sm"
 			label={
 				<span class="flex flex-wrap break-all">
-					Enabled for <span class="text-info">{props.tabUrl}</span>
+					Mode for <span class="text-info">{props.tabUrl}</span>
 				</span>
 			}
 			onInput={handleSiteToggle}
+			options={selectOptions()}
+			selected={selectedOption()}
 		/>
 	);
 }
 
-function GlobalSaveDataToggle(props: {
-	settings: typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+function DefaultSaveDataToggle(props: {
+	settings: typeof DEFAULT_GENERAL_SETTINGS;
 }) {
-	const handleGlobalToggle = () =>
-		globalSettingsStorageItem.setValue({
+	const handleDefaultToggle = () =>
+		defaultGeneralSettingsStorageItem.setValue({
 			...props.settings,
 			saveData: !props.settings.saveData,
 		});
@@ -121,17 +190,20 @@ function GlobalSaveDataToggle(props: {
 			checked={props.settings.saveData}
 			class="toggle-primary"
 			label='Add "Save-Data" header?'
-			onInput={handleGlobalToggle}
+			onInput={handleDefaultToggle}
 		/>
 	);
 }
 
-function DomainSaveDataToggle(props: {
-	settings: typeof DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS;
+function SiteSaveDataToggle(props: {
+	settings: typeof DEFAULT_GENERAL_SETTINGS;
 	tabUrl: UrlSchema;
 }) {
+	const siteSpecificGeneralSettingsStorageItem = () =>
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
+
 	const handleSiteToggle = () => {
-		getSiteSpecificSettingsStorageItem(props.tabUrl).setValue({
+		siteSpecificGeneralSettingsStorageItem().setValue({
 			...props.settings,
 			saveData: !props.settings.saveData,
 		});
@@ -151,12 +223,17 @@ export function PopupToggles(props: {
 	tabUrl: UrlSchema;
 	scope: SettingsScope;
 }) {
-	const siteSpecificSettingsStorageItem = () =>
-		getSiteSpecificSettingsStorageItem(props.tabUrl);
+	const siteSpecificGeneralSettingsStorageItem = () =>
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificSettingsStorageItem(),
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
+	);
+
+	const defaultGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
 	);
 
 	return (
@@ -164,20 +241,22 @@ export function PopupToggles(props: {
 			<Show
 				fallback={
 					<>
-						<GlobalEnabledToggle settings={globalSettingsStore()} />
-						<GlobalSaveDataToggle settings={globalSettingsStore()} />
+						<DefaultEnabledToggle settings={defaultGeneralSettingsSignal()} />
+						<DefaultSaveDataToggle settings={defaultGeneralSettingsSignal()} />
 					</>
 				}
-				when={props.scope === "domain"}
+				when={props.scope === "site"}
 			>
-				<DomainEnabledToggle
-					settings={siteSpecificSettingsSignal()}
+				<SiteEnabledSelect
+					settings={siteSpecificGeneralSettingsSignal()}
 					tabUrl={props.tabUrl}
 				/>
-				<DomainSaveDataToggle
-					settings={siteSpecificSettingsSignal()}
-					tabUrl={props.tabUrl}
-				/>
+				<Show when={!siteSpecificGeneralSettingsSignal().useDefaultRules}>
+					<SiteSaveDataToggle
+						settings={siteSpecificGeneralSettingsSignal()}
+						tabUrl={props.tabUrl}
+					/>
+				</Show>
 			</Show>
 		</div>
 	);

@@ -6,49 +6,54 @@ import { StorageKey } from "./constants";
 
 const {
 	SCHEMA_VERSION,
-	SETTINGS_BLOCK,
-	SETTINGS_COMPRESSION,
-	SETTINGS_PROXY,
+	DEFAULT_SETTINGS_BLOCK,
+	DEFAULT_SETTINGS_COMPRESSION,
+	DEFAULT_SETTINGS_PROXY,
 	SITE_SPECIFIC_STATISTICS_PREFIX,
-	SETTINGS_GLOBAL,
-	SITE_SPECIFIC_SETTINGS_PREFIX,
+	DEFAULT_SETTINGS_GENERAL,
+	SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX,
 	STATISTICS,
+	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX,
+	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX,
+	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
 } = StorageKey;
 
-export const globalSettingsStorageItem = storage.defineItem(SETTINGS_GLOBAL, {
-	fallback: clone(STORAGE_DEFAULTS[SETTINGS_GLOBAL]),
-	init: () => clone(STORAGE_DEFAULTS[SETTINGS_GLOBAL]),
+export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
+	fallback: clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
+	init: () => clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
 });
 
-export const compressionSettingsStorageItem = storage.defineItem(
-	SETTINGS_COMPRESSION,
+export const defaultGeneralSettingsStorageItem = storage.defineItem(
+	DEFAULT_SETTINGS_GENERAL,
 	{
-		fallback: clone(STORAGE_DEFAULTS[SETTINGS_COMPRESSION]),
-		init: () => clone(STORAGE_DEFAULTS[SETTINGS_COMPRESSION]),
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
+		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
 	},
 );
 
-export const proxySettingsStorageItem = storage.defineItem(SETTINGS_PROXY, {
-	fallback: clone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
-	init: () => clone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
-});
+export const defaultCompressionSettingsStorageItem = storage.defineItem(
+	DEFAULT_SETTINGS_COMPRESSION,
+	{
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
+		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
+	},
+);
 
-export const blockSettingsStorageItem = storage.defineItem(SETTINGS_BLOCK, {
-	fallback: clone(STORAGE_DEFAULTS[SETTINGS_BLOCK]),
-	init: () => clone(STORAGE_DEFAULTS[SETTINGS_BLOCK]),
-});
+export const defaultProxySettingsStorageItem = storage.defineItem(
+	DEFAULT_SETTINGS_PROXY,
+	{
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
+		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
+	},
+);
 
-export const getSiteSpecificSettingsStorageItem = (url: UrlSchema) => {
-	const key =
-		`${SITE_SPECIFIC_SETTINGS_PREFIX}${getUrlSchemaOrigin(url)}` as const;
-
-	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_SPECIFIC_SETTINGS_PREFIX]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_SPECIFIC_SETTINGS_PREFIX]),
-	});
-
-	return storageItem;
-};
+export const defaultBlockSettingsStorageItem = storage.defineItem(
+	DEFAULT_SETTINGS_BLOCK,
+	{
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
+		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
+	},
+);
 
 export const statisticsStorageItem = storage.defineItem(STATISTICS, {
 	fallback: clone(STORAGE_DEFAULTS[STATISTICS]),
@@ -67,7 +72,51 @@ export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	return storageItem;
 };
 
-export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
-	fallback: clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
-	init: () => clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
-});
+export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
+	const key =
+		`${SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const storageItem = storage.defineItem(key, {
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
+		init: defaultGeneralSettingsStorageItem.getValue,
+	});
+
+	return storageItem;
+};
+
+export const getSiteSpecificBlockSettingsStorageItem = (url: UrlSchema) => {
+	const key =
+		`${SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const storageItem = storage.defineItem(key, {
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
+		init: defaultBlockSettingsStorageItem.getValue,
+	});
+
+	return storageItem;
+};
+
+export const getSiteSpecificCompressionSettingsStorageItem = (
+	url: UrlSchema,
+) => {
+	const key =
+		`${SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const storageItem = storage.defineItem(key, {
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
+		init: defaultCompressionSettingsStorageItem.getValue,
+	});
+
+	return storageItem;
+};
+export const getSiteSpecificProxySettingsStorageItem = (url: UrlSchema) => {
+	const key =
+		`${SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const storageItem = storage.defineItem(key, {
+		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
+		init: defaultProxySettingsStorageItem.getValue,
+	});
+
+	return storageItem;
+};

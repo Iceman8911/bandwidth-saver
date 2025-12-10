@@ -22,7 +22,7 @@ export const StorageAreaSchema = v.picklist([
 ]);
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
-const GlobalSettingsSchema = v.object({
+const GeneralSettingsSchema = v.object({
 	/** If  disabled, all blocking rules are effectively disabled */
 	block: v.boolean(),
 
@@ -37,6 +37,9 @@ const GlobalSettingsSchema = v.object({
 
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
+
+	/** If true, the site will not have any site-specific DNR rules applied to it  */
+	useDefaultRules: v.boolean(),
 });
 
 const CompressionSettingsSchema = v.object({
@@ -140,13 +143,20 @@ const DetailedStatisticsSchema = v.object({
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const STORAGE_SCHEMA = {
-	[StorageKey.SETTINGS_COMPRESSION]: CompressionSettingsSchema,
-	[StorageKey.SETTINGS_PROXY]: ProxySettingsSchema,
-	[StorageKey.SETTINGS_BLOCK]: BlockSettingsSchema,
-	[StorageKey.SETTINGS_GLOBAL]: GlobalSettingsSchema,
-	[StorageKey.SITE_SPECIFIC_SETTINGS_PREFIX]: GlobalSettingsSchema,
+	[StorageKey.DEFAULT_SETTINGS_BLOCK]: BlockSettingsSchema,
+	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: CompressionSettingsSchema,
+	[StorageKey.DEFAULT_SETTINGS_PROXY]: ProxySettingsSchema,
+	[StorageKey.DEFAULT_SETTINGS_GENERAL]: GeneralSettingsSchema,
+
+	[StorageKey.SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX]: BlockSettingsSchema,
+	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]:
+		CompressionSettingsSchema,
+	[StorageKey.SITE_SPECIFIC_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
+	[StorageKey.SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX]: GeneralSettingsSchema,
+
 	[StorageKey.STATISTICS]: StatisticsSchema,
 	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: DetailedStatisticsSchema,
+
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
@@ -172,15 +182,13 @@ export const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
 	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
 ] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
 
-export const DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS = v.parse(
-	GlobalSettingsSchema,
-	{
-		block: true,
-		bypassCsp: false,
-		compression: true,
-		saveData: true,
-	} as const satisfies v.InferOutput<typeof GlobalSettingsSchema>,
-);
+export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
+	block: true,
+	bypassCsp: false,
+	compression: true,
+	saveData: true,
+	useDefaultRules: true,
+} as const satisfies v.InferOutput<typeof GeneralSettingsSchema>);
 
 export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
 	audio: 0,
@@ -211,20 +219,32 @@ export const DEFAULT_SITE_SPECIFIC_STATISTICS = v.parse(
 const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
 
 export const STORAGE_DEFAULTS = {
-	[StorageKey.SETTINGS_COMPRESSION]: clone(DEFAULT_COMPRESSION_SETTINGS),
-	[StorageKey.SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
-	[StorageKey.SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
+	[StorageKey.DEFAULT_SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
+	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: clone(
+		DEFAULT_COMPRESSION_SETTINGS,
+	),
+	[StorageKey.DEFAULT_SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
+	[StorageKey.DEFAULT_SETTINGS_GENERAL]: clone(DEFAULT_GENERAL_SETTINGS),
+
+	[StorageKey.SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX]: clone(
+		DEFAULT_BLOCK_SETTINGS,
+	),
+	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]: clone(
+		DEFAULT_COMPRESSION_SETTINGS,
+	),
+	[StorageKey.SITE_SPECIFIC_SETTINGS_PROXY_PREFIX]: clone(
+		DEFAULT_PROXY_SETTINGS,
+	),
+	[StorageKey.SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX]: clone(
+		DEFAULT_GENERAL_SETTINGS,
+	),
+
 	[StorageKey.STATISTICS]: clone(DEFAULT_STATISTICS),
 	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: clone(
 		DEFAULT_SITE_SPECIFIC_STATISTICS,
 	),
+
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
-	[StorageKey.SITE_SPECIFIC_SETTINGS_PREFIX]: clone(
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	),
-	[StorageKey.SETTINGS_GLOBAL]: clone(
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
-	),
 } as const satisfies {
 	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
 		(typeof STORAGE_SCHEMA)[STORAGE_KEY]

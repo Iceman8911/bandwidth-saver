@@ -1,4 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { createStore } from "solid-js/store";
 import * as v from "valibot";
 import type { SettingsScope } from "@/models/context";
 import {
@@ -7,9 +8,13 @@ import {
 	STORAGE_SCHEMA,
 } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
-import { proxySettingsStorageItem } from "@/shared/storage";
+import {
+	defaultProxySettingsStorageItem,
+	getSiteSpecificProxySettingsStorageItem,
+} from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 
-const { SETTINGS_PROXY } = StorageKey;
+const { DEFAULT_SETTINGS_PROXY: SETTINGS_PROXY } = StorageKey;
 
 export function PopupProxySettings(props: {
 	scope: SettingsScope;
@@ -17,10 +22,23 @@ export function PopupProxySettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const proxySettings = convertStorageItemToReadonlySignal(
-		proxySettingsStorageItem,
+	const siteSpecificProxySettingsStorageItem = () =>
+		getSiteSpecificProxySettingsStorageItem(props.tabUrl);
+
+	const defaultProxySettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultProxySettingsStorageItem,
 		DEFAULT_PROXY_SETTINGS,
 	);
+
+	const siteSpecificProxySettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificProxySettingsStorageItem,
+		DEFAULT_PROXY_SETTINGS,
+	);
+
+	const proxySettings = () =>
+		props.scope === "default"
+			? defaultProxySettingsSignal()
+			: siteSpecificProxySettingsSignal();
 
 	const [tempProxySettings, setTempProxySettings] = createStore(
 		proxySettings() ?? structuredClone(STORAGE_DEFAULTS[SETTINGS_PROXY]),
@@ -29,7 +47,7 @@ export function PopupProxySettings(props: {
 	// Sync external proxy changes
 	createEffect(on(proxySettings, (settings) => setTempProxySettings(settings)));
 
-	const handleUpdateGeneralProxySettings = (e: Event) => {
+	const handleUpdateProxySettings = (e: Event) => {
 		e.preventDefault();
 
 		const parsedProxySettings = v.parse(
@@ -37,25 +55,12 @@ export function PopupProxySettings(props: {
 			tempProxySettings,
 		);
 
-		proxySettingsStorageItem.setValue(parsedProxySettings);
+		if (props.scope === "default") {
+			defaultProxySettingsStorageItem.setValue(parsedProxySettings);
+		} else {
+			siteSpecificProxySettingsStorageItem().setValue(parsedProxySettings);
+		}
 	};
-
-	// Whenever the scope is changed, refresh the displayed proxy settings
-	// createEffect(
-	// 	on([proxySettings, proxyToggle], ([proxySettings, proxyToggle]) => {
-	// 		setTempProxySettings(proxySettings);
-
-	// 		props.scope === "global"
-	// 			? globalSettingsStorageItem.setValue({
-	// 					...globalProxySettingsSignalWithDefault(),
-	// 					proxy: proxyToggle,
-	// 				})
-	// 			: siteSpecificSettingsStorageItem().setValue({
-	// 					...siteSpecificSettingsSignalWithDefault(),
-	// 					proxy: proxyToggle,
-	// 				});
-	// 	}),
-	// );
 
 	return (
 		<details
@@ -66,7 +71,7 @@ export function PopupProxySettings(props: {
 			<div class="collapse-content text-sm">
 				<form
 					class="grid grid-cols-2 gap-4"
-					onSubmit={handleUpdateGeneralProxySettings}
+					onSubmit={handleUpdateProxySettings}
 				>
 					{/* Host */}
 					<fieldset class="fieldset">
@@ -97,7 +102,7 @@ export function PopupProxySettings(props: {
 					</fieldset>
 
 					<BaseButton class="btn-primary btn-sm self-center" type="submit">
-						Save Changes
+						💾 Save Changes
 					</BaseButton>
 				</form>
 			</div>

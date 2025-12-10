@@ -1,26 +1,35 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
+	NOOP_RULE_CONDITION,
 } from "@/shared/constants";
-import { declarativeNetRequestSafeUpdateDynamicRules } from "@/shared/extension-api";
 import {
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
-import { getEnabledAndDisabledDomainsFromNewAndOldSiteOptions } from "./utils";
+import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
+import {
+	getSiteDomainsToNotApplyDefaultRule,
+	watchChangesToSiteSpecificSettings,
+} from "@/utils/storage";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
 
-type SiteSaveDataOption = { url: UrlSchema; enabled: boolean };
+/**
+ * Applies both default and site-specific Save-Data rules.
+ * This ensures excludedInitiatorDomains stays in sync when site settings change.
+ */
+async function applyAllSaveDataRules(enabled: boolean): Promise<void> {
+	await applyDefaultSaveDataRules(enabled);
+	await applySiteSaveDataRules();
+}
 
-function getGlobalSaveDataRules(
-	enabled: boolean,
-): Browser.declarativeNetRequest.UpdateRuleOptions {
-	return {
+async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
+	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+
+	await browser.declarativeNetRequest.updateSessionRules({
 		addRules: enabled
 			? [
 					{
@@ -35,129 +44,74 @@ function getGlobalSaveDataRules(
 							type: "modifyHeaders",
 						},
 						condition: {
+							excludedInitiatorDomains: excludedDomains.length
+								? excludedDomains
+								: undefined,
 							resourceTypes: RESOURCE_TYPES,
-							urlFilter: "*",
 						},
-						id: DeclarativeNetRequestRuleIds.GLOBAL_SAVE_DATA_HEADER,
+						id: DeclarativeNetRequestRuleIds.DEFAULT_SAVE_DATA_HEADER,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				]
 			: undefined,
-		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_SAVE_DATA_HEADER],
-	};
+		removeRuleIds: [DeclarativeNetRequestRuleIds.DEFAULT_SAVE_DATA_HEADER],
+	});
 }
 
-async function getSiteSaveDataRules(
-	options: ReadonlyArray<SiteSaveDataOption>,
-): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const { enabledDomains, disabledDomains } =
-		await getEnabledAndDisabledDomainsFromNewAndOldSiteOptions(
-			options,
-			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
-			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
-		);
+async function applySiteSaveDataRules() {
+	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
+		async (url) => {
+			const { saveData } =
+				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
-
-	if (enabledDomains.length) {
-		rulesToAdd.push({
-			action: {
-				requestHeaders: [
-					{
-						header: "Save-Data",
-						operation: "set",
-						value: "on",
-					},
-				],
-				type: "modifyHeaders",
-			},
-			condition: {
-				initiatorDomains: enabledDomains,
-				resourceTypes: RESOURCE_TYPES,
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	if (disabledDomains.length) {
-		rulesToAdd.push({
-			action: {
-				requestHeaders: [
-					{
-						header: "Save-Data",
-						operation: "remove",
-					},
-				],
-				type: "modifyHeaders",
-			},
-			condition: {
-				initiatorDomains: disabledDomains,
-				resourceTypes: RESOURCE_TYPES,
-			},
-			id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
-			priority: DeclarativeNetRequestPriority.LOW,
-		});
-	}
-
-	return {
-		addRules: rulesToAdd,
-		removeRuleIds: [
-			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_ADD,
-			DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER_REMOVE,
-		],
-	};
+			return {
+				action: {
+					requestHeaders: [
+						{
+							header: "Save-Data",
+							operation: "set",
+							value: "on",
+						},
+					],
+					type: "modifyHeaders",
+				},
+				condition: {
+					resourceTypes: RESOURCE_TYPES,
+					...(saveData ? {} : NOOP_RULE_CONDITION),
+				},
+				priority: DeclarativeNetRequestPriority.LOWEST,
+			};
+		},
+		DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
+		DeclarativeNetRequestRuleIds._$END_SITE_SAVE_DATA_HEADER,
+	);
 }
 
 async function toggleSaveDataOnStartup() {
-	const { saveData } = await globalSettingsStorageItem.getValue();
+	const { saveData } = await defaultGeneralSettingsStorageItem.getValue();
 
-	const globalPromise = declarativeNetRequestSafeUpdateDynamicRules(
-		getGlobalSaveDataRules(saveData),
-	);
+	const defaultSaveDataRulePromise = applyDefaultSaveDataRules(saveData);
 
-	const siteSaveDataOptionPromises: Promise<SiteSaveDataOption>[] = [];
+	const siteSaveDataOptionPromises = applySiteSaveDataRules();
 
-	for (const url of await getSiteUrlOriginsFromStorage()) {
-		const saveDataOptionPromise: Promise<SiteSaveDataOption> =
-			getSiteSpecificSettingsStorageItem(url)
-				.getValue()
-				.then(({ saveData }) => ({ enabled: saveData, url }));
-
-		siteSaveDataOptionPromises.push(saveDataOptionPromise);
-	}
-
-	const sitePromise = declarativeNetRequestSafeUpdateDynamicRules(
-		await getSiteSaveDataRules(await Promise.all(siteSaveDataOptionPromises)),
-	);
-
-	await Promise.all([globalPromise, sitePromise]);
+	await Promise.all([defaultSaveDataRulePromise, siteSaveDataOptionPromises]);
 }
 
 export async function saveDataToggleWatcher() {
 	await toggleSaveDataOnStartup();
 
-	globalSettingsStorageItem.watch(({ saveData }) => {
-		declarativeNetRequestSafeUpdateDynamicRules(
-			getGlobalSaveDataRules(saveData),
-		);
+	// Cache enabled state for use in site settings change handler
+	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
+		.saveData;
+
+	defaultGeneralSettingsStorageItem.watch(({ saveData }) => {
+		cachedEnabled = saveData;
+		applyDefaultSaveDataRules(saveData);
 	});
 
-	watchChangesToSiteSpecificSettings(async (changes) => {
-		const options = changes.reduce<SiteSaveDataOption[]>(
-			(options, settingsChange) => {
-				options.push({
-					enabled: settingsChange.change.newValue?.saveData ?? false,
-					url: settingsChange.url,
-				});
-
-				return options;
-			},
-			[],
-		);
-
-		declarativeNetRequestSafeUpdateDynamicRules(
-			await getSiteSaveDataRules(options),
-		);
+	// Reapply BOTH default and site rules when site settings change
+	// This fixes stale excludedInitiatorDomains when useDefaultRules changes
+	watchChangesToSiteSpecificSettings(async () => {
+		await applyAllSaveDataRules(cachedEnabled);
 	});
 }

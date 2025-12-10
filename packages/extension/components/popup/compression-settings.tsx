@@ -6,21 +6,25 @@ import {
 import { For, Match, Switch } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
+import { createStore } from "#imports";
 import type { SettingsScope } from "@/models/context";
 import {
 	DEFAULT_COMPRESSION_SETTINGS,
-	DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	DEFAULT_GENERAL_SETTINGS,
 	STORAGE_SCHEMA,
 } from "@/models/storage";
 import { CompressionMode, StorageKey } from "@/shared/constants";
 import {
-	compressionSettingsStorageItem,
-	getSiteSpecificSettingsStorageItem,
-	globalSettingsStorageItem,
+	defaultCompressionSettingsStorageItem,
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificCompressionSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { InformativeTooltip } from "../tooltip";
 
-const COMPRESSION_SCHEMA = STORAGE_SCHEMA[StorageKey.SETTINGS_COMPRESSION];
+const COMPRESSION_SCHEMA =
+	STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_COMPRESSION];
 type COMPRESSION_SCHEMA = v.InferOutput<typeof COMPRESSION_SCHEMA>;
 
 const COMPRESSION_FORMATS = [
@@ -63,15 +67,6 @@ function CompressionFormatSelect(props: TempCompressionSettingsProps) {
 function CompressionModeTooltip(props: { mode: CompressionMode }) {
 	return (
 		<Switch>
-			<Match when={props.mode === CompressionMode.MONKEY_PATCH}>
-				<p>
-					Brittle attempt at patching Javascript and DOM globals so the relevant
-					requests are compressed.
-				</p>
-
-				<em>May likely not work well.</em>
-			</Match>
-
 			<Match when={props.mode === CompressionMode.PROXY}>
 				<p>Redirects all relevant requests to the given remote proxy.</p>
 
@@ -130,9 +125,6 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 					{(mode) => (
 						<option selected={props.store.mode === mode} value={mode}>
 							<Switch>
-								<Match when={mode === CompressionMode.MONKEY_PATCH}>
-									Monkey Patch
-								</Match>
 								<Match when={mode === CompressionMode.WEB_REQUEST}>
 									Web Request (MV2)
 								</Match>
@@ -222,7 +214,7 @@ function CompressionEnabledToggle(props: {
 			<span class="label">Enabled?</span>
 			<input
 				checked={props.enabled}
-				class={`toggle toggle-sm ${props.scope === "global" ? "toggle-primary" : "toggle-secondary"}`}
+				class={`toggle toggle-sm ${props.scope === "default" ? "toggle-primary" : "toggle-secondary"}`}
 				onInput={(e) => props.onInput(e.target.checked)}
 				type="checkbox"
 			/>
@@ -236,36 +228,46 @@ export function PopupCompressionSettings(props: {
 	/** Accordion name */
 	name: string;
 }) {
-	const siteSpecificSettingsStorageItem = () =>
-		getSiteSpecificSettingsStorageItem(props.tabUrl);
+	const siteSpecificGeneralSettingsStorageItem = () =>
+		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
+	const siteSpecificCompressionSettingsStorageItem = () =>
+		getSiteSpecificCompressionSettingsStorageItem(props.tabUrl);
 
-	const siteSpecificSettingsSignal = convertStorageItemToReadonlySignal(
-		siteSpecificSettingsStorageItem(),
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		siteSpecificGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
 	);
 
 	const siteSpecificCompressionToggle = () =>
-		siteSpecificSettingsSignal().compression;
+		siteSpecificGeneralSettingsSignal().compression;
 
-	const compressionSettings = convertStorageItemToReadonlySignal(
-		compressionSettingsStorageItem,
+	const defaultGeneralSettingsSignal = convertStorageItemToReactiveSignal(
+		() => defaultGeneralSettingsStorageItem,
+		DEFAULT_GENERAL_SETTINGS,
+	);
+
+	const defaultCompressionSettings = convertStorageItemToReactiveSignal(
+		() => defaultCompressionSettingsStorageItem,
 		DEFAULT_COMPRESSION_SETTINGS,
 	);
 
-	const globalSettingsSignal = convertStorageItemToReadonlySignal(
-		globalSettingsStorageItem,
-		DEFAULT_GLOBAL_AND_SITE_SPECIFIC_SETTINGS,
+	const siteSpecificCompressionSettings = convertStorageItemToReactiveSignal(
+		siteSpecificCompressionSettingsStorageItem,
+		DEFAULT_COMPRESSION_SETTINGS,
 	);
 
-	const globalCompressionToggle = () => globalSettingsSignal().compression;
-
 	const compressionToggle = () =>
-		props.scope === "global"
-			? globalCompressionToggle()
+		props.scope === "default"
+			? defaultGeneralSettingsSignal().compression
 			: siteSpecificCompressionToggle();
 
+	const compressionSettings = () =>
+		props.scope === "default"
+			? defaultCompressionSettings()
+			: siteSpecificCompressionSettings();
+
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(
-		compressionSettings() ?? structuredClone(DEFAULT_COMPRESSION_SETTINGS),
+		compressionSettings(),
 	);
 
 	// Sync external changes
@@ -285,19 +287,24 @@ export function PopupCompressionSettings(props: {
 	const handleUpdateCompressionSettings = (e: SubmitEvent) => {
 		e.preventDefault();
 
-		compressionSettingsStorageItem.setValue(tempCompressionSettings);
+		if (props.scope === "default")
+			defaultCompressionSettingsStorageItem.setValue(tempCompressionSettings);
+		else
+			siteSpecificCompressionSettingsStorageItem().setValue(
+				tempCompressionSettings,
+			);
 	};
 
 	const handleUpdateCompressionToggle = () => {
-		if (props.scope === "global") {
-			const store = globalSettingsSignal();
-			globalSettingsStorageItem.setValue({
+		if (props.scope === "default") {
+			const store = defaultGeneralSettingsSignal();
+			defaultGeneralSettingsStorageItem.setValue({
 				...store,
 				compression: !store.compression,
 			});
 		} else {
-			const store = siteSpecificSettingsSignal();
-			siteSpecificSettingsStorageItem().setValue({
+			const store = siteSpecificGeneralSettingsSignal();
+			siteSpecificGeneralSettingsStorageItem().setValue({
 				...store,
 				compression: !store.compression,
 			});

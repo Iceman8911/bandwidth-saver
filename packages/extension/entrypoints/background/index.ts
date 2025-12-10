@@ -1,5 +1,4 @@
-import { compressionModeProxyToggleWatcher } from "./compression/proxy";
-import { compressionModeSimpleToggleWatcher } from "./compression/simple-mode";
+import { compressionToggleWatcher } from "./compression";
 import { registerStaticRules } from "./compression/static-rules";
 import { cspBypassToggleWatcher } from "./csp-workaround";
 import { saveDataToggleWatcher } from "./save-data";
@@ -13,7 +12,6 @@ export default defineBackground(() => {
 	processMonitoredBandwidthData();
 
 	saveDataToggleWatcher();
-	compressionModeSimpleToggleWatcher();
-	compressionModeProxyToggleWatcher();
+	compressionToggleWatcher();
 	cspBypassToggleWatcher();
 });

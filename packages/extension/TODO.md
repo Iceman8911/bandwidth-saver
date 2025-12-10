@@ -30,7 +30,6 @@
   - [ ] Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.  
   - [x] Rename query string props to prevent conflicts.
 - [ ] Prevent autoplay
-- [ ] Lazy load everything that's possible.
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [ ] **Experimental**:
