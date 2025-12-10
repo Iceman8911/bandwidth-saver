@@ -4,7 +4,8 @@ import { NumberBetween1and100Inclusively, UrlSchema } from "./shared";
 export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"]);
 export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
 
-export const ImageCompressionPayloadSchema = v.object({
+/** losse object is used dueo to some funky query string behaviour and as such, the extra props this object might have are necessary for restoring the redirected url. */
+export const ImageCompressionPayloadSchema = v.looseObject({
 	/** An optional url to fallback to, or a number that tells the compressor endpoint what to do */
 	default: v.optional(UrlSchema),
 	format: v.optional(ImageFormatSchema, "auto"),
