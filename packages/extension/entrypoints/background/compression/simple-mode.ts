@@ -52,11 +52,11 @@ function getGlobalCompressionRules(
 						action: {
 							redirect: {
 								regexSubstitution: urlConstructor({
-									default: BASE_URL_WITH_FLAG,
-									format,
-									preserveAnim,
-									quality,
-									url: BASE_URL_WITHOUT_QUERY_STRING,
+									default_bwsvr8911: BASE_URL_WITH_FLAG,
+									format_bwsvr8911: format,
+									preserveAnim_bwsvr8911: preserveAnim,
+									quality_bwsvr8911: quality,
+									url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
 								}),
 							},
 							type: "redirect",
@@ -105,11 +105,11 @@ async function getSiteCompressionRules(
 			action: {
 				redirect: {
 					regexSubstitution: urlConstructor({
-						default: BASE_URL_WITH_FLAG,
-						format,
-						preserveAnim,
-						quality,
-						url: BASE_URL_WITHOUT_QUERY_STRING,
+						default_bwsvr8911: BASE_URL_WITH_FLAG,
+						format_bwsvr8911: format,
+						preserveAnim_bwsvr8911: preserveAnim,
+						quality_bwsvr8911: quality,
+						url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
 					}),
 				},
 				type: "redirect",

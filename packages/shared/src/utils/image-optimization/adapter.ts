@@ -22,11 +22,11 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 };
 
 const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
-	url,
-	quality,
-	preserveAnim,
-	format,
-	default: defaultValue,
+	url_bwsvr8911: url,
+	quality_bwsvr8911: quality,
+	preserveAnim_bwsvr8911: preserveAnim,
+	format_bwsvr8911: format,
+	default_bwsvr8911: defaultValue,
 }) => {
 	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 		return v.parse(UrlSchema, url);
@@ -50,7 +50,11 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 };
 
 const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
-	({ url, quality, format }) => {
+	({
+		url_bwsvr8911: url,
+		quality_bwsvr8911: quality,
+		format_bwsvr8911: format,
+	}) => {
 		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 			return v.parse(UrlSchema, url);
 
@@ -61,7 +65,7 @@ const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
 	};
 
 const imageCompressionUrlConstructorAlpacaCdn: ImageCompressionUrlConstructor =
-	({ url }) => {
+	({ url_bwsvr8911: url }) => {
 		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 			return v.parse(UrlSchema, url);
 
@@ -107,13 +111,13 @@ export async function getCompressedImageUrlWithFallback(
 			if (result) return result;
 		} catch (error) {
 			console.warn(
-				`Image compression adapter failed for ${payload.url}:`,
+				`Image compression adapter failed for ${payload.url_bwsvr8911}:`,
 				error,
 			);
 		}
 	}
 
-	return v.parse(UrlSchema, `${payload.url}`);
+	return v.parse(UrlSchema, `${payload.url_bwsvr8911}`);
 }
 
 export const customProxyUrlConstructor = (

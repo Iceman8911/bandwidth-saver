@@ -41,7 +41,12 @@ function getGlobalProxyRules(
 		};
 
 	const proxyUrl = customProxyUrlConstructor(
-		{ format, preserveAnim, quality, url: "\\0" as UrlSchema },
+		{
+			format_bwsvr8911: format,
+			preserveAnim_bwsvr8911: preserveAnim,
+			quality_bwsvr8911: quality,
+			url_bwsvr8911: "\\0" as UrlSchema,
+		},
 		proxy,
 	);
 
@@ -85,7 +90,12 @@ async function getSiteProxyRules(
 	const { format, preserveAnim, quality } = config;
 
 	const proxyUrl = customProxyUrlConstructor(
-		{ format, preserveAnim, quality, url: "\\0" as UrlSchema },
+		{
+			format_bwsvr8911: format,
+			preserveAnim_bwsvr8911: preserveAnim,
+			quality_bwsvr8911: quality,
+			url_bwsvr8911: "\\0" as UrlSchema,
+		},
 		proxy,
 	);
 

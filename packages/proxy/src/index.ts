@@ -22,10 +22,10 @@ const app = new Elysia()
 			// I'll make this cleaner later
 			const redirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
-				url: cleanlyExtractUrlFromImageCompressorPayload(query),
+				url_bwsvr8911: cleanlyExtractUrlFromImageCompressorPayload(query),
 			});
 
-			if (redirectedUrl !== query.url) {
+			if (redirectedUrl !== query.url_bwsvr8911) {
 				const redirectedUrlObject = new URL(redirectedUrl);
 
 				redirectedUrlObject.searchParams.append(
@@ -52,7 +52,7 @@ const app = new Elysia()
 					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
 
 					// Default to the original url
-					const redirectedUrlObject = new URL(query.url);
+					const redirectedUrlObject = new URL(query.url_bwsvr8911);
 
 					redirectedUrlObject.searchParams.append(
 						REDIRECTED_SEARCH_PARAM_KEY,

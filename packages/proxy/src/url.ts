@@ -12,7 +12,7 @@ export function cleanlyExtractUrlFromImageCompressorPayload(
 		([key]) => !(key in ImageCompressionPayloadSchema.entries),
 	);
 
-	const starvedUrl = new URL(query.url);
+	const starvedUrl = new URL(query.url_bwsvr8911);
 
 	for (const [key, val] of extraQueryStringPairs) {
 		starvedUrl.searchParams.append(key, String(val));
