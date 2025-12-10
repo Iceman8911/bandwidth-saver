@@ -75,7 +75,10 @@ function CompressionModeTooltip(props: { mode: CompressionMode }) {
 			<Match when={props.mode === CompressionMode.PROXY}>
 				<p>Redirects all relevant requests to the given remote proxy.</p>
 
-				<em> Free from all limitations by MV3 but requires a server.</em>
+				<em>
+					Free from all limitations by MV3 but requires a server. If you are
+					unsure what that is, don't choose this option.
+				</em>
 			</Match>
 
 			<Match when={props.mode === CompressionMode.SIMPLE}>
