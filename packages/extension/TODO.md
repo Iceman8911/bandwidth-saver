@@ -1,3 +1,6 @@
+# General
+- [ ] Remove "global" stuff since the behaviour is redundant to the site-scoped ones.
+
 # Reducing Bandwidth Usage by
 
 - [x] Apply `SaveData` on every request
@@ -21,8 +24,10 @@
       - Due to the way the code works, this will result in endless redirects since the compressor returns the original url which the code picks up and redirects again >~<. Our best bet is to simply ignore urls with query strings entirely.
       - ~~Using a proxy server, perhaps we can rewrite some parts of the qeury string? Like the file format and quality?~~
   - [x] Exempt request domains with `**res.cloudinary.com**` and urls with query strings since they may have optimization built in that we may affect.
+  - [ ] Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.  
   - [x] Rename query string props to prevent conflicts.
 - [ ] Prevent autoplay
+- [ ] Lazy load everything that's possible.
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [ ] **Experimental**:
