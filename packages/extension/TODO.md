@@ -1,5 +1,8 @@
 # General
-- [ ] Remove "global" stuff since the behaviour is redundant to the site-scoped ones.
+- [-] ~~Remove "global" stuff since the behaviour is redundant to the site-scoped ones.~~
+  - [ ] Add more fine grained rules per site.
+    - I had an old attempt in this, but the main limitation with MV3 was the fact that each site would have to have it's own rules and the maximum amount of rules is ~30000 as of December, 2025. So this new attempt will allocate a couple thousand rules for each site, and let the user know of it. Once the limits are reached, users can reset rules for older sites or depend on the global / default rules if they don't want to delete any.
+      - [ ] I should also add a way of autodeleting the config for older / rarely used sites too.
 
 # Reducing Bandwidth Usage by
 
