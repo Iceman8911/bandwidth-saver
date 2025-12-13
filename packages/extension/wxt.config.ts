@@ -1,5 +1,5 @@
+import InlineEnum from "@iceman8911/unplugin-inline-enum/vite";
 import tailwindcss from "@tailwindcss/vite";
-import InlineEnum from "unplugin-inline-enum/vite";
 import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
