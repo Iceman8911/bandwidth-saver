@@ -31,7 +31,7 @@ export function generateRuleIdRange(
 export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 	rule: (
 		url: UrlSchema,
-	) => Promise<Omit<Browser.declarativeNetRequest.Rule, "id">>,
+	) => Promise<Omit<Browser.declarativeNetRequest.Rule, "id"> | undefined>,
 	baseRuleId: number,
 	endRuleId: number,
 ): Promise<void> {
@@ -55,16 +55,18 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 		if (!useDefaultRules) {
 			const parsedRule = await rule(url);
 
-			rulesToAdd.push({
-				...parsedRule,
-				condition: {
-					...parsedRule.condition,
-					initiatorDomains: [new URL(url).host],
-				},
-				id: baseRuleId + ruleIncrementer,
-			});
+			if (parsedRule) {
+				rulesToAdd.push({
+					...parsedRule,
+					condition: {
+						...parsedRule.condition,
+						initiatorDomains: [new URL(url).host],
+					},
+					id: baseRuleId + ruleIncrementer,
+				});
 
-			ruleIncrementer++;
+				ruleIncrementer++;
+			}
 		}
 	}
 
