@@ -36,11 +36,18 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 	) => Promise<Omit<Browser.declarativeNetRequest.Rule, "id"> | undefined>,
 	baseRuleId: number,
 	endRuleId: number,
+	...otherRangesToRemove: ReadonlyArray<[first: number, end: number]>
 ): Promise<void> {
 	const urls = await getSiteUrlOriginsFromStorage();
 
 	// Clear all rules in this feature's range to handle stale rules from removed sites
 	const ruleIdsToRemove = generateRuleIdRange(baseRuleId, endRuleId);
+
+	if (otherRangesToRemove) {
+		for (const range of otherRangesToRemove) {
+			ruleIdsToRemove.concat(generateRuleIdRange(range[0], range[1]));
+		}
+	}
 
 	await browser.declarativeNetRequest.updateSessionRules({
 		removeRuleIds: ruleIdsToRemove,
