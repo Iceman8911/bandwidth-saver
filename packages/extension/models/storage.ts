@@ -35,6 +35,12 @@ const GeneralSettingsSchema = v.object({
 	/** If disabled, no compression at all is applied */
 	compression: v.boolean(),
 
+	/** If `true`, modifies all relevant html elements to lazily load their content and also sets up a mutation observer for dynamically inserted elements */
+	lazyLoad: v.boolean(),
+
+	/** If `true`, disables autoplaying of videos and audio  */
+	noAutoplay: v.boolean(),
+
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 
@@ -186,6 +192,8 @@ export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	block: true,
 	bypassCsp: false,
 	compression: true,
+	lazyLoad: true,
+	noAutoplay: true,
 	saveData: true,
 	useDefaultRules: true,
 } as const satisfies v.InferOutput<typeof GeneralSettingsSchema>);
