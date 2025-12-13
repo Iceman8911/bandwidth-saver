@@ -89,7 +89,6 @@ export async function applyDefaultProxyCompressionRules(
 							],
 							excludedRequestDomains: [proxyDomain],
 							regexFilter: IMAGE_URL_REGEX,
-							resourceTypes: ["image"],
 						},
 						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
 						priority: DeclarativeNetRequestPriority.LOWEST,
@@ -158,7 +157,6 @@ export async function applySiteProxyCompressionRules(): Promise<void> {
 						excludedRequestDomains: [proxyDomain],
 						initiatorDomains: [new URL(url).host],
 						regexFilter: IMAGE_URL_REGEX,
-						resourceTypes: ["image"],
 					},
 					id:
 						DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
@@ -182,7 +180,6 @@ export async function applySiteProxyCompressionRules(): Promise<void> {
 						excludedRequestDomains: [proxyDomain],
 						initiatorDomains: [new URL(url).host],
 						regexFilter: IMAGE_URL_REGEX,
-						resourceTypes: ["image"],
 					},
 					id:
 						DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +

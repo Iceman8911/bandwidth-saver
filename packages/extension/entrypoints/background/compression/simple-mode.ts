@@ -84,7 +84,6 @@ export async function applyDefaultSimpleCompressionRules(
 								: [preferredEndpointDomain],
 							excludedRequestDomains: [preferredEndpointDomain],
 							regexFilter: IMAGE_URL_REGEX,
-							resourceTypes: ["image"],
 						},
 						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
 						priority: DeclarativeNetRequestPriority.LOWEST,
@@ -164,7 +163,6 @@ export async function applySiteSimpleCompressionRules(
 					excludedRequestDomains: [preferredEndpointDomain],
 					initiatorDomains: [new URL(url).host],
 					regexFilter: IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
 					// Add NOOP condition if compression is disabled or site uses different mode
 					...(shouldApplyRule ? {} : NOOP_RULE_CONDITION),
 				},

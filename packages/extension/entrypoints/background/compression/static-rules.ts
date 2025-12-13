@@ -50,7 +50,6 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 					action: { type: "allow" },
 					condition: {
 						requestDomains: [...WHITELISTED_REQUEST_DOMAINS],
-						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.MID,
@@ -68,7 +67,6 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 					action: { type: "allow" },
 					condition: {
 						regexFilter: REDIRECTED_SEARCH_PARAM_FLAG,
-						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
 					priority: DeclarativeNetRequestPriority.HIGHEST,
@@ -86,7 +84,6 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 					},
 					condition: {
 						regexFilter: ".*\\.ico(?:[?#].*)?$",
-						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.HIGHEST,
@@ -113,7 +110,6 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 								),
 							),
 						],
-						resourceTypes: ["image"],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.HIGHEST,
