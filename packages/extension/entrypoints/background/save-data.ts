@@ -1,7 +1,6 @@
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
-	NOOP_RULE_CONDITION,
 } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -61,26 +60,28 @@ async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
 async function applySiteSaveDataRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { saveData } =
+			const { saveData, useDefaultRules } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			return {
-				action: {
-					requestHeaders: [
-						{
-							header: "Save-Data",
-							operation: "set",
-							value: "on",
-						},
-					],
-					type: "modifyHeaders",
-				},
-				condition: {
-					resourceTypes: RESOURCE_TYPES,
-					...(saveData ? {} : NOOP_RULE_CONDITION),
-				},
-				priority: DeclarativeNetRequestPriority.LOWEST,
-			};
+			if (saveData && !useDefaultRules)
+				return {
+					action: {
+						requestHeaders: [
+							{
+								header: "Save-Data",
+								operation: "set",
+								value: "on",
+							},
+						],
+						type: "modifyHeaders",
+					},
+					condition: {
+						resourceTypes: RESOURCE_TYPES,
+					},
+					priority: DeclarativeNetRequestPriority.LOWEST,
+				};
+
+			return undefined;
 		},
 		DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
 		DeclarativeNetRequestRuleIds._$END_SITE_SAVE_DATA_HEADER,
@@ -100,9 +101,8 @@ async function toggleSaveDataOnStartup() {
 export async function saveDataToggleWatcher() {
 	await toggleSaveDataOnStartup();
 
-	// Cache enabled state for use in site settings change handler
 	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
-		.saveData;
+		.bypassCsp;
 
 	defaultGeneralSettingsStorageItem.watch(({ saveData }) => {
 		cachedEnabled = saveData;

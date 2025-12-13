@@ -1,7 +1,6 @@
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
-	NOOP_RULE_CONDITION,
 } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -67,17 +66,19 @@ async function applyDefaultCspRules(enabled: boolean): Promise<void> {
 async function applySiteCspRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { bypassCsp } =
+			const { bypassCsp, useDefaultRules } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			return {
-				action: REMOVE_CSP_HEADER_RULES,
-				condition: {
-					resourceTypes: RESOURCE_TYPES,
-					...(bypassCsp ? {} : NOOP_RULE_CONDITION),
-				},
-				priority: DeclarativeNetRequestPriority.LOWEST,
-			};
+			if (bypassCsp && !useDefaultRules)
+				return {
+					action: REMOVE_CSP_HEADER_RULES,
+					condition: {
+						resourceTypes: RESOURCE_TYPES,
+					},
+					priority: DeclarativeNetRequestPriority.LOWEST,
+				};
+
+			return undefined;
 		},
 		DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
 		DeclarativeNetRequestRuleIds._$END_SITE_BYPASS_CSP_BLOCKING,

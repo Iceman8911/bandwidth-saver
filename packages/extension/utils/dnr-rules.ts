@@ -21,6 +21,8 @@ export function generateRuleIdRange(
 /**
  * Applies site-specific declarative net request rules to all sites with custom settings.
  *
+ * Before the rules are applied, the entire id range is cleared to be safe.
+ *
  * This is the generic function for non-compression features (Save-Data, CSP bypass).
  * It clears only the specific rule range for the feature before applying new rules.
  *
