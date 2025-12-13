@@ -33,8 +33,8 @@
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [ ] **Experimental**:
-  - [ ] Replace `no-store` with `no-cache` on large resources
-  - [ ] Replace `no-cache` with a short-lived time
+  - [x] ~~Replace `no-store` with `no-cache` on large resources~~
+  - [x] ~~Replace `no-cache` with a short-lived time ~~
 
 # Statistics
 
