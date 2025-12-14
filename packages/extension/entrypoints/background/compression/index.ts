@@ -7,7 +7,7 @@ import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 import {
 	getDefaultProxyCompressionRules,
 	getSiteProxyCompressionRules,
-} from "./proxy";
+} from "./proxy-mode";
 import {
 	getDefaultSimpleCompressionRules,
 	getSiteSimpleCompressionRules,
