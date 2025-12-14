@@ -8,6 +8,8 @@
 		- The `Save-Data` rule will have a single site-scoped rule that only applies to pages since it's just a simple toggle.
 		- The Compression rules will have a default rule that applies to new pages that aren't covered by the 100 site specific rules.
 - There'll be 2 main functions; one for getting the disabled sites[^3] that apply for a particular default rule[^1], and the other that'll apply a single site-scoped rule to a bunch of sites.[^2]
+- **Note:** With the current implementation, as long as no entries in the storage are deleted, it should be fine. Otherwise, there is possibilty for orphaned nodes.
+
 
 [^1]: via a predicate function with a single argument that is the stored setting/config data for the site in question and returns a resolved boolean.
 
