@@ -44,7 +44,10 @@ const GeneralSettingsSchema = v.object({
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 
-	/** If true, the site will not have any site-specific DNR rules applied to it  */
+	/** If true, the site will not have any site-specific DNR rules applied to it.
+	 *
+	 * In the default storage item, this will always resolve to `true`
+	 */
 	useDefaultRules: v.boolean(),
 });
 
