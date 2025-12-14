@@ -28,8 +28,7 @@ const getFallbackUrlConstructor = (
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX =
-	"(https?://.+\\.(png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
+const IMAGE_URL_REGEX = "(https?://.+?)(?:\\?.*)?$";
 
 const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
 
@@ -88,6 +87,7 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 						: [preferredEndpointDomain],
 					excludedRequestDomains: [preferredEndpointDomain],
 					regexFilter: IMAGE_URL_REGEX,
+					resourceTypes: ["image"],
 				},
 				id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
 				priority: DeclarativeNetRequestPriority.LOWEST,
@@ -148,6 +148,7 @@ export async function getSiteSimpleCompressionRules(
 				condition: {
 					excludedRequestDomains: [preferredEndpointDomain],
 					regexFilter: IMAGE_URL_REGEX,
+					resourceTypes: ["image"],
 				},
 				id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE,
 				priority: DeclarativeNetRequestPriority.LOWEST,

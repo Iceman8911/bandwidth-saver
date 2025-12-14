@@ -19,8 +19,7 @@ import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/storage";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX =
-	"(https?://.+\\.(png|jpg|jpeg|gif|webp|avif))(?:\\?.*)?$";
+const IMAGE_URL_REGEX = "(https?://.+)";
 
 export async function getDefaultProxyCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
@@ -74,6 +73,7 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 					],
 					excludedRequestDomains: [proxyDomain],
 					regexFilter: IMAGE_URL_REGEX,
+					resourceTypes: ["image"],
 				},
 				id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
 				priority: DeclarativeNetRequestPriority.LOWEST,
@@ -128,6 +128,7 @@ export async function getSiteProxyCompressionRules(
 					excludedRequestDomains: [proxyDomain],
 					initiatorDomains: [new URL(url).host],
 					regexFilter: IMAGE_URL_REGEX,
+					resourceTypes: ["image"],
 				},
 				id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY,
 				priority: DeclarativeNetRequestPriority.LOWEST,
