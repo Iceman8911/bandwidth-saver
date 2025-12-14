@@ -35,6 +35,34 @@ function CspBypassTooltip() {
 	);
 }
 
+function CspBypassToggle(props: {
+	enabled: boolean;
+	onInput: (
+		e: InputEvent & {
+			currentTarget: HTMLInputElement;
+			target: HTMLInputElement;
+		},
+	) => void;
+}) {
+	return (
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">
+				<span>Bypass CSP</span>
+
+				<CspBypassTooltip />
+			</legend>
+			<input
+				checked={props.enabled}
+				class="toggle toggle-error"
+				max={100}
+				min={0}
+				onInput={props.onInput}
+				type="checkbox"
+			/>
+		</fieldset>
+	);
+}
+
 export function PopupOtherSettings(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
@@ -87,22 +115,10 @@ export function PopupOtherSettings(props: {
 			</summary>
 			<div class="collapse-content text-sm">
 				<form class="grid grid-cols-2 gap-4" onSubmit={handleUpdateSettings}>
-					{/* CSP Bypass Toggle */}
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">
-							<span>Bypass CSP</span>
-
-							<CspBypassTooltip />
-						</legend>
-						<input
-							checked={tempSettings.bypassCsp}
-							class="toggle toggle-error"
-							max={100}
-							min={0}
-							onInput={(e) => setTempSettings("bypassCsp", e.target.checked)}
-							type="checkbox"
-						/>
-					</fieldset>
+					<CspBypassToggle
+						enabled={tempSettings.bypassCsp}
+						onInput={(e) => setTempSettings("bypassCsp", e.target.checked)}
+					/>
 
 					<BaseButton
 						class="btn-primary btn-sm place-self-center"
