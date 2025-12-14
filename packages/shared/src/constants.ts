@@ -1,7 +1,4 @@
 export enum ImageCompressorEndpoint {
-	/** Not working :( */
-	ALPACA_CDN = "https://spitting.alpacacdn.com",
-
 	/** Has watermarks but depending on the image, it may be unnoticable
 	 *
 	 * No animation support
