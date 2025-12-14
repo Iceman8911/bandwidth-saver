@@ -20,7 +20,7 @@ export default defineConfig({
 		short_name: "Bandwidth Saver",
 		version: "0.0.1",
 	},
-	modules: ["@wxt-dev/module-solid"],
+	modules: ["@wxt-dev/module-solid", "@wxt-dev/auto-icons"],
 	vite: () => ({
 		plugins: [
 			tailwindcss(),

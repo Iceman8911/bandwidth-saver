@@ -12,6 +12,7 @@
 	"devDependencies": {
 		"@bandwidth-saver/proxy": "workspace:*",
 		"@tailwindcss/vite": "^4.1.18",
+		"@wxt-dev/auto-icons": "^1.1.0",
 		"@wxt-dev/module-solid": "^1.1.4",
 		"daisyui": "^5.5.13",
 		"tailwindcss": "^4.1.18",
