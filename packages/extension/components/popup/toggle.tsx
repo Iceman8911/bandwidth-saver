@@ -17,7 +17,7 @@ const DEFAULT_DISABLED_SETTINGS = {
 	lazyLoad: false,
 	noAutoplay: false,
 	saveData: false,
-	useDefaultRules: true,
+	useDefaultRules: false,
 } as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
 
 const DEFAULT_ENABLED_SETTINGS = {
