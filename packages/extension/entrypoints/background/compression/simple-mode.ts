@@ -1,5 +1,6 @@
 import {
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
+	ImageCompressorEndpoint,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
@@ -15,6 +16,15 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/storage";
+
+const getFallbackUrlConstructor = (
+	preferredEndpoint: ImageCompressorEndpoint,
+) =>
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[
+		preferredEndpoint === ImageCompressorEndpoint.DEFAULT
+			? ImageCompressorEndpoint.FLY_IMG_IO
+			: ImageCompressorEndpoint.DEFAULT
+	];
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
@@ -47,6 +57,7 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
+	const fallbackUrlConstructor = getFallbackUrlConstructor(preferredEndpoint);
 
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
 
@@ -56,7 +67,13 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 				action: {
 					redirect: {
 						regexSubstitution: urlConstructor({
-							default_bwsvr8911: BASE_URL_WITH_FLAG,
+							default_bwsvr8911: fallbackUrlConstructor({
+								default_bwsvr8911: BASE_URL_WITH_FLAG,
+								format_bwsvr8911: format,
+								preserveAnim_bwsvr8911: preserveAnim,
+								quality_bwsvr8911: quality,
+								url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+							}),
 							format_bwsvr8911: format,
 							preserveAnim_bwsvr8911: preserveAnim,
 							quality_bwsvr8911: quality,
@@ -105,6 +122,7 @@ export async function getSiteSimpleCompressionRules(
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
+	const fallbackUrlConstructor = getFallbackUrlConstructor(preferredEndpoint);
 
 	return {
 		addRules: [
@@ -112,7 +130,13 @@ export async function getSiteSimpleCompressionRules(
 				action: {
 					redirect: {
 						regexSubstitution: urlConstructor({
-							default_bwsvr8911: BASE_URL_WITH_FLAG,
+							default_bwsvr8911: fallbackUrlConstructor({
+								default_bwsvr8911: BASE_URL_WITH_FLAG,
+								format_bwsvr8911: format,
+								preserveAnim_bwsvr8911: preserveAnim,
+								quality_bwsvr8911: quality,
+								url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+							}),
 							format_bwsvr8911: format,
 							preserveAnim_bwsvr8911: preserveAnim,
 							quality_bwsvr8911: quality,
