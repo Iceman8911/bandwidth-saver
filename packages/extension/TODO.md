@@ -1,6 +1,6 @@
 # General
 - [-] ~~Remove "global" stuff since the behaviour is redundant to the site-scoped ones.~~
-  - [ ] Add more fine grained rules per site.
+  - [x] Add more fine grained rules per site.
     - I had an old attempt in this, but the main limitation with MV3 was the fact that each site would have to have it's own rules and the maximum amount of rules is ~30000 as of December, 2025. So this new attempt will allocate a couple thousand rules for each site, and let the user know of it. Once the limits are reached, users can reset rules for older sites or depend on the global / default rules if they don't want to delete any.
       - [ ] I should also add a way of autodeleting the config for older / rarely used sites too.
 
@@ -33,8 +33,8 @@
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [ ] **Experimental**:
-  - [x] ~~Replace `no-store` with `no-cache` on large resources~~
-  - [x] ~~Replace `no-cache` with a short-lived time ~~
+  - [-] ~~Replace `no-store` with `no-cache` on large resources~~
+  - [-] ~~Replace `no-cache` with a short-lived time ~~
 
 # Statistics
 
@@ -42,7 +42,8 @@
 - [x] Requests made to cross-origin sources by a page need to be aggregated and related somehow...
 - [ ] Monitor unbounded growth by occasionally archiving statistics (making them less specific about their cross origin hosts or asset type).
   - [ ] Also consider lightweight gzip compression with native apis.
-- [ ] Use big ints over numbers.
+- [-] ~~Use big ints over numbers~~.
+  - With numbers, I have a ~2 petabyte limit so it'll be more than enough lol.
 - [ ] Add specific statistics like "dataUsed" per tab session (refreshed whenever the tab is reloaded / navigated away and to)
   - [ ] Maybe some other time ranges would be nice, like daily, weekly, monthly, etc.
 
