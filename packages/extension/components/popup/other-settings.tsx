@@ -18,16 +18,16 @@ function CspBypassTooltip() {
 		<InformativeTooltip
 			dir="right"
 			tip={
-				<div class="max-w-44 space-y-2 text-error text-xs">
+				<div class="max-w-52 space-y-2 text-error text-xs">
 					<p>
-						This <strong>WILL</strong> weaken the site's security and make it
-						more susceptible to XSS attacks.
+						Some sites' CSP can block external image requests (e.g. redirected
+						compressed images). Disabling this may <i>fix</i> those failures.
 					</p>
 
 					<p>
-						{" "}
-						Do <strong>NOT</strong> enable this unless you know what you're
-						doing.
+						This <strong>WILL</strong> weaken site security and increase XSS
+						risk. <strong>Do NOT</strong> enable unless you understand the
+						risks.
 					</p>
 				</div>
 			}
