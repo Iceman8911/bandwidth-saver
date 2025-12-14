@@ -35,7 +35,7 @@ function CspBypassTooltip() {
 	);
 }
 
-function CspBypassToggle(props: {
+type ToggleComponentProps = {
 	enabled: boolean;
 	onInput: (
 		e: InputEvent & {
@@ -43,19 +43,55 @@ function CspBypassToggle(props: {
 			target: HTMLInputElement;
 		},
 	) => void;
-}) {
+};
+
+function CspBypassToggle(props: ToggleComponentProps) {
 	return (
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">
-				<span>Bypass CSP</span>
+				<span>Bypass CSP?</span>
 
 				<CspBypassTooltip />
 			</legend>
 			<input
 				checked={props.enabled}
 				class="toggle toggle-error"
-				max={100}
-				min={0}
+				onInput={props.onInput}
+				type="checkbox"
+			/>
+		</fieldset>
+	);
+}
+
+function DisableAutoplayToggle(props: ToggleComponentProps) {
+	return (
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">
+				<span>Disable Autoplay?</span>
+
+				{/*<CspBypassTooltip />*/}
+			</legend>
+			<input
+				checked={props.enabled}
+				class="toggle"
+				onInput={props.onInput}
+				type="checkbox"
+			/>
+		</fieldset>
+	);
+}
+
+function LazyLoadToggle(props: ToggleComponentProps) {
+	return (
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">
+				<span>Lazy Load Assets?</span>
+
+				{/*<CspBypassTooltip />*/}
+			</legend>
+			<input
+				checked={props.enabled}
+				class="toggle"
 				onInput={props.onInput}
 				type="checkbox"
 			/>
@@ -118,6 +154,16 @@ export function PopupOtherSettings(props: {
 					<CspBypassToggle
 						enabled={tempSettings.bypassCsp}
 						onInput={(e) => setTempSettings("bypassCsp", e.target.checked)}
+					/>
+
+					<DisableAutoplayToggle
+						enabled={tempSettings.noAutoplay}
+						onInput={(e) => setTempSettings("noAutoplay", e.target.checked)}
+					/>
+
+					<LazyLoadToggle
+						enabled={tempSettings.lazyLoad}
+						onInput={(e) => setTempSettings("lazyLoad", e.target.checked)}
 					/>
 
 					<BaseButton
