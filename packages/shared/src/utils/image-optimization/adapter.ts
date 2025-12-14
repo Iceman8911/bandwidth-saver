@@ -107,6 +107,17 @@ const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor
 		);
 	};
 
+const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructor =
+	({ url_bwsvr8911: url }) => {
+		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+			return v.parse(UrlSchema, url);
+
+		return v.parse(
+			UrlSchema,
+			`${ImageCompressorEndpoint.SERVE_PROXY}/?url=${url}`,
+		);
+	};
+
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
 	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
@@ -115,6 +126,8 @@ export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 		imageCompressionUrlConstructorFlyWebpCloud,
 	[ImageCompressorEndpoint.WORDPRESS]:
 		imageCompressionUrlConstructorFlyWordpress,
+	[ImageCompressorEndpoint.SERVE_PROXY]:
+		imageCompressionUrlConstructorFlyServeProxy,
 } as const satisfies Record<
 	ImageCompressorEndpoint,
 	ImageCompressionUrlConstructor

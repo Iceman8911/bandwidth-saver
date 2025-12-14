@@ -31,6 +31,14 @@ export enum ImageCompressorEndpoint {
 	 */
 	FLY_WEBP_CLOUD = "https://fly.webp.se/image",
 
+	/** Only accepts a url to the iamge to compress.
+	 *
+	 * Has animation support forcefully enabled.
+	 *
+	 * Fails on images larger than 5 MB.
+	 */
+	SERVE_PROXY = "https://serveproxy.com",
+
 	/** The most reliable */
 	DEFAULT = WSRV_NL,
 
