@@ -14,6 +14,7 @@ export enum ImageCompressorEndpoint {
 	 * Animation is enabled permanently.
 	 *
 	 * Defaults to the given url if it cannot optimize it (like Imgur stuff). Although, the default url should not have query strings since it may be truncated.
+	 * Scratch that, this only happens sometimes :p.
 	 *
 	 * The only supported parameter that is relevant is `quality`.
 	 */
@@ -31,7 +32,7 @@ export enum ImageCompressorEndpoint {
 	 */
 	FLY_WEBP_CLOUD = "https://fly.webp.se/image",
 
-	/** Only accepts a url to the iamge to compress.
+	/** Only accepts a url to the image to compress.
 	 *
 	 * Has animation support forcefully enabled.
 	 *
@@ -43,7 +44,7 @@ export enum ImageCompressorEndpoint {
 	DEFAULT = WSRV_NL,
 
 	/** Second most reliable */
-	BACKUP = FLY_IMG_IO,
+	BACKUP = SERVE_PROXY,
 }
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
 
