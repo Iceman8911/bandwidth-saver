@@ -21,6 +21,7 @@
     - [ ] Allow individual extensions to be compressed
   - [x] Gifs
   - [ ] Videos
+    - Perhaps we can just focus on popular sites like Youtube, Vimeo, Reddit?, Facebook, etc.
   - [ ] Audios
   - [x] Fix ORB / CORB errors on sites like Reddit and discord.
     - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. ~~So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.~~
@@ -54,3 +55,4 @@
 # Optimization
 
 - [x] Site-specific data should be at the top level in the extension local storage scope, indexed by their origins so we won't have to load unrelated entries when trying to update a single site's data
+- [ ] Convert "jpg" to "jpeg" since that's what most sites want i think.
