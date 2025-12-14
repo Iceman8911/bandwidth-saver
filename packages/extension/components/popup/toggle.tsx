@@ -170,7 +170,7 @@ function SiteEnabledSelect(props: {
 			class="select-secondary select-sm"
 			label={
 				<span class="flex flex-wrap break-all">
-					Mode for <span class="text-info">{props.tabUrl}</span>
+					Mode for <span class="ml-2 text-info">{props.tabUrl}</span>
 				</span>
 			}
 			onInput={handleSiteToggle}
