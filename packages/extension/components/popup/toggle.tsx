@@ -126,7 +126,7 @@ function DefaultEnabledToggle(props: {
 	);
 }
 
-type SiteEnabledSelectValues = "site-specific" | "default" | "none";
+type SiteEnabledSelectValues = "site-specific" | "default" | "disabled";
 
 function SiteEnabledSelect(props: {
 	settings: typeof DEFAULT_GENERAL_SETTINGS;
@@ -138,16 +138,16 @@ function SiteEnabledSelect(props: {
 	const selectOptions = createAsync<SiteEnabledSelectValues[]>(
 		async () => {
 			if ((await getSiteSpecificRuleAllocationUsage()).left > 0)
-				return ["default", "none", "site-specific"];
+				return ["default", "disabled", "site-specific"];
 
-			return ["default", "none"];
+			return ["default", "disabled"];
 		},
-		{ initialValue: ["default", "none"] },
+		{ initialValue: ["default", "disabled"] },
 	);
 
 	const selectedOption = (): SiteEnabledSelectValues =>
 		doAllPropsMatchBoolean({ ...props.settings, useDefaultRules: false }, false)
-			? "none"
+			? "disabled"
 			: props.settings.useDefaultRules
 				? "default"
 				: "site-specific";
@@ -157,7 +157,7 @@ function SiteEnabledSelect(props: {
 		const prevValue = await storageItem.getValue();
 
 		storageItem.setValue(
-			val === "none"
+			val === "disabled"
 				? DEFAULT_DISABLED_SETTINGS
 				: val === "site-specific"
 					? { ...prevValue, useDefaultRules: false }
