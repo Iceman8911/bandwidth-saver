@@ -4,87 +4,57 @@ import { getSiteSpecificGeneralSettingsStorageItem } from "@/shared/storage";
 import { getSiteUrlOriginsFromStorage } from "./storage";
 
 /**
- * Generates an array of rule IDs from a base ID to its end marker (inclusive).
- * Used to clear all rules in a range before reapplying.
- */
-export function generateRuleIdRange(
-	baseRuleId: number,
-	endRuleId: number,
-): number[] {
-	const ids: number[] = [];
-	for (let id = baseRuleId; id <= endRuleId; id++) {
-		ids.push(id);
-	}
-	return ids;
-}
-
-/**
  * Applies site-specific declarative net request rules to all sites with custom settings.
  *
- * Before the rules are applied, the entire id range is cleared to be safe.
- *
- * This is the generic function for non-compression features (Save-Data, CSP bypass).
- * It clears only the specific rule range for the feature before applying new rules.
- *
- * @param rule - Function that generates the rule for a given site URL
- * @param baseRuleId - The starting rule ID for this feature's site-specific rules
- * @param endRuleId - The ending rule ID for this feature's site-specific rules (inclusive)
+ * @param ruleCb - Function that generates the rule for a given site URL
  */
 export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
-	rule: (
+	ruleCb: (
 		url: UrlSchema,
-	) => Promise<Omit<Browser.declarativeNetRequest.Rule, "id"> | undefined>,
-	baseRuleId: number,
-	endRuleId: number,
-	...otherRangesToRemove: ReadonlyArray<[first: number, end: number]>
+	) => Promise<Browser.declarativeNetRequest.UpdateRuleOptions>,
 ): Promise<void> {
 	const urls = await getSiteUrlOriginsFromStorage();
 
-	// Clear all rules in this feature's range to handle stale rules from removed sites
-	const ruleIdsToRemove = generateRuleIdRange(baseRuleId, endRuleId);
-
-	if (otherRangesToRemove) {
-		for (const range of otherRangesToRemove) {
-			ruleIdsToRemove.concat(generateRuleIdRange(range[0], range[1]));
-		}
-	}
-
-	await browser.declarativeNetRequest.updateSessionRules({
-		removeRuleIds: ruleIdsToRemove,
-	});
-
-	// Collect all rules to add
-	const rulesToAdd: Browser.declarativeNetRequest.Rule[] = [];
+	const ruleUpdatesToApply: Browser.declarativeNetRequest.UpdateRuleOptions = {
+		addRules: [],
+		removeRuleIds: [],
+	};
 	let ruleIncrementer = 0;
 
 	for (const url of urls) {
+		if (
+			ruleIncrementer >=
+			DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE
+		)
+			break;
+
 		const { useDefaultRules } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 		if (!useDefaultRules) {
-			const parsedRule = await rule(url);
+			const {
+				addRules: parsedRulesToAdd = [],
+				removeRuleIds: parsedRuleIdsToRemove = [],
+			} = await ruleCb(url);
 
-			if (parsedRule) {
-				rulesToAdd.push({
-					...parsedRule,
-					condition: {
-						...parsedRule.condition,
-						initiatorDomains: [new URL(url).host],
-					},
-					id: baseRuleId + ruleIncrementer,
-				});
+			for (const ruleToAdd of parsedRulesToAdd) {
+				ruleToAdd.id += ruleIncrementer;
+				ruleToAdd.condition.initiatorDomains = [new URL(url).host]; // THe rule should only match the site it was made for
 
-				ruleIncrementer++;
+				ruleUpdatesToApply.addRules?.push(ruleToAdd);
 			}
+
+			for (let ruleIdToRemove of parsedRuleIdsToRemove) {
+				ruleIdToRemove += ruleIncrementer;
+
+				ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
+			}
+
+			ruleIncrementer++;
 		}
 	}
 
-	// Add all rules in a single batch for efficiency
-	if (rulesToAdd.length > 0) {
-		await browser.declarativeNetRequest.updateSessionRules({
-			addRules: rulesToAdd,
-		});
-	}
+	await browser.declarativeNetRequest.updateSessionRules(ruleUpdatesToApply);
 }
 
 type RuleAllocationUsage = {

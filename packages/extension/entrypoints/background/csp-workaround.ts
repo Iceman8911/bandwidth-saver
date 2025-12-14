@@ -69,19 +69,30 @@ async function applySiteCspRules() {
 			const { bypassCsp, useDefaultRules } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			if (bypassCsp && !useDefaultRules)
-				return {
-					action: REMOVE_CSP_HEADER_RULES,
-					condition: {
-						resourceTypes: RESOURCE_TYPES,
-					},
-					priority: DeclarativeNetRequestPriority.LOWEST,
-				};
+			const isEnabled = bypassCsp && !useDefaultRules;
 
-			return undefined;
+			if (!isEnabled) {
+				return {
+					removeRuleIds: [
+						DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
+					],
+				};
+			}
+
+			return {
+				addRules: [
+					{
+						action: REMOVE_CSP_HEADER_RULES,
+						condition: {
+							resourceTypes: RESOURCE_TYPES,
+						},
+						id: DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
+						priority: DeclarativeNetRequestPriority.LOWEST,
+					},
+				],
+				removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING],
+			};
 		},
-		DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
-		DeclarativeNetRequestRuleIds._$END_SITE_BYPASS_CSP_BLOCKING,
 	);
 }
 

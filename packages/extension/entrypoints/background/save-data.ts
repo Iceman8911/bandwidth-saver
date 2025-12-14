@@ -63,28 +63,37 @@ async function applySiteSaveDataRules() {
 			const { saveData, useDefaultRules } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			if (saveData && !useDefaultRules)
-				return {
-					action: {
-						requestHeaders: [
-							{
-								header: "Save-Data",
-								operation: "set",
-								value: "on",
-							},
-						],
-						type: "modifyHeaders",
-					},
-					condition: {
-						resourceTypes: RESOURCE_TYPES,
-					},
-					priority: DeclarativeNetRequestPriority.LOWEST,
-				};
+			const isEnabled = saveData && !useDefaultRules;
 
-			return undefined;
+			if (!isEnabled) {
+				return {
+					removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
+				};
+			}
+
+			return {
+				addRules: [
+					{
+						action: {
+							requestHeaders: [
+								{
+									header: "Save-Data",
+									operation: "set",
+									value: "on",
+								},
+							],
+							type: "modifyHeaders",
+						},
+						condition: {
+							resourceTypes: RESOURCE_TYPES,
+						},
+						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
+						priority: DeclarativeNetRequestPriority.LOWEST,
+					},
+				],
+				removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
+			};
 		},
-		DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
-		DeclarativeNetRequestRuleIds._$END_SITE_SAVE_DATA_HEADER,
 	);
 }
 
