@@ -6,8 +6,13 @@ export const STORAGE_VERSION = 1;
 
 export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 
-export const getActiveTabUrl = async () =>
-	(await getActiveTabOrigin()) ?? DUMMY_TAB_URL;
+export const getActiveTabUrl = async () => {
+	try {
+		return (await getActiveTabOrigin()) ?? DUMMY_TAB_URL;
+	} catch {
+		return v.parse(UrlSchema, location.href);
+	}
+};
 
 export const MessageType = {
 	/** Sends the bandwidth used from content scripts to the background */
