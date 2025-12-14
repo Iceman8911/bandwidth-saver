@@ -87,7 +87,7 @@ function BaseSelectContainer<TOption extends string>(
 ) {
 	return (
 		<BaseContainer
-			class={`grid-cols-[50%_1fr]! ${props.selected !== "site-specific" ? "w-full!" : ""}`}
+			class={`grid-cols-[50%_1fr]! ${props.selected === "default" ? "w-full" : ""}`}
 		>
 			<span class="label overflow-auto">{props.label}</span>
 
@@ -146,7 +146,7 @@ function SiteEnabledSelect(props: {
 	);
 
 	const selectedOption = (): SiteEnabledSelectValues =>
-		doAllPropsMatchBoolean({ ...props.settings, useDefaultRules: false }, false)
+		doAllPropsMatchBoolean({ ...props.settings }, false)
 			? "disabled"
 			: props.settings.useDefaultRules
 				? "default"
