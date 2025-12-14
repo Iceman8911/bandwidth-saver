@@ -17,22 +17,36 @@ import {
 } from "@/shared/storage";
 import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/storage";
 
-const getFallbackUrlConstructor = (
-	preferredEndpoint: ImageCompressorEndpoint,
-) =>
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS[
-		preferredEndpoint === ImageCompressorEndpoint.DEFAULT
-			? ImageCompressorEndpoint.FLY_IMG_IO
-			: ImageCompressorEndpoint.DEFAULT
-	];
-
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX = "(https?://.+?)(?:\\?.*)?$";
+const IMAGE_URL_REGEX = "(https?://)(.+?)(?:\\?.*)?$";
 
-const BASE_URL_WITHOUT_QUERY_STRING = "\\1" as UrlSchema;
+const PROTOCOL_OF_BASE_URL = "\\1" as UrlSchema;
 
-const BASE_URL_WITH_FLAG = `\\1#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
+const BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL = "\\2" as UrlSchema;
+
+const BASE_URL_WITHOUT_QUERY_STRING =
+	`${PROTOCOL_OF_BASE_URL}${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}` as UrlSchema;
+
+const BASE_URL_WITH_FLAG =
+	`${BASE_URL_WITHOUT_QUERY_STRING}#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
+
+function getFallbackEndpoint(preferredEndpoint: ImageCompressorEndpoint) {
+	return preferredEndpoint === ImageCompressorEndpoint.DEFAULT
+		? ImageCompressorEndpoint.BACKUP
+		: ImageCompressorEndpoint.DEFAULT;
+}
+
+function getUrlToRedirectToForChosenEndpoint(
+	endpoint: ImageCompressorEndpoint,
+) {
+	switch (endpoint) {
+		case ImageCompressorEndpoint.WORDPRESS:
+			return BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL;
+		default:
+			return BASE_URL_WITHOUT_QUERY_STRING;
+	}
+}
 
 export async function getDefaultSimpleCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
@@ -56,7 +70,9 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
-	const fallbackUrlConstructor = getFallbackUrlConstructor(preferredEndpoint);
+	const fallbackEndpoint = getFallbackEndpoint(preferredEndpoint);
+	const fallbackUrlConstructor =
+		IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
 
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
 
@@ -71,12 +87,14 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 								format_bwsvr8911: format,
 								preserveAnim_bwsvr8911: preserveAnim,
 								quality_bwsvr8911: quality,
-								url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+								url_bwsvr8911:
+									getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
 							}),
 							format_bwsvr8911: format,
 							preserveAnim_bwsvr8911: preserveAnim,
 							quality_bwsvr8911: quality,
-							url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+							url_bwsvr8911:
+								getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 						}),
 					},
 					type: "redirect",
@@ -122,7 +140,9 @@ export async function getSiteSimpleCompressionRules(
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
-	const fallbackUrlConstructor = getFallbackUrlConstructor(preferredEndpoint);
+	const fallbackEndpoint = getFallbackEndpoint(preferredEndpoint);
+	const fallbackUrlConstructor =
+		IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
 
 	return {
 		addRules: [
@@ -135,12 +155,14 @@ export async function getSiteSimpleCompressionRules(
 								format_bwsvr8911: format,
 								preserveAnim_bwsvr8911: preserveAnim,
 								quality_bwsvr8911: quality,
-								url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+								url_bwsvr8911:
+									getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
 							}),
 							format_bwsvr8911: format,
 							preserveAnim_bwsvr8911: preserveAnim,
 							quality_bwsvr8911: quality,
-							url_bwsvr8911: BASE_URL_WITHOUT_QUERY_STRING,
+							url_bwsvr8911:
+								getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 						}),
 					},
 					type: "redirect",

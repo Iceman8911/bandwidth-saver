@@ -75,6 +75,63 @@ const imageCompressionUrlConstructorAlpacaCdn: ImageCompressionUrlConstructor =
 		);
 	};
 
+const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
+	url_bwsvr8911: url,
+	format_bwsvr8911: format,
+	quality_bwsvr8911: quality,
+}) => {
+	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+		return v.parse(UrlSchema, url);
+
+	let baseUrl = `${ImageCompressorEndpoint.IMAGE_CDN}/${url}?quality=${quality}`;
+
+	if (format !== "auto") {
+		if (format === "jpg") baseUrl += "&format=jpeg";
+		else baseUrl += `&format=${format}`;
+	}
+
+	return v.parse(UrlSchema, baseUrl);
+};
+
+const imageCompressionUrlConstructorFlyWebpCloud: ImageCompressionUrlConstructor =
+	({ url_bwsvr8911: url }) => {
+		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+			return v.parse(UrlSchema, url);
+
+		return v.parse(
+			UrlSchema,
+			`${ImageCompressorEndpoint.FLY_WEBP_CLOUD}?url=${url}`,
+		);
+	};
+
+const PROTOCOL_REGEX = /^.*\/\//;
+const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor =
+	({ url_bwsvr8911: url, quality_bwsvr8911: quality }) => {
+		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
+			return v.parse(UrlSchema, url);
+
+		const noProtocolUrl = url.replace(PROTOCOL_REGEX, "");
+
+		return v.parse(
+			UrlSchema,
+			`${ImageCompressorEndpoint.WORDPRESS}/${noProtocolUrl}?quality=${quality}`,
+		);
+	};
+
+export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
+	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
+	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
+	[ImageCompressorEndpoint.ALPACA_CDN]: imageCompressionUrlConstructorAlpacaCdn,
+	[ImageCompressorEndpoint.IMAGE_CDN]: imageCompressionUrlConstructorIcdn,
+	[ImageCompressorEndpoint.FLY_WEBP_CLOUD]:
+		imageCompressionUrlConstructorFlyWebpCloud,
+	[ImageCompressorEndpoint.WORDPRESS]:
+		imageCompressionUrlConstructorFlyWordpress,
+} as const satisfies Record<
+	ImageCompressorEndpoint,
+	ImageCompressionUrlConstructor
+>;
+
 const imageCompressionAdapter: ImageCompressionAdapter = async (
 	payload,
 	urlConstructor,
@@ -86,15 +143,6 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 
 	return v.parse(UrlSchema, newUrl);
 };
-
-export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
-	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
-	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
-	[ImageCompressorEndpoint.ALPACA_CDN]: imageCompressionUrlConstructorAlpacaCdn,
-} as const satisfies Record<
-	ImageCompressorEndpoint,
-	ImageCompressionUrlConstructor
->;
 
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
