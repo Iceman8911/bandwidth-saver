@@ -14,6 +14,8 @@ const DEFAULT_DISABLED_SETTINGS = {
 	block: false,
 	bypassCsp: false,
 	compression: false,
+	lazyLoad: false,
+	noAutoplay: false,
 	saveData: false,
 	useDefaultRules: true,
 } as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
@@ -22,6 +24,8 @@ const DEFAULT_ENABLED_SETTINGS = {
 	block: true,
 	bypassCsp: false,
 	compression: true,
+	lazyLoad: true,
+	noAutoplay: true,
 	saveData: true,
 	useDefaultRules: true,
 } as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
