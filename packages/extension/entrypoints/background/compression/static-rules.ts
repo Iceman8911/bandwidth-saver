@@ -6,6 +6,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
+import { getWhitelistedDomains } from "./whilisted-domains";
 
 /** These rules are basically to prevent useless redirects / redirect looping */
 function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {
@@ -82,6 +83,23 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 			],
 			removeRuleIds: [
 				DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
+			],
+		},
+
+		// Don't process whitelisted domains (they won't work anyway)
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: {
+						requestDomains: [...getWhitelistedDomains()],
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 			],
 		},
 	];
