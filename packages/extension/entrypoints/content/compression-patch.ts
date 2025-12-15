@@ -10,7 +10,7 @@ import {
 
 // Toggling the compression setting requires a page reload for changes to be applied
 
-const HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME = "bwsvr8911HasRepairedImgElement";
+const repairedImgElements = new WeakSet<HTMLOrSVGImageElement>();
 
 function isHtmlOrSvgImageElement(node: Node): node is HTMLOrSVGImageElement {
 	return node instanceof HTMLImageElement || node instanceof SVGImageElement;
@@ -39,7 +39,7 @@ async function fixImageElementsBrokenFromFailedCompression(
 	if (!compressionCache) return;
 
 	function handler() {
-		if (img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] === "true") return;
+		if (repairedImgElements.has(img)) return;
 
 		if (img instanceof HTMLImageElement) {
 			// Append the src and srcset so that the DNR rules won't redirect and fail again
@@ -60,7 +60,7 @@ async function fixImageElementsBrokenFromFailedCompression(
 			img.href.baseVal += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
 		}
 
-		img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] = "true";
+		repairedImgElements.add(img);
 	}
 
 	img.addEventListener("error", handler, { once: true });
