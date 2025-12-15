@@ -44,6 +44,21 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 			],
 		},
 
+		// Don't process svgs
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: { regexFilter: "^https?://.+\\.svg(?:[?#].*)?$" },
+					id: DeclarativeNetRequestRuleIds.EXEMPT_SVGS_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_SVGS_FROM_COMPRESSION,
+			],
+		},
+
 		// Don't bother compressing already compressed requests
 		{
 			addRules: [
