@@ -1,6 +1,10 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { getActiveTabUrl } from "@/shared/constants";
 import {
+	toggleAutoplayFromMutationObserver,
+	toggleAutoplayOnPageLoad,
+} from "./autoplay";
+import {
 	fixImageElementsBrokenFromFailedCompressionFromMutationObserver,
 	fixImageElementsBrokenFromFailedCompressionOnPageLoad,
 } from "./compression-patch";
@@ -16,6 +20,8 @@ const observer = (pageUrl: UrlSchema) =>
 						node,
 						pageUrl,
 					);
+
+					toggleAutoplayFromMutationObserver(node, pageUrl);
 				});
 			}
 		}
@@ -28,6 +34,8 @@ export default defineContentScript({
 		monitorBandwidthUsageViaContentScript();
 
 		fixImageElementsBrokenFromFailedCompressionOnPageLoad(PAGE_URL);
+
+		toggleAutoplayOnPageLoad(PAGE_URL);
 
 		// Start observing the document for added nodes
 		observer(PAGE_URL).observe(document.documentElement, {
