@@ -8,6 +8,8 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 
+// Toggling the compression setting requires a page reload for changes to be applied
+
 const HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME = "bwsvr8911HasRepairedImgElement";
 
 function isHtmlOrSvgImageElement(node: Node): node is HTMLOrSVGImageElement {
