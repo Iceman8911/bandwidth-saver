@@ -1,4 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
@@ -38,7 +39,7 @@ async function getAutoplayToggleForSite(url: UrlSchema): Promise<boolean> {
 export async function toggleAutoplayOnPageLoad(url: UrlSchema) {
 	if (!(await getAutoplayToggleForSite(url))) return;
 
-	document.querySelectorAll("audio,video").forEach((mediaElement) => {
+	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
 		if (isMediaElement(mediaElement)) {
 			disableAutoplay(mediaElement);
 		}
@@ -56,7 +57,7 @@ export async function toggleAutoplayFromMutationObserver(
 	}
 
 	if (node instanceof HTMLElement) {
-		node.querySelectorAll("audio,video").forEach((mediaElement) => {
+		querySelectorAllDeep("audio,video", node).forEach((mediaElement) => {
 			if (isMediaElement(mediaElement)) {
 				disableAutoplay(mediaElement);
 			}

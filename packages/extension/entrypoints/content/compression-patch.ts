@@ -2,6 +2,7 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
+import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import * as v from "valibot";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -64,21 +65,6 @@ async function repairImageElement(
 	repairedImgElements.add(img);
 }
 
-export async function fixImageElementsBrokenFromFailedCompression(
-	img: HTMLOrSVGImageElement,
-	url: UrlSchema,
-): Promise<void> {
-	// If the image already failed to load before we attached the listener,
-	// naturalWidth === 0 on a completed image indicates a load failure.
-	if (
-		img instanceof HTMLImageElement &&
-		img.complete &&
-		img.naturalWidth === 0
-	) {
-		await repairImageElement(img, url);
-	}
-}
-
 /**
  * Install a single delegated error handler to repair images when they error.
  */
@@ -94,7 +80,8 @@ function installGlobalImageErrorHandler(url: UrlSchema) {
 			if (!target) return;
 
 			if (isHtmlOrSvgImageElement(target)) {
-				fixImageElementsBrokenFromFailedCompression(target, url);
+				if (target instanceof SVGImageElement) console.log("is SVG:", target);
+				repairImageElement(target, url);
 			}
 		},
 		true,
@@ -106,9 +93,9 @@ export async function fixImageElementsBrokenFromFailedCompressionOnPageLoad(
 ) {
 	installGlobalImageErrorHandler(url);
 
-	document.querySelectorAll("img,image").forEach((img) => {
+	querySelectorAllDeep("img,image").forEach((img) => {
 		if (isHtmlOrSvgImageElement(img)) {
-			fixImageElementsBrokenFromFailedCompression(img, url);
+			repairImageElement(img, url);
 		}
 	});
 }
@@ -120,13 +107,12 @@ export async function fixImageElementsBrokenFromFailedCompressionFromMutationObs
 	installGlobalImageErrorHandler(url);
 
 	if (node instanceof HTMLImageElement) {
-		fixImageElementsBrokenFromFailedCompression(node, url);
+		repairImageElement(node, url);
 	}
 
 	if (node instanceof HTMLElement) {
-		node.querySelectorAll("img,image").forEach((img) => {
-			if (isHtmlOrSvgImageElement(img))
-				fixImageElementsBrokenFromFailedCompression(img, url);
+		querySelectorAllDeep("img,image", node).forEach((img) => {
+			if (isHtmlOrSvgImageElement(img)) repairImageElement(img, url);
 		});
 	}
 }
