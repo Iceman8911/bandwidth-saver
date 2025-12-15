@@ -46,8 +46,6 @@ async function fixImageElementsBrokenFromFailedCompression(
 			})
 			.join(" ");
 
-		console.log("new src is", img.src);
-
 		img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] = "true";
 	});
 }
