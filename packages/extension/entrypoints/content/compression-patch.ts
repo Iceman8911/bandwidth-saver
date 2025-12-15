@@ -26,11 +26,15 @@ async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
 	return defaultSettings.compression;
 }
 
+let compressionCache: boolean | undefined;
+
 async function fixImageElementsBrokenFromFailedCompression(
 	img: HTMLOrSVGImageElement,
 	url: UrlSchema,
 ): Promise<void> {
-	if (!(await isCompressionEnabled(url))) return;
+	if (!compressionCache) compressionCache = await isCompressionEnabled(url);
+
+	if (!compressionCache) return;
 
 	function handler() {
 		if (img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] === "true") return;
