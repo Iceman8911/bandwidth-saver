@@ -33,6 +33,8 @@
 - [ ] Prevent autoplay
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
+- [ ] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
+  - Since MV3 DNR redirecting is rather limited, perhaps I can eventually try to do proper redirecting here, and of couse still fallback to the orignal url if it doens't work out. Although this would break any site functionality that relies on expecting the original url.
 - [ ] **Experimental**:
   - [-] ~~Replace `no-store` with `no-cache` on large resources~~
   - [-] ~~Replace `no-cache` with a short-lived time ~~
@@ -56,3 +58,4 @@
 
 - [x] Site-specific data should be at the top level in the extension local storage scope, indexed by their origins so we won't have to load unrelated entries when trying to update a single site's data
 - [ ] Convert "jpg" to "jpeg" since that's what most sites want i think.
+- [ ] Focus on commonly used sites like scoical media like Youtube, Facebook, Reddit, Discord, Twitter, Instagram, etc and other popular image-heavy sites and apply focused optimizations e.g since reddit uses custom web components for a lot of stuff, we need to account for that.
