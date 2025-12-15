@@ -36,7 +36,7 @@ async function getAutoplayToggleForSite(url: UrlSchema): Promise<boolean> {
 	return noAutoplayToggleForDefault;
 }
 
-export async function toggleAutoplayOnPageLoad(url: UrlSchema) {
+export async function disableAutoplayOnPageLoad(url: UrlSchema) {
 	if (!(await getAutoplayToggleForSite(url))) return;
 
 	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
@@ -46,7 +46,7 @@ export async function toggleAutoplayOnPageLoad(url: UrlSchema) {
 	});
 }
 
-export async function toggleAutoplayFromMutationObserver(
+export async function disableAutoplayFromMutationObserver(
 	node: Node,
 	url: UrlSchema,
 ) {

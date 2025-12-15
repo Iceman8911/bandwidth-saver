@@ -1,8 +1,8 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { getActiveTabUrl } from "@/shared/constants";
 import {
-	toggleAutoplayFromMutationObserver,
-	toggleAutoplayOnPageLoad,
+	disableAutoplayFromMutationObserver,
+	disableAutoplayOnPageLoad,
 } from "./autoplay";
 import { fixImageElementsBrokenFromFailedCompression } from "./compression-patch";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
@@ -13,7 +13,7 @@ const observer = (pageUrl: UrlSchema) =>
 		for (const mutation of mutationsList) {
 			if (mutation.type === "childList") {
 				mutation.addedNodes.forEach((node) => {
-					toggleAutoplayFromMutationObserver(node, pageUrl);
+					disableAutoplayFromMutationObserver(node, pageUrl);
 				});
 			}
 		}
@@ -27,7 +27,7 @@ export default defineContentScript({
 
 		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
 
-		toggleAutoplayOnPageLoad(PAGE_URL);
+		disableAutoplayOnPageLoad(PAGE_URL);
 
 		// Start observing the document for added nodes
 		observer(PAGE_URL).observe(document.documentElement, {
