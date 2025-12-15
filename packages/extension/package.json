@@ -3,8 +3,10 @@
 		"@bandwidth-saver/shared": "workspace:*",
 		"@elysiajs/eden": "^1.4.5",
 		"@iceman8911/unplugin-inline-enum": "^0.6.7",
+		"@types/query-selector-shadow-dom": "^1.0.4",
 		"@webext-core/messaging": "^2.3.0",
 		"ky": "^1.14.1",
+		"query-selector-shadow-dom": "^1.0.1",
 		"solid-js": "^1.9.10",
 		"valibot": "^1.2.0"
 	},
