@@ -28,7 +28,7 @@ async function fixImageElementsBrokenFromFailedCompression(
 ): Promise<void> {
 	if (!(await isCompressionEnabled(url))) return;
 
-	img.addEventListener("error", () => {
+	function handler() {
 		if (img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] === "true") return;
 
 		// Append the src and srcset so that the DNR rules won't redirect and fail again
@@ -47,7 +47,17 @@ async function fixImageElementsBrokenFromFailedCompression(
 			.join(" ");
 
 		img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] = "true";
-	});
+	}
+
+	img.addEventListener("error", handler, { once: true });
+
+	// If the image already failed to load before we attached the listener,
+	// naturalWidth === 0 on a completed image indicates a load failure.
+	try {
+		if (img.complete && img.naturalWidth === 0) {
+			handler();
+		}
+	} catch {}
 }
 
 export async function fixImageElementsBrokenFromFailedCompressionOnPageLoad(
