@@ -14,6 +14,7 @@
   - [ ] Videos
   - [ ] Audios
   - [ ] Fonts
+  - [ ] Iframes
   - [ ] Support more fine-grained blocking like blocking specific extensions, urls,  domains, etc
   - [ ] Blocked elements should be replaced with a transparent, but visible broder that can be clicked to load the resource.
 - [ ] Compress / reduce resolution of assets like:
@@ -30,7 +31,7 @@
   - [x] Exempt request domains with `**res.cloudinary.com**` and urls with query strings since they may have optimization built in that we may affect.
   - [ ] Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.  
   - [x] Rename query string props to prevent conflicts.
-- [ ] Prevent autoplay
+- [x] Prevent autoplay
 - [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [ ] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
