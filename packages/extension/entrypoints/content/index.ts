@@ -4,10 +4,7 @@ import {
 	toggleAutoplayFromMutationObserver,
 	toggleAutoplayOnPageLoad,
 } from "./autoplay";
-import {
-	fixImageElementsBrokenFromFailedCompressionFromMutationObserver,
-	fixImageElementsBrokenFromFailedCompressionOnPageLoad,
-} from "./compression-patch";
+import { fixImageElementsBrokenFromFailedCompression } from "./compression-patch";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
 
 // Add all mutation observer stuff here
@@ -16,11 +13,6 @@ const observer = (pageUrl: UrlSchema) =>
 		for (const mutation of mutationsList) {
 			if (mutation.type === "childList") {
 				mutation.addedNodes.forEach((node) => {
-					fixImageElementsBrokenFromFailedCompressionFromMutationObserver(
-						node,
-						pageUrl,
-					);
-
 					toggleAutoplayFromMutationObserver(node, pageUrl);
 				});
 			}
@@ -33,7 +25,7 @@ export default defineContentScript({
 
 		monitorBandwidthUsageViaContentScript();
 
-		fixImageElementsBrokenFromFailedCompressionOnPageLoad(PAGE_URL);
+		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
 
 		toggleAutoplayOnPageLoad(PAGE_URL);
 

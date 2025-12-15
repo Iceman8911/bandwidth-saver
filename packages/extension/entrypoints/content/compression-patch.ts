@@ -2,7 +2,6 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import * as v from "valibot";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -12,8 +11,6 @@ import {
 // Toggling the compression setting requires a page reload for changes to be applied
 
 const repairedImgElements = new WeakSet<HTMLOrSVGImageElement>();
-
-let globalImageErrorHandlerInstalled = false;
 
 function isHtmlOrSvgImageElement(node: Node): node is HTMLOrSVGImageElement {
 	return node instanceof HTMLImageElement || node instanceof SVGImageElement;
@@ -68,10 +65,7 @@ async function repairImageElement(
 /**
  * Install a single delegated error handler to repair images when they error.
  */
-function installGlobalImageErrorHandler(url: UrlSchema) {
-	if (globalImageErrorHandlerInstalled) return;
-	globalImageErrorHandlerInstalled = true;
-
+export function fixImageElementsBrokenFromFailedCompression(url: UrlSchema) {
 	// Capture phase listener; resource error events don't reliably bubble, so capture is required.
 	document.addEventListener(
 		"error",
@@ -80,39 +74,9 @@ function installGlobalImageErrorHandler(url: UrlSchema) {
 			if (!target) return;
 
 			if (isHtmlOrSvgImageElement(target)) {
-				if (target instanceof SVGImageElement) console.log("is SVG:", target);
 				repairImageElement(target, url);
 			}
 		},
 		true,
 	);
-}
-
-export async function fixImageElementsBrokenFromFailedCompressionOnPageLoad(
-	url: UrlSchema,
-) {
-	installGlobalImageErrorHandler(url);
-
-	querySelectorAllDeep("img,image").forEach((img) => {
-		if (isHtmlOrSvgImageElement(img)) {
-			repairImageElement(img, url);
-		}
-	});
-}
-
-export async function fixImageElementsBrokenFromFailedCompressionFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	installGlobalImageErrorHandler(url);
-
-	if (node instanceof HTMLImageElement) {
-		repairImageElement(node, url);
-	}
-
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("img,image", node).forEach((img) => {
-			if (isHtmlOrSvgImageElement(img)) repairImageElement(img, url);
-		});
-	}
 }
