@@ -10,6 +10,10 @@ import {
 
 const HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME = "bwsvr8911HasRepairedImgElement";
 
+function isHtmlOrSvgImageElement(node: Node): node is HTMLOrSVGImageElement {
+	return node instanceof HTMLImageElement || node instanceof SVGImageElement;
+}
+
 async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
 	const [defaultSettings, siteSpecificSettings] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
@@ -23,7 +27,7 @@ async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
 }
 
 async function fixImageElementsBrokenFromFailedCompression(
-	img: HTMLImageElement,
+	img: HTMLOrSVGImageElement,
 	url: UrlSchema,
 ): Promise<void> {
 	if (!(await isCompressionEnabled(url))) return;
@@ -31,20 +35,24 @@ async function fixImageElementsBrokenFromFailedCompression(
 	function handler() {
 		if (img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] === "true") return;
 
-		// Append the src and srcset so that the DNR rules won't redirect and fail again
-		img.src += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
-		img.srcset = img.srcset
-			.split(" ")
-			.map((urlOrSizeDefinition) => {
-				const validated = v.safeParse(UrlSchema, urlOrSizeDefinition);
+		if (img instanceof HTMLImageElement) {
+			// Append the src and srcset so that the DNR rules won't redirect and fail again
+			img.src += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+			img.srcset = img.srcset
+				.split(" ")
+				.map((urlOrSizeDefinition) => {
+					const validated = v.safeParse(UrlSchema, urlOrSizeDefinition);
 
-				if (validated.success) {
-					urlOrSizeDefinition += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
-				}
+					if (validated.success) {
+						urlOrSizeDefinition += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+					}
 
-				return urlOrSizeDefinition;
-			})
-			.join(" ");
+					return urlOrSizeDefinition;
+				})
+				.join(" ");
+		} else {
+			img.href.baseVal += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+		}
 
 		img.dataset[HAS_REPAIRED_IMG_ELEMENT_FLAG_NAME] = "true";
 	}
@@ -54,7 +62,11 @@ async function fixImageElementsBrokenFromFailedCompression(
 	// If the image already failed to load before we attached the listener,
 	// naturalWidth === 0 on a completed image indicates a load failure.
 	try {
-		if (img.complete && img.naturalWidth === 0) {
+		if (
+			img instanceof HTMLImageElement &&
+			img.complete &&
+			img.naturalWidth === 0
+		) {
 			handler();
 		}
 	} catch {}
@@ -63,8 +75,9 @@ async function fixImageElementsBrokenFromFailedCompression(
 export async function fixImageElementsBrokenFromFailedCompressionOnPageLoad(
 	url: UrlSchema,
 ) {
-	document.querySelectorAll("img").forEach((img) => {
-		fixImageElementsBrokenFromFailedCompression(img, url);
+	document.querySelectorAll("img,image").forEach((img) => {
+		if (isHtmlOrSvgImageElement(img))
+			fixImageElementsBrokenFromFailedCompression(img, url);
 	});
 }
 
@@ -77,8 +90,9 @@ export async function fixImageElementsBrokenFromFailedCompressionFromMutationObs
 	}
 
 	if (node instanceof HTMLElement) {
-		node.querySelectorAll("img").forEach((img) => {
-			fixImageElementsBrokenFromFailedCompression(img, url);
+		node.querySelectorAll("img,image").forEach((img) => {
+			if (isHtmlOrSvgImageElement(img))
+				fixImageElementsBrokenFromFailedCompression(img, url);
 		});
 	}
 }
