@@ -6,6 +6,10 @@ import {
 } from "./autoplay";
 import { fixImageElementsBrokenFromFailedCompression } from "./compression-patch";
 import {
+	forceLazyLoadingFromMutationObserver,
+	forceLazyLoadingOnPageLoad,
+} from "./lazyload";
+import {
 	disablePrefetchFromMutationObserver,
 	disablePrefetchOnPageLoad,
 } from "./prefetch";
@@ -19,6 +23,7 @@ const observer = (pageUrl: UrlSchema) =>
 				mutation.addedNodes.forEach((node) => {
 					disableAutoplayFromMutationObserver(node, pageUrl);
 					disablePrefetchFromMutationObserver(node, pageUrl);
+					forceLazyLoadingFromMutationObserver(node, pageUrl);
 				});
 			}
 		}
@@ -35,6 +40,8 @@ export default defineContentScript({
 		disableAutoplayOnPageLoad(PAGE_URL);
 
 		disablePrefetchOnPageLoad(PAGE_URL);
+
+		forceLazyLoadingOnPageLoad(PAGE_URL);
 
 		// Start observing the document for added nodes
 		observer(PAGE_URL).observe(document.documentElement, {
