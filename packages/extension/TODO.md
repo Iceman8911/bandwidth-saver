@@ -32,9 +32,9 @@
   - [ ] Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.  
   - [x] Rename query string props to prevent conflicts.
 - [x] Prevent autoplay
-- [ ] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
+- [x] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
 - [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
-- [ ] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
+- [x] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
   - Since MV3 DNR redirecting is rather limited, perhaps I can eventually try to do proper redirecting here, and of couse still fallback to the orignal url if it doens't work out. Although this would break any site functionality that relies on expecting the original url.
 - [ ] **Experimental**:
   - [-] ~~Replace `no-store` with `no-cache` on large resources~~
