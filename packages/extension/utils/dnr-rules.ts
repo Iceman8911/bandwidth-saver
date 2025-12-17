@@ -13,44 +13,39 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 		url: UrlSchema,
 	) => Promise<Browser.declarativeNetRequest.UpdateRuleOptions>,
 ): Promise<void> {
+	// Get all stored site origins and use a deterministic order
 	const urls = await getSiteUrlOriginsFromStorage();
+	const sortedUrls = urls.toSorted();
 
 	const ruleUpdatesToApply: Browser.declarativeNetRequest.UpdateRuleOptions = {
 		addRules: [],
 		removeRuleIds: [],
 	};
-	let ruleIncrementer = 0;
 
-	for (const url of urls) {
+	for (let i = 0; i < sortedUrls.length; i++) {
+		const url = sortedUrls[i];
+
 		if (
-			ruleIncrementer >=
-			DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE
+			i >=
+				DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE ||
+			!url
 		)
 			break;
 
-		const { useDefaultRules } =
-			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
+		const {
+			addRules: parsedRulesToAdd = [],
+			removeRuleIds: parsedRuleIdsToRemove = [],
+		} = await ruleCb(url);
 
-		if (!useDefaultRules) {
-			const {
-				addRules: parsedRulesToAdd = [],
-				removeRuleIds: parsedRuleIdsToRemove = [],
-			} = await ruleCb(url);
+		for (const ruleToAdd of parsedRulesToAdd) {
+			ruleToAdd.id += i;
+			ruleToAdd.condition.initiatorDomains = [new URL(url).host];
+			ruleUpdatesToApply.addRules?.push(ruleToAdd);
+		}
 
-			for (const ruleToAdd of parsedRulesToAdd) {
-				ruleToAdd.id += ruleIncrementer;
-				ruleToAdd.condition.initiatorDomains = [new URL(url).host]; // THe rule should only match the site it was made for
-
-				ruleUpdatesToApply.addRules?.push(ruleToAdd);
-			}
-
-			for (let ruleIdToRemove of parsedRuleIdsToRemove) {
-				ruleIdToRemove += ruleIncrementer;
-
-				ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
-			}
-
-			ruleIncrementer++;
+		for (let ruleIdToRemove of parsedRuleIdsToRemove) {
+			ruleIdToRemove += i;
+			ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
 		}
 	}
 
