@@ -72,6 +72,7 @@ export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	return storageItem;
 };
 
+// Todo: add caching
 export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
 	const key =
 		`${SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${getUrlSchemaOrigin(url)}` as const;

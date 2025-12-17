@@ -7,10 +7,7 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
-import {
-	getSiteDomainsToNotApplyDefaultRule,
-	watchChangesToSiteSpecificSettings,
-} from "@/utils/storage";
+import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -66,10 +63,10 @@ async function applyDefaultCspRules(enabled: boolean): Promise<void> {
 async function applySiteCspRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { bypassCsp, useDefaultRules } =
+			const { bypassCsp, ruleIdOffset } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			const isEnabled = bypassCsp && !useDefaultRules;
+			const isEnabled = bypassCsp && ruleIdOffset != null;
 
 			if (!isEnabled) {
 				return {

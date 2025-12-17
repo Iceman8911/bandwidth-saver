@@ -15,7 +15,6 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
-import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/storage";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
@@ -87,7 +86,7 @@ export async function getSiteProxyCompressionRules(
 	url: UrlSchema,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
-		{ useDefaultRules, compression },
+		{ ruleIdOffset, compression },
 		{ format, preserveAnim, quality, mode },
 		proxySettings,
 	] = await Promise.all([
@@ -96,7 +95,7 @@ export async function getSiteProxyCompressionRules(
 		getSiteSpecificProxySettingsStorageItem(url).getValue(),
 	]);
 
-	const isEnabled = compression && !useDefaultRules && mode === PROXY_MODE;
+	const isEnabled = compression && ruleIdOffset != null && mode === PROXY_MODE;
 
 	if (!isEnabled)
 		return {

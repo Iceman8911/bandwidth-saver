@@ -72,8 +72,7 @@ export default function App() {
 
 			<Show
 				when={
-					!siteSpecificGeneralSettings().useDefaultRules ||
-					scope() === "default"
+					!siteSpecificGeneralSettings().ruleIdOffset || scope() === "default"
 				}
 			>
 				<PopupSettings scope={scope()} tabUrl={activeTabUrl()} />

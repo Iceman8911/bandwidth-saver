@@ -15,36 +15,34 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 ): Promise<void> {
 	// Get all stored site origins and use a deterministic order
 	const urls = await getSiteUrlOriginsFromStorage();
-	const sortedUrls = urls.toSorted();
 
 	const ruleUpdatesToApply: Browser.declarativeNetRequest.UpdateRuleOptions = {
 		addRules: [],
 		removeRuleIds: [],
 	};
 
-	for (let i = 0; i < sortedUrls.length; i++) {
-		const url = sortedUrls[i];
+	for (const url of urls) {
+		const [
+			{
+				addRules: parsedRulesToAdd = [],
+				removeRuleIds: parsedRuleIdsToRemove = [],
+			},
+			{ ruleIdOffset },
+		] = await Promise.all([
+			ruleCb(url),
+			getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
+		]);
 
-		if (
-			i >=
-				DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE ||
-			!url
-		)
-			break;
-
-		const {
-			addRules: parsedRulesToAdd = [],
-			removeRuleIds: parsedRuleIdsToRemove = [],
-		} = await ruleCb(url);
+		if (ruleIdOffset == null) return;
 
 		for (const ruleToAdd of parsedRulesToAdd) {
-			ruleToAdd.id += i;
+			ruleToAdd.id += ruleIdOffset;
 			ruleToAdd.condition.initiatorDomains = [new URL(url).host];
 			ruleUpdatesToApply.addRules?.push(ruleToAdd);
 		}
 
 		for (let ruleIdToRemove of parsedRuleIdsToRemove) {
-			ruleIdToRemove += i;
+			ruleIdToRemove += ruleIdOffset;
 			ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
 		}
 	}
@@ -68,10 +66,10 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 	const urls = await getSiteUrlOriginsFromStorage();
 
 	for (const url of urls) {
-		const { useDefaultRules } =
+		const { ruleIdOffset } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-		if (!useDefaultRules) used++;
+		if (ruleIdOffset != null) used++;
 	}
 
 	return {
@@ -80,4 +78,48 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 			used,
 		used,
 	};
+}
+
+export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
+	ReadonlyArray<string>
+> {
+	const urls = await getSiteUrlOriginsFromStorage();
+
+	const domains: string[] = [];
+
+	for (const url of urls) {
+		const { ruleIdOffset } =
+			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
+
+		if (ruleIdOffset != null) domains.push(new URL(url).host);
+	}
+
+	return domains;
+}
+
+export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
+	const urls = await getSiteUrlOriginsFromStorage();
+
+	const usedRuleIdOffsets = (
+		await Promise.all(
+			urls.map((url) =>
+				getSiteSpecificGeneralSettingsStorageItem(url)
+					.getValue()
+					.then((setting) => setting.ruleIdOffset),
+			),
+		)
+	).filter((offset) => offset != null);
+
+	const excluded = new Set(usedRuleIdOffsets);
+	for (
+		let i = 0;
+		i < DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE;
+		i++
+	) {
+		if (!excluded.has(i)) {
+			return i;
+		}
+	}
+
+	return null;
 }

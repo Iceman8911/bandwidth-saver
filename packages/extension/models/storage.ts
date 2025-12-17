@@ -41,14 +41,14 @@ const GeneralSettingsSchema = v.object({
 	/** If `true`, disables autoplaying of videos and audio  */
 	noAutoplay: v.boolean(),
 
+	/** The offset of the rule id to use for this site.
+	 *
+	 * If `null`, the default rule is used
+	 */
+	ruleIdOffset: v.union([v.number(), v.null()]),
+
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
-
-	/** If true, the site will not have any site-specific DNR rules applied to it.
-	 *
-	 * In the default storage item, this will always resolve to `true`
-	 */
-	useDefaultRules: v.boolean(),
 });
 
 const CompressionSettingsSchema = v.object({
@@ -197,8 +197,8 @@ export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	compression: true,
 	lazyLoad: true,
 	noAutoplay: true,
+	ruleIdOffset: null,
 	saveData: true,
-	useDefaultRules: true,
 } as const satisfies v.InferOutput<typeof GeneralSettingsSchema>);
 
 export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {

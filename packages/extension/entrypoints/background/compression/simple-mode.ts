@@ -15,7 +15,6 @@ import {
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/storage";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
@@ -121,14 +120,14 @@ export async function getSiteSimpleCompressionRules(
 	url: UrlSchema,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
-		{ useDefaultRules, compression },
+		{ ruleIdOffset, compression },
 		{ format, preserveAnim, quality, mode, preferredEndpoint },
 	] = await Promise.all([
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 		getSiteSpecificCompressionSettingsStorageItem(url).getValue(),
 	]);
 
-	const isEnabled = compression && mode === SIMPLE_MODE && !useDefaultRules;
+	const isEnabled = compression && mode === SIMPLE_MODE && ruleIdOffset != null;
 
 	if (!isEnabled)
 		return {

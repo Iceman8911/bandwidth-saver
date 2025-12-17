@@ -20,13 +20,13 @@ function forceLazyLoading(el: HTMLImageOrIframeElement) {
 async function getLazyLoadToggleForSite(url: UrlSchema): Promise<boolean> {
 	const [
 		{ lazyLoad: nolazyLoadToggleForDefault },
-		{ lazyLoad: nolazyLoadToggleForSite, useDefaultRules },
+		{ lazyLoad: nolazyLoadToggleForSite, ruleIdOffset },
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (!useDefaultRules) {
+	if (ruleIdOffset != null) {
 		return nolazyLoadToggleForSite;
 	}
 

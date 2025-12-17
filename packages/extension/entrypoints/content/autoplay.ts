@@ -23,13 +23,13 @@ function disableAutoplay(element: HTMLMediaElement) {
 async function getAutoplayToggleForSite(url: UrlSchema): Promise<boolean> {
 	const [
 		{ noAutoplay: noAutoplayToggleForDefault },
-		{ noAutoplay: noAutoplayToggleForSite, useDefaultRules },
+		{ noAutoplay: noAutoplayToggleForSite, ruleIdOffset },
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (!useDefaultRules) {
+	if (ruleIdOffset != null) {
 		return noAutoplayToggleForSite;
 	}
 

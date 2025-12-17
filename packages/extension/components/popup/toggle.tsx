@@ -7,7 +7,10 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { getSiteSpecificRuleAllocationUsage } from "@/utils/dnr-rules";
+import {
+	getAvailableSiteRuleIdOffset,
+	getSiteSpecificRuleAllocationUsage,
+} from "@/utils/dnr-rules";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 
 const DEFAULT_DISABLED_SETTINGS = {
@@ -16,19 +19,21 @@ const DEFAULT_DISABLED_SETTINGS = {
 	compression: false,
 	lazyLoad: false,
 	noAutoplay: false,
+	ruleIdOffset: null,
 	saveData: false,
-	useDefaultRules: false,
 } as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
 
-const DEFAULT_ENABLED_SETTINGS = {
-	block: true,
-	bypassCsp: false,
-	compression: true,
-	lazyLoad: true,
-	noAutoplay: true,
-	saveData: true,
-	useDefaultRules: true,
-} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
+async function getDefaultEnabledSettings() {
+	return {
+		block: true,
+		bypassCsp: false,
+		compression: true,
+		lazyLoad: true,
+		noAutoplay: true,
+		ruleIdOffset: await getAvailableSiteRuleIdOffset(),
+		saveData: true,
+	} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
+}
 
 const doAllPropsMatchBoolean = (
 	obj: Record<string, boolean>,
@@ -111,14 +116,19 @@ function BaseSelectContainer<TOption extends string>(
 function DefaultEnabledToggle(props: {
 	settings: typeof DEFAULT_GENERAL_SETTINGS;
 }) {
-	const handleDefaultToggle = (enabled: boolean) =>
+	const handleDefaultToggle = async (enabled: boolean) =>
 		defaultGeneralSettingsStorageItem.setValue(
-			enabled ? DEFAULT_ENABLED_SETTINGS : DEFAULT_DISABLED_SETTINGS,
+			enabled ? await getDefaultEnabledSettings() : DEFAULT_DISABLED_SETTINGS,
 		);
 
 	return (
 		<BaseToggleContainer
-			checked={!doAllPropsMatchBoolean(props.settings, false)}
+			checked={
+				!doAllPropsMatchBoolean(
+					{ ...props.settings, ruleIdOffset: false },
+					false,
+				)
+			}
 			class="toggle-primary"
 			label="Enabled for all sites?"
 			onInput={handleDefaultToggle}
@@ -146,9 +156,9 @@ function SiteEnabledSelect(props: {
 	);
 
 	const selectedOption = (): SiteEnabledSelectValues =>
-		doAllPropsMatchBoolean({ ...props.settings }, false)
+		doAllPropsMatchBoolean({ ...props.settings, ruleIdOffset: false }, false)
 			? "disabled"
-			: props.settings.useDefaultRules
+			: props.settings.ruleIdOffset
 				? "default"
 				: "site-specific";
 
@@ -160,8 +170,8 @@ function SiteEnabledSelect(props: {
 			val === "disabled"
 				? DEFAULT_DISABLED_SETTINGS
 				: val === "site-specific"
-					? { ...prevValue, useDefaultRules: false }
-					: { ...prevValue, useDefaultRules: true },
+					? { ...prevValue, ruleIdOffset: await getAvailableSiteRuleIdOffset() }
+					: { ...prevValue, ruleIdOffset: null },
 		);
 	};
 
@@ -255,7 +265,7 @@ export function PopupToggles(props: {
 					settings={siteSpecificGeneralSettingsSignal()}
 					tabUrl={props.tabUrl}
 				/>
-				<Show when={!siteSpecificGeneralSettingsSignal().useDefaultRules}>
+				<Show when={!siteSpecificGeneralSettingsSignal().ruleIdOffset}>
 					<SiteSaveDataToggle
 						settings={siteSpecificGeneralSettingsSignal()}
 						tabUrl={props.tabUrl}

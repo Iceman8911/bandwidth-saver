@@ -20,13 +20,13 @@ function disablePrefetch(el: HTMLLinkElement) {
 async function getPrefetchToggleForSite(url: UrlSchema): Promise<boolean> {
 	const [
 		{ lazyLoad: noPrefetchToggleForDefault },
-		{ lazyLoad: noPrefetchToggleForSite, useDefaultRules },
+		{ lazyLoad: noPrefetchToggleForSite, ruleIdOffset },
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (!useDefaultRules) {
+	if (ruleIdOffset != null) {
 		return noPrefetchToggleForSite;
 	}
 

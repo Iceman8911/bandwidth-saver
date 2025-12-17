@@ -7,10 +7,7 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
-import {
-	getSiteDomainsToNotApplyDefaultRule,
-	watchChangesToSiteSpecificSettings,
-} from "@/utils/storage";
+import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
@@ -60,10 +57,10 @@ async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
 async function applySiteSaveDataRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { saveData, useDefaultRules } =
+			const { saveData, ruleIdOffset } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			const isEnabled = saveData && !useDefaultRules;
+			const isEnabled = saveData && ruleIdOffset != null;
 
 			if (!isEnabled) {
 				return {
