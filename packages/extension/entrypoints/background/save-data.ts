@@ -108,7 +108,7 @@ export async function saveDataToggleWatcher() {
 	await toggleSaveDataOnStartup();
 
 	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
-		.bypassCsp;
+		.saveData;
 
 	defaultGeneralSettingsStorageItem.watch(({ saveData }) => {
 		cachedEnabled = saveData;
