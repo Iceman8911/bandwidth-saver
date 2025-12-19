@@ -68,11 +68,29 @@ async function applySiteCspRules() {
 
 			const isEnabled = bypassCsp && ruleIdOffset != null && enabled;
 
+			const initiatorDomain = new URL(url).host;
+
+			const ruleIdWithOffset =
+				DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING +
+				(ruleIdOffset ?? 0);
+
 			if (!isEnabled) {
+				const possibleRuleToRemove = (
+					await browser.declarativeNetRequest.getSessionRules()
+				).find(
+					({ condition: { initiatorDomains }, action: { responseHeaders } }) =>
+						initiatorDomains?.[0] === initiatorDomain &&
+						responseHeaders?.every(
+							({ header }) =>
+								header === REMOVE_CSP_HEADER_RULES.responseHeaders[0].header ||
+								header === REMOVE_CSP_HEADER_RULES.responseHeaders[1].header,
+						),
+				);
+
 				return {
-					removeRuleIds: [
-						DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
-					],
+					removeRuleIds: possibleRuleToRemove
+						? [possibleRuleToRemove.id]
+						: undefined,
 				};
 			}
 
@@ -83,11 +101,12 @@ async function applySiteCspRules() {
 						condition: {
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING,
+						id: ruleIdWithOffset,
+						initiatorDomain: [initiatorDomain],
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				],
-				removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING],
+				removeRuleIds: [ruleIdWithOffset],
 			};
 		},
 	);
