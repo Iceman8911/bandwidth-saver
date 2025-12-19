@@ -88,10 +88,13 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 	const domains: string[] = [];
 
 	for (const url of urls) {
-		const { ruleIdOffset } =
+		const { ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-		if (ruleIdOffset != null) domains.push(new URL(url).host);
+		const shouldSiteBeUnaffectedByDefaultRule =
+			ruleIdOffset != null || !enabled;
+
+		if (shouldSiteBeUnaffectedByDefaultRule) domains.push(new URL(url).host);
 	}
 
 	return domains;
