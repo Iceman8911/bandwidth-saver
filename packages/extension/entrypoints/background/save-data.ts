@@ -13,6 +13,8 @@ const declarativeNetRequest = browser.declarativeNetRequest;
 
 const RESOURCE_TYPES = Object.values(declarativeNetRequest.ResourceType);
 
+const SAVE_DATA_HEADER = "Save-Data";
+
 /**
  * Applies both default and site-specific Save-Data rules.
  * This ensures excludedInitiatorDomains stays in sync when site settings change.
@@ -32,7 +34,7 @@ async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
 						action: {
 							requestHeaders: [
 								{
-									header: "Save-Data",
+									header: SAVE_DATA_HEADER,
 									operation: "set",
 									value: "on",
 								},
@@ -62,9 +64,25 @@ async function applySiteSaveDataRules() {
 
 			const applySaveData = saveData && ruleIdOffset != null && enabled;
 
+			const initiatorDomain = new URL(url).host;
+
+			const ruleIdWithOffset =
+				DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER +
+				(ruleIdOffset ?? 0);
+
 			if (!applySaveData) {
+				const possibleRuleToRemove = (
+					await browser.declarativeNetRequest.getSessionRules()
+				).find(
+					({ condition: { initiatorDomains }, action: { requestHeaders } }) =>
+						initiatorDomains?.[0] === initiatorDomain &&
+						requestHeaders?.[0]?.header === SAVE_DATA_HEADER,
+				);
+
 				return {
-					removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
+					removeRuleIds: possibleRuleToRemove
+						? [possibleRuleToRemove.id]
+						: undefined,
 				};
 			}
 
@@ -74,7 +92,7 @@ async function applySiteSaveDataRules() {
 						action: {
 							requestHeaders: [
 								{
-									header: "Save-Data",
+									header: SAVE_DATA_HEADER,
 									operation: "set",
 									value: "on",
 								},
@@ -82,13 +100,14 @@ async function applySiteSaveDataRules() {
 							type: "modifyHeaders",
 						},
 						condition: {
+							initiatorDomains: [initiatorDomain],
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER,
+						id: ruleIdWithOffset,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				],
-				removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
+				removeRuleIds: [ruleIdWithOffset],
 			};
 		},
 	);
