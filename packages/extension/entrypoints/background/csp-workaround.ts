@@ -63,10 +63,10 @@ async function applyDefaultCspRules(enabled: boolean): Promise<void> {
 async function applySiteCspRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { bypassCsp, ruleIdOffset } =
+			const { bypassCsp, ruleIdOffset, enabled } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			const isEnabled = bypassCsp && ruleIdOffset != null;
+			const isEnabled = bypassCsp && ruleIdOffset != null && enabled;
 
 			if (!isEnabled) {
 				return {
@@ -94,25 +94,21 @@ async function applySiteCspRules() {
 }
 
 async function toggleCspBlockingOnStartup() {
-	const { bypassCsp } = await defaultGeneralSettingsStorageItem.getValue();
+	const { bypassCsp, enabled } =
+		await defaultGeneralSettingsStorageItem.getValue();
 
-	const defaultCspRulePromise = applyDefaultCspRules(bypassCsp);
-
-	const siteCspOptionPromises = applySiteCspRules();
-
-	await Promise.all([defaultCspRulePromise, siteCspOptionPromises]);
+	await applyAllCspRules(bypassCsp && enabled);
 }
 
 export async function cspBypassToggleWatcher() {
 	await toggleCspBlockingOnStartup();
 
-	// Cache enabled state for use in site settings change handler
-	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
-		.bypassCsp;
+	const defaultSettings = await defaultGeneralSettingsStorageItem.getValue();
+	let cachedEnabled = defaultSettings.enabled && defaultSettings.bypassCsp;
 
-	defaultGeneralSettingsStorageItem.watch(({ bypassCsp }) => {
-		cachedEnabled = bypassCsp;
-		applyDefaultCspRules(bypassCsp);
+	defaultGeneralSettingsStorageItem.watch(({ bypassCsp, enabled }) => {
+		cachedEnabled = bypassCsp && enabled;
+		applyDefaultCspRules(cachedEnabled);
 	});
 
 	// Reapply BOTH default and site rules when site settings change

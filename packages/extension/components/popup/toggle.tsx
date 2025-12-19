@@ -13,38 +13,7 @@ import {
 } from "@/utils/dnr-rules";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 
-const DEFAULT_DISABLED_SETTINGS = {
-	block: false,
-	bypassCsp: false,
-	compression: false,
-	lazyLoad: false,
-	noAutoplay: false,
-	ruleIdOffset: null,
-	saveData: false,
-} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
-
-async function getDefaultEnabledSettings() {
-	return {
-		block: true,
-		bypassCsp: false,
-		compression: true,
-		lazyLoad: true,
-		noAutoplay: true,
-		ruleIdOffset: await getAvailableSiteRuleIdOffset(),
-		saveData: true,
-	} as const satisfies typeof DEFAULT_GENERAL_SETTINGS;
-}
-
-const doAllPropsMatchBoolean = (
-	obj: Record<string, boolean>,
-	boolToMatch: boolean,
-): boolean => {
-	for (const key in obj) {
-		if (obj[key] !== boolToMatch) return false;
-	}
-
-	return true;
-};
+// TODO: Add a tooltip for the "default", "site-specific", "disabled"
 
 function BaseContainer(props: { children: JSXElement; class?: string }) {
 	return (
@@ -83,7 +52,8 @@ type BaseSelectContainerProps<TOption extends string> = {
 	label: JSXElement;
 	selected: TOption;
 	onInput: (val: TOption) => void;
-	class?: string;
+	selectClass?: string;
+	containerClass?: string;
 	options: TOption[];
 };
 
@@ -91,13 +61,11 @@ function BaseSelectContainer<TOption extends string>(
 	props: BaseSelectContainerProps<TOption>,
 ) {
 	return (
-		<BaseContainer
-			class={`grid-cols-[50%_1fr]! ${props.selected === "default" ? "w-full" : ""}`}
-		>
+		<BaseContainer class={`grid-cols-[50%_1fr]! ${props.containerClass ?? ""}`}>
 			<span class="label overflow-auto">{props.label}</span>
 
 			<select
-				class={`select ${props.class ?? ""}`}
+				class={`select ${props.selectClass ?? ""}`}
 				//@ts-expect-error This will be right in practice
 				onInput={(e) => props.onInput(e.target.value)}
 			>
@@ -116,19 +84,15 @@ function BaseSelectContainer<TOption extends string>(
 function DefaultEnabledToggle(props: {
 	settings: typeof DEFAULT_GENERAL_SETTINGS;
 }) {
-	const handleDefaultToggle = async (enabled: boolean) =>
-		defaultGeneralSettingsStorageItem.setValue(
-			enabled ? await getDefaultEnabledSettings() : DEFAULT_DISABLED_SETTINGS,
-		);
+	const handleDefaultToggle = async (enabled: boolean) => {
+		const prevValue = await defaultGeneralSettingsStorageItem.getValue();
+
+		defaultGeneralSettingsStorageItem.setValue({ ...prevValue, enabled });
+	};
 
 	return (
 		<BaseToggleContainer
-			checked={
-				!doAllPropsMatchBoolean(
-					{ ...props.settings, ruleIdOffset: false },
-					false,
-				)
-			}
+			checked={props.settings.enabled}
 			class="toggle-primary"
 			label="Enabled for all sites?"
 			onInput={handleDefaultToggle}
@@ -156,9 +120,9 @@ function SiteEnabledSelect(props: {
 	);
 
 	const selectedOption = (): SiteEnabledSelectValues =>
-		doAllPropsMatchBoolean({ ...props.settings, ruleIdOffset: false }, false)
+		!props.settings.enabled
 			? "disabled"
-			: props.settings.ruleIdOffset
+			: props.settings.ruleIdOffset == null
 				? "default"
 				: "site-specific";
 
@@ -166,18 +130,27 @@ function SiteEnabledSelect(props: {
 		const storageItem = siteSpecificGeneralSettingsStorageItem();
 		const prevValue = await storageItem.getValue();
 
-		storageItem.setValue(
-			val === "disabled"
-				? DEFAULT_DISABLED_SETTINGS
-				: val === "site-specific"
-					? { ...prevValue, ruleIdOffset: await getAvailableSiteRuleIdOffset() }
-					: { ...prevValue, ruleIdOffset: null },
-		);
+		switch (val) {
+			case "site-specific":
+				prevValue.ruleIdOffset = await getAvailableSiteRuleIdOffset();
+				prevValue.enabled = true;
+				break;
+			case "default":
+				prevValue.ruleIdOffset = null;
+				prevValue.enabled = true;
+				break;
+			case "disabled":
+				prevValue.ruleIdOffset = null;
+				prevValue.enabled = false;
+				break;
+		}
+
+		storageItem.setValue(prevValue);
 	};
 
 	return (
 		<BaseSelectContainer
-			class="select-secondary select-sm"
+			containerClass={selectedOption() !== "site-specific" ? "w-full" : ""}
 			label={
 				<span class="flex flex-wrap break-all">
 					Mode for <span class="ml-2 text-info">{props.tabUrl}</span>
@@ -185,6 +158,7 @@ function SiteEnabledSelect(props: {
 			}
 			onInput={handleSiteToggle}
 			options={selectOptions()}
+			selectClass="select-secondary select-sm"
 			selected={selectedOption()}
 		/>
 	);
@@ -250,6 +224,10 @@ export function PopupToggles(props: {
 		DEFAULT_GENERAL_SETTINGS,
 	);
 
+	const areSiteSpecificSettingsActive = () =>
+		siteSpecificGeneralSettingsSignal().ruleIdOffset != null &&
+		siteSpecificGeneralSettingsSignal().enabled;
+
 	return (
 		<div class="flex justify-around gap-4">
 			<Show
@@ -265,7 +243,8 @@ export function PopupToggles(props: {
 					settings={siteSpecificGeneralSettingsSignal()}
 					tabUrl={props.tabUrl}
 				/>
-				<Show when={!siteSpecificGeneralSettingsSignal().ruleIdOffset}>
+
+				<Show when={areSiteSpecificSettingsActive()}>
 					<SiteSaveDataToggle
 						settings={siteSpecificGeneralSettingsSignal()}
 						tabUrl={props.tabUrl}

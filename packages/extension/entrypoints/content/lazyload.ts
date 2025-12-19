@@ -17,24 +17,21 @@ function forceLazyLoading(el: HTMLImageOrIframeElement) {
 	el.loading = "lazy";
 }
 
-async function getLazyLoadToggleForSite(url: UrlSchema): Promise<boolean> {
-	const [
-		{ lazyLoad: nolazyLoadToggleForDefault },
-		{ lazyLoad: nolazyLoadToggleForSite, ruleIdOffset },
-	] = await Promise.all([
+async function shouldLazyLoadOnSite(url: UrlSchema): Promise<boolean> {
+	const [defaultSettings, siteSpecificSettings] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (ruleIdOffset != null) {
-		return nolazyLoadToggleForSite;
+	if (siteSpecificSettings.ruleIdOffset != null) {
+		return siteSpecificSettings.enabled && siteSpecificSettings.lazyLoad;
 	}
 
-	return nolazyLoadToggleForDefault;
+	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
 export async function forceLazyLoadingOnPageLoad(url: UrlSchema) {
-	if (!(await getLazyLoadToggleForSite(url))) return;
+	if (!(await shouldLazyLoadOnSite(url))) return;
 
 	querySelectorAllDeep("img,iframe").forEach((ele) => {
 		if (isImageOrIframeElement(ele)) {
@@ -47,7 +44,7 @@ export async function forceLazyLoadingFromMutationObserver(
 	node: Node,
 	url: UrlSchema,
 ) {
-	if (!(await getLazyLoadToggleForSite(url))) return;
+	if (!(await shouldLazyLoadOnSite(url))) return;
 
 	if (isImageOrIframeElement(node)) {
 		forceLazyLoading(node);

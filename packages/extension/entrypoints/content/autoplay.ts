@@ -20,24 +20,21 @@ function disableAutoplay(element: HTMLMediaElement) {
 	element.setAttribute("preload", "none");
 }
 
-async function getAutoplayToggleForSite(url: UrlSchema): Promise<boolean> {
-	const [
-		{ noAutoplay: noAutoplayToggleForDefault },
-		{ noAutoplay: noAutoplayToggleForSite, ruleIdOffset },
-	] = await Promise.all([
+async function shouldDisableAutoplayForSite(url: UrlSchema): Promise<boolean> {
+	const [defaultSettings, siteSpecificSettings] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (ruleIdOffset != null) {
-		return noAutoplayToggleForSite;
+	if (siteSpecificSettings.ruleIdOffset != null) {
+		return siteSpecificSettings.enabled && siteSpecificSettings.noAutoplay;
 	}
 
-	return noAutoplayToggleForDefault;
+	return defaultSettings.enabled && defaultSettings.noAutoplay;
 }
 
 export async function disableAutoplayOnPageLoad(url: UrlSchema) {
-	if (!(await getAutoplayToggleForSite(url))) return;
+	if (!(await shouldDisableAutoplayForSite(url))) return;
 
 	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
 		if (isMediaElement(mediaElement)) {
@@ -50,7 +47,7 @@ export async function disableAutoplayFromMutationObserver(
 	node: Node,
 	url: UrlSchema,
 ) {
-	if (!(await getAutoplayToggleForSite(url))) return;
+	if (!(await shouldDisableAutoplayForSite(url))) return;
 
 	if (isMediaElement(node)) {
 		disableAutoplay(node);

@@ -24,14 +24,14 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 	const [
 		{ format, preserveAnim, quality, mode },
 		proxySettings,
-		{ compression },
+		{ compression, enabled },
 	] = await Promise.all([
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultProxySettingsStorageItem.getValue(),
 		defaultGeneralSettingsStorageItem.getValue(),
 	]);
 
-	const isEnabled = compression && mode === PROXY_MODE;
+	const isEnabled = compression && mode === PROXY_MODE && enabled;
 
 	if (!isEnabled) {
 		return {
@@ -86,7 +86,7 @@ export async function getSiteProxyCompressionRules(
 	url: UrlSchema,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
-		{ ruleIdOffset, compression },
+		{ ruleIdOffset, compression, enabled },
 		{ format, preserveAnim, quality, mode },
 		proxySettings,
 	] = await Promise.all([
@@ -95,7 +95,8 @@ export async function getSiteProxyCompressionRules(
 		getSiteSpecificProxySettingsStorageItem(url).getValue(),
 	]);
 
-	const isEnabled = compression && ruleIdOffset != null && mode === PROXY_MODE;
+	const isEnabled =
+		compression && ruleIdOffset != null && mode === PROXY_MODE && enabled;
 
 	if (!isEnabled)
 		return {

@@ -50,13 +50,13 @@ function getUrlToRedirectToForChosenEndpoint(
 export async function getDefaultSimpleCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
 		{ format, preferredEndpoint, preserveAnim, quality, mode },
-		{ compression },
+		{ compression, enabled },
 	] = await Promise.all([
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultGeneralSettingsStorageItem.getValue(),
 	]);
 
-	const isEnabled = compression && mode === SIMPLE_MODE;
+	const isEnabled = compression && mode === SIMPLE_MODE && enabled;
 
 	if (!isEnabled) {
 		return {
@@ -120,14 +120,15 @@ export async function getSiteSimpleCompressionRules(
 	url: UrlSchema,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
-		{ ruleIdOffset, compression },
+		{ ruleIdOffset, compression, enabled },
 		{ format, preserveAnim, quality, mode, preferredEndpoint },
 	] = await Promise.all([
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 		getSiteSpecificCompressionSettingsStorageItem(url).getValue(),
 	]);
 
-	const isEnabled = compression && mode === SIMPLE_MODE && ruleIdOffset != null;
+	const isEnabled =
+		compression && mode === SIMPLE_MODE && ruleIdOffset != null && enabled;
 
 	if (!isEnabled)
 		return {

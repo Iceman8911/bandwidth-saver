@@ -57,12 +57,12 @@ async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
 async function applySiteSaveDataRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { saveData, ruleIdOffset } =
+			const { saveData, ruleIdOffset, enabled } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-			const isEnabled = saveData && ruleIdOffset != null;
+			const applySaveData = saveData && ruleIdOffset != null && enabled;
 
-			if (!isEnabled) {
+			if (!applySaveData) {
 				return {
 					removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_SAVE_DATA_HEADER],
 				};
@@ -95,24 +95,21 @@ async function applySiteSaveDataRules() {
 }
 
 async function toggleSaveDataOnStartup() {
-	const { saveData } = await defaultGeneralSettingsStorageItem.getValue();
+	const { saveData, enabled } =
+		await defaultGeneralSettingsStorageItem.getValue();
 
-	const defaultSaveDataRulePromise = applyDefaultSaveDataRules(saveData);
-
-	const siteSaveDataOptionPromises = applySiteSaveDataRules();
-
-	await Promise.all([defaultSaveDataRulePromise, siteSaveDataOptionPromises]);
+	await applyAllSaveDataRules(saveData && enabled);
 }
 
 export async function saveDataToggleWatcher() {
 	await toggleSaveDataOnStartup();
 
-	let cachedEnabled = (await defaultGeneralSettingsStorageItem.getValue())
-		.saveData;
+	const defaultSettings = await defaultGeneralSettingsStorageItem.getValue();
+	let cachedEnabled = defaultSettings.saveData && defaultSettings.enabled;
 
-	defaultGeneralSettingsStorageItem.watch(({ saveData }) => {
-		cachedEnabled = saveData;
-		applyDefaultSaveDataRules(saveData);
+	defaultGeneralSettingsStorageItem.watch(({ saveData, enabled }) => {
+		cachedEnabled = saveData && enabled;
+		applyDefaultSaveDataRules(cachedEnabled);
 	});
 
 	// Reapply BOTH default and site rules when site settings change

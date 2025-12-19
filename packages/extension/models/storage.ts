@@ -35,6 +35,9 @@ const GeneralSettingsSchema = v.object({
 	/** If disabled, no compression at all is applied */
 	compression: v.boolean(),
 
+	/** If `false`, completely disables all functionality for the default / site-specific settings */
+	enabled: v.boolean(),
+
 	/** If `true`, modifies all relevant html elements to lazily load their content and also sets up a mutation observer for dynamically inserted elements */
 	lazyLoad: v.boolean(),
 
@@ -195,6 +198,7 @@ export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	block: true,
 	bypassCsp: false,
 	compression: true,
+	enabled: true,
 	lazyLoad: true,
 	noAutoplay: true,
 	ruleIdOffset: null,

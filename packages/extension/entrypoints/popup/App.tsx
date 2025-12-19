@@ -62,6 +62,10 @@ export default function App() {
 		DEFAULT_GENERAL_SETTINGS,
 	);
 
+	const areSiteSpecificRulesEnabled = () =>
+		siteSpecificGeneralSettings().enabled &&
+		siteSpecificGeneralSettings().ruleIdOffset != null;
+
 	return (
 		<div class="h-fit w-96 divide-y divide-base-300 *:w-full *:p-4">
 			<PopupHeader scope={scope()} setScope={setScope} />
@@ -70,11 +74,7 @@ export default function App() {
 
 			<PopupToggles scope={scope()} tabUrl={activeTabUrl()} />
 
-			<Show
-				when={
-					!siteSpecificGeneralSettings().ruleIdOffset || scope() === "default"
-				}
-			>
+			<Show when={areSiteSpecificRulesEnabled() || scope() === "default"}>
 				<PopupSettings scope={scope()} tabUrl={activeTabUrl()} />
 			</Show>
 

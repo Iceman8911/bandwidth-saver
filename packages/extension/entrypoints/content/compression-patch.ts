@@ -23,9 +23,9 @@ async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
 	]);
 
 	if (siteSpecificSettings.ruleIdOffset != null)
-		return siteSpecificSettings.compression;
+		return siteSpecificSettings.compression && siteSpecificSettings.enabled;
 
-	return defaultSettings.compression;
+	return defaultSettings.compression && defaultSettings.enabled;
 }
 
 let compressionCache: boolean | undefined;

@@ -17,24 +17,21 @@ function disablePrefetch(el: HTMLLinkElement) {
 	}
 }
 
-async function getPrefetchToggleForSite(url: UrlSchema): Promise<boolean> {
-	const [
-		{ lazyLoad: noPrefetchToggleForDefault },
-		{ lazyLoad: noPrefetchToggleForSite, ruleIdOffset },
-	] = await Promise.all([
+async function shouldDisablePrefetchForSite(url: UrlSchema): Promise<boolean> {
+	const [defaultSettings, siteSpecificSettings] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (ruleIdOffset != null) {
-		return noPrefetchToggleForSite;
+	if (siteSpecificSettings.ruleIdOffset != null) {
+		return siteSpecificSettings.enabled && siteSpecificSettings.lazyLoad;
 	}
 
-	return noPrefetchToggleForDefault;
+	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
 export async function disablePrefetchOnPageLoad(url: UrlSchema) {
-	if (!(await getPrefetchToggleForSite(url))) return;
+	if (!(await shouldDisablePrefetchForSite(url))) return;
 
 	querySelectorAllDeep("link").forEach((linkElement) => {
 		if (isLinkElement(linkElement)) {
@@ -47,7 +44,7 @@ export async function disablePrefetchFromMutationObserver(
 	node: Node,
 	url: UrlSchema,
 ) {
-	if (!(await getPrefetchToggleForSite(url))) return;
+	if (!(await shouldDisablePrefetchForSite(url))) return;
 
 	if (isLinkElement(node)) {
 		disablePrefetch(node);
