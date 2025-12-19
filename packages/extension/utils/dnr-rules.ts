@@ -22,27 +22,16 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 	};
 
 	for (const url of urls) {
-		const [
-			{
-				addRules: parsedRulesToAdd = [],
-				removeRuleIds: parsedRuleIdsToRemove = [],
-			},
-			{ ruleIdOffset },
-		] = await Promise.all([
-			ruleCb(url),
-			getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-		]);
-
-		if (ruleIdOffset == null) return;
+		const {
+			addRules: parsedRulesToAdd = [],
+			removeRuleIds: parsedRuleIdsToRemove = [],
+		} = await ruleCb(url);
 
 		for (const ruleToAdd of parsedRulesToAdd) {
-			ruleToAdd.id += ruleIdOffset;
-			ruleToAdd.condition.initiatorDomains = [new URL(url).host];
 			ruleUpdatesToApply.addRules?.push(ruleToAdd);
 		}
 
-		for (let ruleIdToRemove of parsedRuleIdsToRemove) {
-			ruleIdToRemove += ruleIdOffset;
+		for (const ruleIdToRemove of parsedRuleIdsToRemove) {
 			ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
 		}
 	}

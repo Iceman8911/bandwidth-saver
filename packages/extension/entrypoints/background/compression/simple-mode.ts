@@ -130,11 +130,13 @@ export async function getSiteSimpleCompressionRules(
 	const isEnabled =
 		compression && mode === SIMPLE_MODE && ruleIdOffset != null && enabled;
 
+	const ruleIdWithOffset =
+		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE +
+		(ruleIdOffset ?? 0);
+
 	if (!isEnabled)
 		return {
-			removeRuleIds: [
-				DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE,
-			],
+			removeRuleIds: [ruleIdWithOffset],
 		};
 
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
@@ -169,13 +171,14 @@ export async function getSiteSimpleCompressionRules(
 				},
 				condition: {
 					excludedRequestDomains: [preferredEndpointDomain],
+					initiatorDomains: [new URL(url).host],
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
 				},
-				id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE,
+				id: ruleIdWithOffset,
 				priority: DeclarativeNetRequestPriority.LOWEST,
 			},
 		],
-		removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE],
+		removeRuleIds: [ruleIdWithOffset],
 	};
 }

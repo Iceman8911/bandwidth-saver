@@ -98,9 +98,13 @@ export async function getSiteProxyCompressionRules(
 	const isEnabled =
 		compression && ruleIdOffset != null && mode === PROXY_MODE && enabled;
 
+	const ruleIdWithOffset =
+		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
+		(ruleIdOffset ?? 0);
+
 	if (!isEnabled)
 		return {
-			removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY],
+			removeRuleIds: [ruleIdWithOffset],
 		};
 
 	const proxyUrl = customProxyUrlConstructor(
@@ -130,10 +134,10 @@ export async function getSiteProxyCompressionRules(
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
 				},
-				id: DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY,
+				id: ruleIdWithOffset,
 				priority: DeclarativeNetRequestPriority.LOWEST,
 			},
 		],
-		removeRuleIds: [DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY],
+		removeRuleIds: [ruleIdWithOffset],
 	};
 }
