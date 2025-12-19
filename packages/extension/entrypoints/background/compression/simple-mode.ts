@@ -15,10 +15,12 @@ import {
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX = "(https?://)(.+?)(?:\\?.*)?$";
+/** The `bwsvr8911-img-compression-flag` is just a useless flage to make the regex unique */
+const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://)(.+?)(?:\\?.*)?$`;
 
 const PROTOCOL_OF_BASE_URL = "\\1" as UrlSchema;
 
@@ -130,14 +132,28 @@ export async function getSiteSimpleCompressionRules(
 	const isEnabled =
 		compression && mode === SIMPLE_MODE && ruleIdOffset != null && enabled;
 
+	const initiatorDomain = new URL(url).host;
+
+	if (!isEnabled) {
+		// Search for the old rule since it only has a single intiator domain, and the appropriate unique image regex
+		const possibleRuleToRemove = (
+			await browser.declarativeNetRequest.getSessionRules()
+		).find(
+			({ condition: { regexFilter, initiatorDomains } }) =>
+				regexFilter === IMAGE_URL_REGEX &&
+				initiatorDomains?.[0] === initiatorDomain,
+		);
+
+		return {
+			removeRuleIds: possibleRuleToRemove
+				? [possibleRuleToRemove.id]
+				: undefined,
+		};
+	}
+
 	const ruleIdWithOffset =
 		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE +
 		(ruleIdOffset ?? 0);
-
-	if (!isEnabled)
-		return {
-			removeRuleIds: [ruleIdWithOffset],
-		};
 
 	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
 
@@ -171,7 +187,7 @@ export async function getSiteSimpleCompressionRules(
 				},
 				condition: {
 					excludedRequestDomains: [preferredEndpointDomain],
-					initiatorDomains: [new URL(url).host],
+					initiatorDomains: [initiatorDomain],
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
 				},

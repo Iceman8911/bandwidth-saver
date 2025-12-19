@@ -15,10 +15,11 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
+import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX = "(https?://.+)";
+const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://.+)`;
 
 export async function getDefaultProxyCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
 	const [
@@ -102,10 +103,24 @@ export async function getSiteProxyCompressionRules(
 		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
 		(ruleIdOffset ?? 0);
 
-	if (!isEnabled)
+	const initiatorDomain = new URL(url).host;
+
+	if (!isEnabled) {
+		// Search for the old rule since it only has a single intiator domain, and the appropriate unique image regex
+		const possibleRuleToRemove = (
+			await browser.declarativeNetRequest.getSessionRules()
+		).find(
+			({ condition: { regexFilter, initiatorDomains } }) =>
+				regexFilter === IMAGE_URL_REGEX &&
+				initiatorDomains?.[0] === initiatorDomain,
+		);
+
 		return {
-			removeRuleIds: [ruleIdWithOffset],
+			removeRuleIds: possibleRuleToRemove
+				? [possibleRuleToRemove.id]
+				: undefined,
 		};
+	}
 
 	const proxyUrl = customProxyUrlConstructor(
 		{
@@ -130,7 +145,7 @@ export async function getSiteProxyCompressionRules(
 				},
 				condition: {
 					excludedRequestDomains: [proxyDomain],
-					initiatorDomains: [new URL(url).host],
+					initiatorDomains: [initiatorDomain],
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
 				},
