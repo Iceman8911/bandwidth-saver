@@ -29,7 +29,8 @@
       - Due to the way the code works, this will result in endless redirects since the compressor returns the original url which the code picks up and redirects again >~<. Our best bet is to simply ignore urls with query strings entirely.
       - ~~Using a proxy server, perhaps we can rewrite some parts of the qeury string? Like the file format and quality?~~
   - [x] Exempt request domains with `**res.cloudinary.com**` and urls with query strings since they may have optimization built in that we may affect.
-  - [ ] Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.  
+  - [-] ~~Add a compression option for stripping / preserving query strings (defaults to preserving them unlike the current behaviour that strips them) for simple compression mode. Since some image links break in either of those modes.~~
+    - It's probably better to not remove the query strings at all, me thinks.
   - [x] Rename query string props to prevent conflicts.
 - [x] Prevent autoplay
 - [x] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)

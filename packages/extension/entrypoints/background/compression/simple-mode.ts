@@ -19,8 +19,14 @@ import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
-/** The `bwsvr8911-img-compression-flag` is just a useless flage to make the regex unique */
-const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://)(.+?)(?:\\?.*)?$`;
+/** The `bwsvr8911-img-compression-flag` is just a useless flage to make the regex unique
+ *
+ * Capture groups:
+ * 1 -> protocol (https?://)
+ * 2 -> host + path up to (but not including) query
+ * 3 -> query string (including leading '?') if present
+ */
+const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://)(.+?)(\\?.*)?$`;
 
 const PROTOCOL_OF_BASE_URL = "\\1" as UrlSchema;
 
@@ -29,8 +35,12 @@ const BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL = "\\2" as UrlSchema;
 const BASE_URL_WITHOUT_QUERY_STRING =
 	`${PROTOCOL_OF_BASE_URL}${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}` as UrlSchema;
 
+/** The captured query string (including leading '?') — may be empty when the original URL had no query */
+const CAPTURED_QUERY_STRING = "\\3" as UrlSchema;
+
+/** When we add our redirected-search-param flag, it must come after any original query string */
 const BASE_URL_WITH_FLAG =
-	`${BASE_URL_WITHOUT_QUERY_STRING}#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
+	`${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
 
 function getFallbackEndpoint(preferredEndpoint: ImageCompressorEndpoint) {
 	return preferredEndpoint === ImageCompressorEndpoint.DEFAULT
@@ -43,9 +53,11 @@ function getUrlToRedirectToForChosenEndpoint(
 ) {
 	switch (endpoint) {
 		case ImageCompressorEndpoint.WORDPRESS:
-			return BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL;
+			// Wordpress endpoint expects the URL without protocol; preserve query string
+			return `${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}${CAPTURED_QUERY_STRING}` as UrlSchema;
 		default:
-			return BASE_URL_WITHOUT_QUERY_STRING;
+			// Preserve protocol + path + query string
+			return `${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}` as UrlSchema;
 	}
 }
 
