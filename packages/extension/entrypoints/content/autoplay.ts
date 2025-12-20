@@ -13,9 +13,10 @@ function isMediaElement(element: Node): element is HTMLMediaElement {
 
 function disableAutoplay(element: HTMLMediaElement) {
 	element.autoplay = false;
-	// element.loop = false;
+	element.loop = false;
 	element.muted = true; // some sites re-enable autoplay unless muted
 	element.pause?.();
+	element.preload = "none";
 	element.removeAttribute("autoplay");
 	element.setAttribute("preload", "none");
 }
