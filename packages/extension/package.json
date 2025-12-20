@@ -3,6 +3,8 @@
 		"@bandwidth-saver/shared": "workspace:*",
 		"@elysiajs/eden": "^1.4.5",
 		"@iceman8911/unplugin-inline-enum": "^0.6.7",
+		"@kobalte/core": "^0.13.11",
+		"@kobalte/tailwindcss": "^0.9.0",
 		"@types/query-selector-shadow-dom": "^1.0.4",
 		"@webext-core/messaging": "^2.3.0",
 		"ky": "^1.14.1",
