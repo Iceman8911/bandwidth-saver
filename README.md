@@ -8,6 +8,8 @@ Settings are configured globally and may be optionally toggled per site.[^2]
 
 Using both the observational `webRequest` and the `Performance API`, the bandwidth consumed by requested assets can be measured *mostly* accurately.
 
+Statistics are stored per day for at most 90 days of use, beyond that, older entries get combined into a total sum, to prevent unbounded growth (and especially because data that old won't have much use).
+
 ### Why use both of them?
 
 - `webRequest` doesn't help here if the request is lacking the `Content-Length` header.
