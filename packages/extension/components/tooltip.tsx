@@ -1,3 +1,4 @@
+import { Tooltip } from "@kobalte/core/tooltip";
 import type { JSXElement } from "solid-js";
 
 const TOOLTIP_DIRECTION_MAPPING = {
@@ -21,11 +22,15 @@ type BaseTooltipProps = {
 
 export function BaseTooltip(props: BaseTooltipProps) {
 	return (
-		<div class={`tooltip ${TOOLTIP_DIRECTION_MAPPING[props.dir ?? "top"]}`}>
-			<div class="tooltip-content">{props.tip}</div>
-
-			{props.children}
-		</div>
+		<Tooltip placement={props.dir ?? "top"}>
+			<Tooltip.Trigger>{props.children}</Tooltip.Trigger>
+			<Tooltip.Portal>
+				<Tooltip.Content class="origin-(--kb-tooltip-content-transform-origin) animate-content-hide ui-expanded:animate-content-show rounded bg-neutral px-2 py-1 text-neutral-content">
+					<Tooltip.Arrow />
+					{props.tip}
+				</Tooltip.Content>
+			</Tooltip.Portal>
+		</Tooltip>
 	);
 }
 
