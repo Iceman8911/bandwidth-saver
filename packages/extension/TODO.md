@@ -23,6 +23,7 @@
   - [x] Gifs
   - [ ] Videos
     - Perhaps we can just focus on popular sites like Youtube, Vimeo, Reddit?, Facebook, etc.
+    - Like for reddit, the quality and format are usually specified in the query string. Perhaps a content script can deal with this?
   - [ ] Audios
   - [x] Fix ORB / CORB errors on sites like Reddit and discord.
     - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. ~~So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.~~
@@ -34,7 +35,7 @@
   - [x] Rename query string props to prevent conflicts.
 - [x] Prevent autoplay
 - [x] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
-- [ ] Patch relevant elements to make them lazy load (`loading=lazy`)
+- [x] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [x] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
   - Since MV3 DNR redirecting is rather limited, perhaps I can eventually try to do proper redirecting here, and of couse still fallback to the orignal url if it doens't work out. Although this would break any site functionality that relies on expecting the original url.
 - [ ] **Experimental**:
