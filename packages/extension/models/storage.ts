@@ -111,7 +111,7 @@ const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.minValue(0),
 );
 
-export const AssetStatisticsSchema = v.object({
+export const SingleAssetStatisticsSchema = v.object({
 	audio: IntegerFromAtLeastZeroSchema,
 	font: IntegerFromAtLeastZeroSchema,
 	html: IntegerFromAtLeastZeroSchema,
@@ -121,22 +121,38 @@ export const AssetStatisticsSchema = v.object({
 	style: IntegerFromAtLeastZeroSchema,
 	video: IntegerFromAtLeastZeroSchema,
 });
-export type AssetStatisticsSchema = v.InferOutput<typeof AssetStatisticsSchema>;
+export type SingleAssetStatisticsSchema = v.InferOutput<
+	typeof SingleAssetStatisticsSchema
+>;
+
+export const CombinedAssetStatisticsSchema = v.object({
+	/** Sum of older entries that will no longer be recorded individually (~after 90 days) */
+	aggregate: SingleAssetStatisticsSchema,
+
+	/** Indexed with the day in milliseconds */
+	dailyStats: v.record(
+		v.pipe(v.string(), v.transform(Number), v.number()),
+		SingleAssetStatisticsSchema,
+	),
+});
+export type CombinedAssetStatisticsSchema = v.InferOutput<
+	typeof CombinedAssetStatisticsSchema
+>;
 
 const StatisticsSchema = v.object({
 	// Maybe I can monitor the original requests for their (content-length) before the redirect? But this is be pretty inaccurate anyway since some sites just don't include it.
-	bytesSaved: AssetStatisticsSchema,
+	bytesSaved: CombinedAssetStatisticsSchema,
 
 	/** Total amount of data consumption after compression / blocking */
-	bytesUsed: AssetStatisticsSchema,
+	bytesUsed: CombinedAssetStatisticsSchema,
 
 	lastReset: v.optional(v.pipe(v.string(), v.isoTimestamp())),
 
 	/** Amount of requests blocked */
-	requestsBlocked: AssetStatisticsSchema,
+	requestsBlocked: CombinedAssetStatisticsSchema,
 
 	/** Amount of non-cached requests re-routed to the compression service */
-	requestsCompressed: AssetStatisticsSchema,
+	requestsCompressed: CombinedAssetStatisticsSchema,
 
 	/** Amount of non-cached requests made by site(s) in total */
 	requestsMade: IntegerFromAtLeastZeroSchema,
@@ -149,7 +165,7 @@ const DetailedStatisticsSchema = v.object({
 	 *
 	 * The url keys are also their url origin, (otherwise there'd be way too many bloat entries)
 	 */
-	crossOrigin: v.record(UrlSchema, AssetStatisticsSchema),
+	crossOrigin: v.record(UrlSchema, CombinedAssetStatisticsSchema),
 });
 
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
@@ -205,22 +221,33 @@ export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	saveData: true,
 } as const satisfies v.InferOutput<typeof GeneralSettingsSchema>);
 
-export const DEFAULT_ASSET_STATISTICS = v.parse(AssetStatisticsSchema, {
-	audio: 0,
-	font: 0,
-	html: 0,
-	image: 0,
-	other: 0,
-	script: 0,
-	style: 0,
-	video: 0,
-} as const satisfies AssetStatisticsSchema);
+export const DEFAULT_SINGLE_ASSET_STATISTICS = v.parse(
+	SingleAssetStatisticsSchema,
+	{
+		audio: 0,
+		font: 0,
+		html: 0,
+		image: 0,
+		other: 0,
+		script: 0,
+		style: 0,
+		video: 0,
+	} as const satisfies SingleAssetStatisticsSchema,
+);
+
+export const DEFAULT_COMBINED_ASSET_STATISTICS = v.parse(
+	CombinedAssetStatisticsSchema,
+	{
+		aggregate: { ...DEFAULT_SINGLE_ASSET_STATISTICS },
+		dailyStats: [],
+	} as const satisfies CombinedAssetStatisticsSchema,
+);
 
 export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
-	bytesSaved: { ...DEFAULT_ASSET_STATISTICS },
-	bytesUsed: { ...DEFAULT_ASSET_STATISTICS },
-	requestsBlocked: { ...DEFAULT_ASSET_STATISTICS },
-	requestsCompressed: { ...DEFAULT_ASSET_STATISTICS },
+	bytesSaved: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
+	bytesUsed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
+	requestsBlocked: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
+	requestsCompressed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsMade: 0,
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 

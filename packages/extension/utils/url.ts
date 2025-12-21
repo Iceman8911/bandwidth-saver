@@ -1,6 +1,6 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import type { AssetStatisticsSchema } from "@/models/storage";
+import type { SingleAssetStatisticsSchema } from "@/models/storage";
 
 const IMAGE_EXTS = [
 	"png",
@@ -20,7 +20,9 @@ const FONT_EXTS = ["woff", "woff2", "ttf", "otf", "eot"];
 const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
 const AUDIO_EXTS = ["mp3", "wav", "flac", "aac", "ogg"];
 
-export function detectAssetTypeFromUrl(url: URL): keyof AssetStatisticsSchema {
+export function detectAssetTypeFromUrl(
+	url: URL,
+): keyof SingleAssetStatisticsSchema {
 	try {
 		const { pathname } = url;
 		const ext = pathname.split(".").pop()?.toLowerCase() ?? "";

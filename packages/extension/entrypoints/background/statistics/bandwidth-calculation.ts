@@ -1,9 +1,18 @@
 import {
+	clone,
+	getDayStartInMillisecondsUTC,
 	ImageCompressorEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import { DEFAULT_ASSET_STATISTICS } from "@/models/storage";
-import { DUMMY_TAB_URL, MessageType } from "@/shared/constants";
+import {
+	DEFAULT_COMBINED_ASSET_STATISTICS,
+	DEFAULT_SINGLE_ASSET_STATISTICS,
+} from "@/models/storage";
+import {
+	DUMMY_TAB_URL,
+	MAX_DAYS_OF_DAILY_STATISTICS,
+	MessageType,
+} from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
 import {
 	getSiteSpecificStatisticsStorageItem,
@@ -26,6 +35,67 @@ type BandwidthRawDataFromMessages = {
 
 const bandwidthRawDataMap = new Map<UrlSchema, BandwidthRawDataFromMessages>();
 
+/** Returns the overload of keys that don't fit within the limit */
+function getOverloadDailyStatsKeys(
+	dailyStats: typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats,
+): number[] {
+	const rawDays: ReadonlyArray<string> = Object.keys(dailyStats);
+
+	if (rawDays.length <= MAX_DAYS_OF_DAILY_STATISTICS) return [];
+
+	/** Ascending order is used so the oldest entries are at the beginning and can be easily sliced */
+	const sortedDays: ReadonlyArray<number> = rawDays
+		.map(Number)
+		.sort((a, b) => a - b);
+
+	const overloadDayCount = rawDays.length - MAX_DAYS_OF_DAILY_STATISTICS;
+
+	return sortedDays.slice(0, overloadDayCount);
+}
+
+function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
+	combinedStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS>;
+	day: number;
+	type: keyof typeof DEFAULT_SINGLE_ASSET_STATISTICS;
+	valueToAdd: number;
+}): typeof DEFAULT_COMBINED_ASSET_STATISTICS {
+	const { valueToAdd, combinedStats: oldCombinedStats, day, type } = arg;
+
+	/** Clone since it's readonly */
+	const newCombinedStats = clone(oldCombinedStats);
+
+	const dailyStats = {
+		...newCombinedStats.dailyStats,
+		[day]: {
+			...DEFAULT_SINGLE_ASSET_STATISTICS,
+			...newCombinedStats.dailyStats[day],
+			[type]: (newCombinedStats.dailyStats[day]?.[type] ?? 0) + valueToAdd,
+		},
+	};
+
+	// Prevent overloads
+	for (const overloadKey of getOverloadDailyStatsKeys(dailyStats)) {
+		const { audio, font, html, image, other, script, style, video } =
+			dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
+
+		newCombinedStats.aggregate.audio += audio;
+		newCombinedStats.aggregate.font += font;
+		newCombinedStats.aggregate.html += html;
+		newCombinedStats.aggregate.image += image;
+		newCombinedStats.aggregate.other += other;
+		newCombinedStats.aggregate.script += script;
+		newCombinedStats.aggregate.style += style;
+		newCombinedStats.aggregate.video += video;
+
+		// I think this will tank perf, but until wxt supports custom transforms, this'll have to do
+		delete dailyStats[overloadKey];
+	}
+
+	newCombinedStats.dailyStats = dailyStats;
+
+	return newCombinedStats;
+}
+
 async function storeBandwidthDataFromPayload(
 	data: BandwidthMonitoringMessagePayload,
 	globalStore: Awaited<ReturnType<typeof statisticsStorageItem.getValue>>,
@@ -43,28 +113,63 @@ async function storeBandwidthDataFromPayload(
 
 	if (!assetSize) return;
 
-	globalStore.bytesUsed[type] += assetSize;
+	const day = getDayStartInMillisecondsUTC();
+
+	globalStore.bytesUsed =
+		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+			combinedStats: globalStore.bytesUsed,
+			day,
+			type,
+			valueToAdd: assetSize,
+		});
+
 	globalStore.requestsMade++;
 
 	const globalStatisticsSavePromise =
 		statisticsStorageItem.setValue(globalStore);
 
-	siteScopedStore.bytesUsed[type] += assetSize;
+	siteScopedStore.bytesUsed =
+		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+			combinedStats: siteScopedStore.bytesUsed,
+			day,
+			type,
+			valueToAdd: assetSize,
+		});
+
 	siteScopedStore.requestsMade++;
 
 	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
 
 	if (hostOrigin !== assetUrlOrigin) {
 		const crossOriginData =
-			siteScopedStore.crossOrigin[assetUrlOrigin] ?? DEFAULT_ASSET_STATISTICS;
-		crossOriginData[type] += assetSize;
-		siteScopedStore.crossOrigin[assetUrlOrigin] = crossOriginData;
+			siteScopedStore.crossOrigin[assetUrlOrigin] ??
+			DEFAULT_COMBINED_ASSET_STATISTICS;
+
+		siteScopedStore.crossOrigin[assetUrlOrigin] =
+			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+				combinedStats: crossOriginData,
+				day,
+				type,
+				valueToAdd: assetSize,
+			});
 	}
 
 	// TODO: This may result in false positives if this compressor endpoints ccan be accessed as functional websites
 	if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
-		globalStore.requestsCompressed[type]++;
-		siteScopedStore.requestsCompressed[type]++;
+		globalStore.requestsCompressed =
+			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+				combinedStats: globalStore.requestsCompressed,
+				day,
+				type,
+				valueToAdd: 1,
+			});
+		siteScopedStore.requestsCompressed =
+			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+				combinedStats: siteScopedStore.requestsCompressed,
+				day,
+				type,
+				valueToAdd: 1,
+			});
 	}
 
 	const siteScopedStatisticsSavePromise =
@@ -123,7 +228,7 @@ async function processCachedBandwidthData(
 		const data: BandwidthMonitoringMessagePayload = {
 			assetUrl: urlEntry,
 			bytes: {
-				...DEFAULT_ASSET_STATISTICS,
+				...DEFAULT_SINGLE_ASSET_STATISTICS,
 				[type]: perfApi.bytes[type] || webRequest.bytes[type],
 			},
 			hostOrigin: webRequest.hostOrigin || perfApi.hostOrigin,

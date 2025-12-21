@@ -146,3 +146,5 @@ export const UPDATE_INTERVAL_IN_MS = 1000 * 60 * 60;
 export const NOOP_RULE_CONDITION = {
 	requestDomains: ["never-ever-match.invalid"],
 } as const satisfies Browser.declarativeNetRequest.RuleCondition;
+
+export const MAX_DAYS_OF_DAILY_STATISTICS = 90;

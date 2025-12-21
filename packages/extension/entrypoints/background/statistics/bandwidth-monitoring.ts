@@ -1,8 +1,8 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import {
-	type AssetStatisticsSchema,
-	DEFAULT_ASSET_STATISTICS,
+	DEFAULT_SINGLE_ASSET_STATISTICS,
+	type SingleAssetStatisticsSchema,
 } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { detectAssetTypeFromUrl } from "@/utils/url";
@@ -18,7 +18,7 @@ const getHeader = (
 function detectAssetTypeFromContentTypeOrUrl(
 	contentType?: string,
 	url?: string | URL,
-): keyof AssetStatisticsSchema {
+): keyof SingleAssetStatisticsSchema {
 	const parsedUrl = new URL(url ?? DUMMY_TAB_URL);
 
 	if (!contentType) return detectAssetTypeFromUrl(parsedUrl);
@@ -60,7 +60,7 @@ export function monitorBandwidthUsageViaBackground() {
 				getHeader(responseHeaders, "content-type") ?? "other"
 			).toLowerCase();
 
-			let assetType: keyof AssetStatisticsSchema = "other";
+			let assetType: keyof SingleAssetStatisticsSchema = "other";
 
 			switch (type) {
 				case "stylesheet":
@@ -90,7 +90,7 @@ export function monitorBandwidthUsageViaBackground() {
 					break;
 			}
 
-			const assetSize = { ...DEFAULT_ASSET_STATISTICS };
+			const assetSize = { ...DEFAULT_SINGLE_ASSET_STATISTICS };
 			assetSize[assetType] = contentLength;
 
 			cacheBandwidthDataFromWebRequest({

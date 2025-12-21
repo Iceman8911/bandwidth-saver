@@ -5,6 +5,7 @@ export * from "./models/shared";
 export * from "./utils/array";
 export * from "./utils/blob";
 export * from "./utils/clone";
+export * from "./utils/date";
 export * from "./utils/fetch";
 export * from "./utils/image-optimization/adapter";
 export * from "./utils/random";

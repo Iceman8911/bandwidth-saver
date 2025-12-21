@@ -1,5 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
-import type { AssetStatisticsSchema } from "@/models/storage";
+import type { SingleAssetStatisticsSchema } from "@/models/storage";
 
 export type BandwidthMonitoringMessagePayload = {
 	/** The full url for the downloaded asset which may be cross-origin */
@@ -11,8 +11,8 @@ export type BandwidthMonitoringMessagePayload = {
 	hostOrigin: UrlSchema;
 
 	/** Bytes downloaded for the asset type */
-	bytes: AssetStatisticsSchema;
+	bytes: SingleAssetStatisticsSchema;
 
 	/** The asset type */
-	type: keyof AssetStatisticsSchema;
+	type: keyof SingleAssetStatisticsSchema;
 };
