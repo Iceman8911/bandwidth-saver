@@ -52,6 +52,7 @@
   - With numbers, I have a ~2 petabyte limit so it'll be more than enough lol.
 - [ ] Add specific statistics like "dataUsed" per tab session (refreshed whenever the tab is reloaded / navigated away and to)
   - [ ] Maybe some other time ranges would be nice, like daily, weekly, monthly, etc.
+- [ ] Since only data for roughly 300 sites can be stored in the sync area, consider if it's worth implementing a hybrid model for stroing excess data in the local-scoped extension storage.
 
 # Monitoring
 
