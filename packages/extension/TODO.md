@@ -56,7 +56,8 @@
 
 # Monitoring
 
-- [ ] Add websocket statistics
+- [-] ~~Add websocket statistics~~
+  - Not practical since it'll probably tank performance if I try to patch Websocket APIs to monitor data flow
 
 # Optimization
 
