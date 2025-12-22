@@ -1,5 +1,6 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { clone } from "@bandwidth-saver/shared";
+import { lru } from "tiny-lru";
 import { STORAGE_DEFAULTS } from "@/models/storage";
 import { getUrlSchemaOrigin } from "@/utils/url";
 import { StorageKey } from "./constants";
@@ -60,27 +61,82 @@ export const statisticsStorageItem = storage.defineItem(STATISTICS, {
 	init: () => clone(STORAGE_DEFAULTS[STATISTICS]),
 });
 
+const CACHE_SIZE = 100;
+
+const siteSpecificStatisticsStorageItemCache =
+	lru<
+		WxtStorageItem<
+			(typeof STORAGE_DEFAULTS)[typeof SITE_SPECIFIC_STATISTICS_PREFIX],
+			Record<string, unknown>
+		>
+	>(CACHE_SIZE);
+
+const siteSpecificGeneralSettingsStorageItemCache =
+	lru<
+		WxtStorageItem<
+			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_GENERAL],
+			Record<string, unknown>
+		>
+	>(CACHE_SIZE);
+
+const siteSpecificBlockSettingsStorageItemCache =
+	lru<
+		WxtStorageItem<
+			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_BLOCK],
+			Record<string, unknown>
+		>
+	>(CACHE_SIZE);
+
+const siteSpecificCompressionSettingsStorageItemCache =
+	lru<
+		WxtStorageItem<
+			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_COMPRESSION],
+			Record<string, unknown>
+		>
+	>(CACHE_SIZE);
+
+const siteSpecificProxySettingsStorageItemCache =
+	lru<
+		WxtStorageItem<
+			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_PROXY],
+			Record<string, unknown>
+		>
+	>(CACHE_SIZE);
+
 export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	const key =
 		`${SITE_SPECIFIC_STATISTICS_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const possibleCachedStorageItem =
+		siteSpecificStatisticsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = storage.defineItem(key, {
 		fallback: clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
 		init: () => clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
 	});
 
+	siteSpecificStatisticsStorageItemCache.set(key, storageItem);
+
 	return storageItem;
 };
 
-// Todo: add caching
 export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
 	const key =
 		`${SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const possibleCachedStorageItem =
+		siteSpecificGeneralSettingsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = storage.defineItem(key, {
 		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
 		init: defaultGeneralSettingsStorageItem.getValue,
 	});
+
+	siteSpecificGeneralSettingsStorageItemCache.set(key, storageItem);
 
 	return storageItem;
 };
@@ -89,10 +145,17 @@ export const getSiteSpecificBlockSettingsStorageItem = (url: UrlSchema) => {
 	const key =
 		`${SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX}${getUrlSchemaOrigin(url)}` as const;
 
+	const possibleCachedStorageItem =
+		siteSpecificBlockSettingsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
+
 	const storageItem = storage.defineItem(key, {
 		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
 		init: defaultBlockSettingsStorageItem.getValue,
 	});
+
+	siteSpecificBlockSettingsStorageItemCache.set(key, storageItem);
 
 	return storageItem;
 };
@@ -103,21 +166,36 @@ export const getSiteSpecificCompressionSettingsStorageItem = (
 	const key =
 		`${SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX}${getUrlSchemaOrigin(url)}` as const;
 
+	const possibleCachedStorageItem =
+		siteSpecificCompressionSettingsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
+
 	const storageItem = storage.defineItem(key, {
 		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
 		init: defaultCompressionSettingsStorageItem.getValue,
 	});
 
+	siteSpecificCompressionSettingsStorageItemCache.set(key, storageItem);
+
 	return storageItem;
 };
+
 export const getSiteSpecificProxySettingsStorageItem = (url: UrlSchema) => {
 	const key =
 		`${SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const possibleCachedStorageItem =
+		siteSpecificProxySettingsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = storage.defineItem(key, {
 		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
 		init: defaultProxySettingsStorageItem.getValue,
 	});
+
+	siteSpecificProxySettingsStorageItemCache.set(key, storageItem);
 
 	return storageItem;
 };
