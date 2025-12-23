@@ -21,7 +21,6 @@ function ExtensionLogoAndName() {
 type NavigationBarLinkProps = {
 	href: `/${string}`;
 	children: JSXElement;
-	isSelected?: boolean;
 };
 
 function NavigationBarLink(props: NavigationBarLinkProps) {
