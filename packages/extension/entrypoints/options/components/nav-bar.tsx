@@ -1,7 +1,6 @@
 import { NavigationMenu } from "@kobalte/core/navigation-menu";
 import { A } from "@solidjs/router";
 import type { JSXElement } from "solid-js";
-import Logo from "@/assets/icon.png";
 import { OptionsPageRoute } from "../shared/constants";
 
 function ExtensionLogoAndName() {
@@ -9,7 +8,7 @@ function ExtensionLogoAndName() {
 		<div class="flex items-center justify-center gap-4">
 			<div class="avatar">
 				<div class="size-10 rounded">
-					<img alt="Bandwidth Saver and Monitor Logo" src={Logo} />
+					<img alt="Bandwidth Saver and Monitor Logo" src="icons/128.png" />
 				</div>
 			</div>
 
