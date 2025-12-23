@@ -5,10 +5,10 @@ type OptionsPageLayoutProps = { children?: JSXElement };
 
 export default function OptionsPageLayout(props: OptionsPageLayoutProps) {
 	return (
-		<div class="h-screen w-screen">
+		<div class="flex h-screen w-screen flex-col">
 			<OptionsPageNavigationBar />
 
-			<div class="size-full p-4">{props.children}</div>
+			<div class="grow overflow-auto p-4 contain-strict">{props.children}</div>
 		</div>
 	);
 }
