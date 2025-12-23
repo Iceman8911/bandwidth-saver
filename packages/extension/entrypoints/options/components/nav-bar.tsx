@@ -2,6 +2,7 @@ import { NavigationMenu } from "@kobalte/core/navigation-menu";
 import { A } from "@solidjs/router";
 import type { JSXElement } from "solid-js";
 import Logo from "@/assets/icon.png";
+import { OptionsPageRoute } from "../shared/constants";
 
 function ExtensionLogoAndName() {
 	return (
@@ -43,15 +44,25 @@ function NavigationBarLinks() {
 			orientation="horizontal"
 		>
 			<NavigationMenu.Menu>
-				<NavigationBarLink href="/">Overview</NavigationBarLink>
+				<NavigationBarLink href={OptionsPageRoute.OVERVIEW}>
+					Overview
+				</NavigationBarLink>
 
-				<NavigationBarLink href="/compression">Compression</NavigationBarLink>
+				<NavigationBarLink href={OptionsPageRoute.COMPRESSION}>
+					Compression
+				</NavigationBarLink>
 
-				<NavigationBarLink href="/blocking">Blocking</NavigationBarLink>
+				<NavigationBarLink href={OptionsPageRoute.BLOCK}>
+					Blocking
+				</NavigationBarLink>
 
-				<NavigationBarLink href="/proxy">Proxy</NavigationBarLink>
+				<NavigationBarLink href={OptionsPageRoute.PROXY}>
+					Proxy
+				</NavigationBarLink>
 
-				<NavigationBarLink href="/about">About</NavigationBarLink>
+				<NavigationBarLink href={OptionsPageRoute.ABOUT}>
+					About
+				</NavigationBarLink>
 			</NavigationMenu.Menu>
 		</NavigationMenu>
 	);
