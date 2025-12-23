@@ -8,7 +8,7 @@ export default function OptionsPageLayout(props: OptionsPageLayoutProps) {
 		<div class="h-screen w-screen">
 			<OptionsPageNavigationBar />
 
-			{props.children}
+			<div class="size-full p-4">{props.children}</div>
 		</div>
 	);
 }
