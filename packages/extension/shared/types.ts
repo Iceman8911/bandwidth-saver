@@ -16,3 +16,8 @@ export type BandwidthMonitoringMessagePayload = {
 	/** The asset type */
 	type: keyof SingleAssetStatisticsSchema;
 };
+
+/** Just a base layout for any compoennt that maybe be able to receive external classes */
+export interface ComponentAcceptingClassesProps {
+	class?: string;
+}
