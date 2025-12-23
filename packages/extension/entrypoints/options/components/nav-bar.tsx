@@ -26,7 +26,7 @@ type NavigationBarLinkProps = {
 function NavigationBarLink(props: NavigationBarLinkProps) {
 	return (
 		<NavigationMenu.Trigger
-			activeClass="menu-active"
+			activeClass="menu-active text-primary"
 			as={A}
 			end={true}
 			href={props.href}
