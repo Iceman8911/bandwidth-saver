@@ -2,7 +2,10 @@
 import { type ObjectToEnum, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 
-export const STORAGE_VERSION = 1;
+export enum ExtensionData {
+	NAME = "Bandwidth Saver and Monitor",
+	VERSION = 1,
+}
 
 export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 

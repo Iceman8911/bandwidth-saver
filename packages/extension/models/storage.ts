@@ -8,11 +8,7 @@ import {
 	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import {
-	CompressionMode,
-	STORAGE_VERSION,
-	StorageKey,
-} from "@/shared/constants";
+import { CompressionMode, ExtensionData, StorageKey } from "@/shared/constants";
 
 export const StorageAreaSchema = v.picklist([
 	"local",
@@ -258,7 +254,10 @@ export const DEFAULT_SITE_SPECIFIC_STATISTICS = v.parse(
 	>,
 );
 
-const DEFAULT_SCHEMA_VERSION = v.parse(SchemaVersionSchema, STORAGE_VERSION);
+const DEFAULT_SCHEMA_VERSION = v.parse(
+	SchemaVersionSchema,
+	ExtensionData.VERSION,
+);
 
 export const STORAGE_DEFAULTS = {
 	[StorageKey.DEFAULT_SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
