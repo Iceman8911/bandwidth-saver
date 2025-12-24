@@ -44,6 +44,23 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 				DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
 			],
 		},
+		{
+			addRules: [
+				{
+					action: {
+						type: "allow",
+					},
+					condition: {
+						regexFilter: "^https?://[^/]+/.*_next/image(?:[/?#]|$)",
+					},
+					id: DeclarativeNetRequestRuleIds.EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
+			],
+		},
 
 		// Don't process svgs
 		{
