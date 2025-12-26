@@ -8,11 +8,8 @@ import {
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
+import { convertBytesToMB } from "@/utils/size";
 import { DEFAULT_SITE_SPECIFIC_STATISTICS } from "../../models/storage";
-
-function convertBytesToMB(bytes: number): number {
-	return Math.round((bytes * 100) / (1024 * 1024)) / 100;
-}
 
 export function PopupStatistics(props: {
 	scope: SettingsScope;
