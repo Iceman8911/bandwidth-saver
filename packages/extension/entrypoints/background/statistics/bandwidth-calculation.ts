@@ -75,17 +75,14 @@ function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
 
 	// Prevent overloads
 	for (const overloadKey of getOverloadDailyStatsKeys(dailyStats)) {
-		const { audio, font, html, image, other, script, style, video } =
+		const overloadStats =
 			dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
 
-		newCombinedStats.aggregate.audio += audio;
-		newCombinedStats.aggregate.font += font;
-		newCombinedStats.aggregate.html += html;
-		newCombinedStats.aggregate.image += image;
-		newCombinedStats.aggregate.other += other;
-		newCombinedStats.aggregate.script += script;
-		newCombinedStats.aggregate.style += style;
-		newCombinedStats.aggregate.video += video;
+		let key: keyof typeof overloadStats;
+
+		for (key in overloadStats) {
+			newCombinedStats.aggregate[key] += overloadStats[key];
+		}
 
 		// I think this will tank perf, but until wxt supports custom transforms, this'll have to do
 		delete dailyStats[overloadKey];
