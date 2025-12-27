@@ -11,7 +11,7 @@ import {
 	type OptionsPageBandwidthUsageOverTimeProps,
 } from "../components/bandwidth-usage";
 
-function getDailyBandwidthStatisticsForMonth(
+function getDailyBandwidthStatisticsForWeek(
 	dailyStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats>,
 ): OptionsPageBandwidthUsageOverTimeProps["usage"] {
 	const dailyStatsAsArray = Object.entries(dailyStats);
@@ -23,8 +23,8 @@ function getDailyBandwidthStatisticsForMonth(
 		}))
 		// In descending order so the most recent entries are at the beginning of the array
 		.sort(({ date: a }, { date: b }) => Number(b) - Number(a))
-		// Get at most 31 days for the month
-		.slice(0, 31)
+		// Get at most 8 days (yeah, I know it's not exactly a week :p)
+		.slice(0, 8)
 		// Reverse the order for the chart so the most recent entries will be rightmost
 		.reverse();
 
@@ -61,7 +61,7 @@ export default function OptionsPageOverviewRoute() {
 
 	const dailyBandwidthStats = createMemo(
 		() =>
-			getDailyBandwidthStatisticsForMonth(
+			getDailyBandwidthStatisticsForWeek(
 				totalBandwidthUsedStatistics().dailyStats,
 			),
 		undefined,
