@@ -4,7 +4,6 @@ import {
 	LineChart,
 	PieChart,
 } from "chartist";
-import type { JSXElement } from "solid-js";
 import type { DEFAULT_SINGLE_ASSET_STATISTICS } from "@/models/storage";
 import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import "chartist/dist/index.css";
@@ -14,8 +13,8 @@ import { convertBytesToMB } from "@/utils/size";
 
 type BaseCardProps = {
 	class?: string | undefined;
-	children: JSXElement;
 	title: string;
+	ref: HTMLDivElement;
 };
 
 function BaseCard(props: BaseCardProps) {
@@ -24,7 +23,7 @@ function BaseCard(props: BaseCardProps) {
 			<div class="card-body">
 				<h2 class="card-title">{props.title}</h2>
 
-				<div class="py-4">{props.children}</div>
+				<div class="h-full py-4" ref={props.ref} />
 			</div>
 		</div>
 	);
@@ -68,9 +67,11 @@ export function OptionsPageBandwidthUsageOverTime(
 	);
 
 	return (
-		<BaseCard class={props.class} title="Bandwidth Usage Over Time">
-			<div ref={chartWrapper$}></div>
-		</BaseCard>
+		<BaseCard
+			class={props.class}
+			ref={chartWrapper$}
+			title="Bandwidth Usage Over Time"
+		/>
 	);
 }
 
@@ -129,8 +130,10 @@ export function OptionsPageBandwidthUsageBreakdown(
 	);
 
 	return (
-		<BaseCard class={props.class} title="Bandwidth Usage Breakdown">
-			<div ref={chartWrapper$}></div>
-		</BaseCard>
+		<BaseCard
+			class={props.class}
+			ref={chartWrapper$}
+			title="Bandwidth Usage Breakdown"
+		/>
 	);
 }
