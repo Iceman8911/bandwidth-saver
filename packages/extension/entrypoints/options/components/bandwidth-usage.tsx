@@ -58,21 +58,26 @@ export function OptionsPageBandwidthUsageOverTime(
 ) {
 	let chartWrapper$!: HTMLDivElement;
 
-	createEffect(
-		() =>
-			new LineChart(
-				chartWrapper$,
-				{
-					labels: props.usage.map((usage) =>
-						extractMonthAndDayOfMonthFromDate(usage.date),
-					),
-					series: [
-						props.usage.map((usage) => convertBytesToMB(usage.dataUsed)),
-					],
-				},
-				{ showArea: true },
-			),
-	);
+	createEffect(() => {
+		const [labels, series] = props.usage.reduce<[string[], number[]]>(
+			(chartLabelsAndSeries, { dataUsed, date }) => {
+				chartLabelsAndSeries[0].push(extractMonthAndDayOfMonthFromDate(date));
+				chartLabelsAndSeries[1].push(convertBytesToMB(dataUsed));
+
+				return chartLabelsAndSeries;
+			},
+			[[], []],
+		);
+
+		new LineChart(
+			chartWrapper$,
+			{
+				labels,
+				series: [series],
+			},
+			{ showArea: true },
+		);
+	});
 
 	return (
 		<BaseCard
