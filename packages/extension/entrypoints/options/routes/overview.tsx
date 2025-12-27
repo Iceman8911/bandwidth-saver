@@ -79,12 +79,12 @@ export default function OptionsPageOverviewRoute() {
 	return (
 		<div class="grid max-h-full grid-cols-8 grid-rows-5 gap-4">
 			<OptionsPageBandwidthUsageOverTime
-				class="col-span-5 row-span-2"
+				class="col-span-full row-span-2 md:col-span-5"
 				usage={dailyBandwidthStats()}
 			/>
 
 			<OptionsPageBandwidthUsageBreakdown
-				class="col-span-3 row-span-2"
+				class="col-span-full row-span-2 md:col-span-3"
 				usage={bandwidthUsageBreakdown()}
 			/>
 		</div>

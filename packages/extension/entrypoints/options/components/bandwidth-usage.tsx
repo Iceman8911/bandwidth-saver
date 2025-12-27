@@ -24,7 +24,7 @@ function BaseCard(props: BaseCardProps) {
 			<div class="card-body">
 				<h2 class="card-title">{props.title}</h2>
 
-				<div class="card-body">{props.children}</div>
+				<div class="py-4">{props.children}</div>
 			</div>
 		</div>
 	);
