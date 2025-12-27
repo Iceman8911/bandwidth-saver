@@ -9,12 +9,14 @@ import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import "chartist/dist/index.css";
 import "./bandwidth-usage.css";
 import { capitalizeString } from "@bandwidth-saver/shared";
+import type { JSXElement } from "solid-js";
 import { convertBytesToMB } from "@/utils/size";
 
 type BaseCardProps = {
 	class?: string | undefined;
 	title: string;
 	ref: HTMLDivElement;
+	children?: JSXElement;
 };
 
 function BaseCard(props: BaseCardProps) {
@@ -23,7 +25,9 @@ function BaseCard(props: BaseCardProps) {
 			<div class="card-body">
 				<h2 class="card-title">{props.title}</h2>
 
-				<div class="h-full py-4" ref={props.ref} />
+				<div class="relative h-full py-4" ref={props.ref}>
+					{props.children}
+				</div>
 			</div>
 		</div>
 	);
@@ -120,7 +124,7 @@ export function OptionsPageBandwidthUsageBreakdown(
 				},
 				{
 					donut: true,
-					donutWidth: "50%",
+					donutWidth: "33%",
 					ignoreEmptyValues: true,
 					labelDirection: "explode",
 					// labelOffset: 5,
@@ -134,6 +138,12 @@ export function OptionsPageBandwidthUsageBreakdown(
 			class={props.class}
 			ref={chartWrapper$}
 			title="Bandwidth Usage Breakdown"
-		/>
+		>
+			<div class="absolute top-[40%] right-[41.5%] grid grid-rows-2 place-items-center font-semibold">
+				<p>Total Used:</p>
+
+				<p>{convertBytesToMB(totalBandwidthUsed())}MB</p>
+			</div>
+		</BaseCard>
 	);
 }
