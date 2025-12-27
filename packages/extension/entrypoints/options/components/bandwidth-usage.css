@@ -1,0 +1,35 @@
+@reference "../../../shared/app.css";
+
+.ct-label {
+	@apply text-base-content;
+	@apply fill-base-content;
+}
+
+.ct-series-a {
+	.ct-area {
+		@apply fill-primary/75;
+	}
+
+	.ct-point,
+	.ct-line {
+		@apply stroke-primary;
+	}
+}
+
+.ct-series-b {
+	.ct-area {
+		@apply fill-secondary/75;
+	}
+
+	.ct-point,
+	.ct-line {
+		@apply stroke-secondary;
+	}
+}
+
+.ct-chart-pie,
+.ct-chart-donut {
+	.ct-label {
+		@apply font-semibold;
+	}
+}

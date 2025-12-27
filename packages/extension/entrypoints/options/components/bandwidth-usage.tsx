@@ -1,45 +1,136 @@
-import { JSXElement, onMount } from 'solid-js'
-import { Chart, Title, Tooltip, Legend, Colors } from 'chart.js'
-import { Line, Pie } from 'solid-chartjs'
-import { ComponentAcceptingClassesProps } from '@/shared/types'
-import { DEFAULT_SINGLE_ASSET_STATISTICS } from '@/models/storage'
+import {
+	type FlatSeriesObjectValue,
+	type FlatSeriesPrimitiveValue,
+	LineChart,
+	PieChart,
+} from "chartist";
+import type { JSXElement } from "solid-js";
+import type { DEFAULT_SINGLE_ASSET_STATISTICS } from "@/models/storage";
+import type { ComponentAcceptingClassesProps } from "@/shared/types";
+import "chartist/dist/index.css";
+import "./bandwidth-usage.css";
+import { capitalizeString } from "@bandwidth-saver/shared";
+import { convertBytesToMB } from "@/utils/size";
 
 type BaseCardProps = {
-  class?:string|undefined, children:JSXElement, title: string
+	class?: string | undefined;
+	children: JSXElement;
+	title: string;
+};
+
+function BaseCard(props: BaseCardProps) {
+	return (
+		<div class={`card card-border bg-base-200 ${props.class}`}>
+			<div class="card-body">
+				<h2 class="card-title">{props.title}</h2>
+
+				<div class="card-body">{props.children}</div>
+			</div>
+		</div>
+	);
 }
 
-function BaseCard(props: BaseCardProps){
-  return <div class={`card card-border bg-base-200 ${props.class}`}>
-    <div class="card-body">
-      <h2 class="card-title">{props.title}</h2>
+export type OptionsPageBandwidthUsageOverTimeProps =
+	ComponentAcceptingClassesProps & {
+		/** Only 28 ~ 31 entries are needed */
+		usage: ReadonlyArray<{
+			date: Date;
+			/** In bytes */
+			dataUsed: number;
+		}>;
+	};
 
-      <div class="card-body">
-        {props.children}
-      </div>
-  </div>
-          </div>
+export function OptionsPageBandwidthUsageOverTime(
+	props: OptionsPageBandwidthUsageOverTimeProps,
+) {
+	let chartWrapper$!: HTMLDivElement;
+
+	createEffect(
+		() =>
+			new LineChart(
+				chartWrapper$,
+				{
+					labels: props.usage.map((usage) => {
+						const dateString = usage.date.toDateString();
+
+						const splitDateString = dateString.split(" ");
+
+						const monthAndDay = `${splitDateString[1]} ${splitDateString[2]}`;
+
+						return monthAndDay;
+					}),
+					series: [
+						props.usage.map((usage) => convertBytesToMB(usage.dataUsed)),
+					],
+				},
+				{ showArea: true },
+			),
+	);
+
+	return (
+		<BaseCard class={props.class} title="Bandwidth Usage Over Time">
+			<div ref={chartWrapper$}></div>
+		</BaseCard>
+	);
 }
 
-export type OptionsPageBandwidthUsageOverTimeProps = ComponentAcceptingClassesProps & {
-  /** Only 28 ~ 31 entries are needed */
-  usage: ReadonlyArray<{date:Date,
-    /** In bytes */
-    dataUsed:number}>
-}
+type OptionsPageBandwidthUsageBreakdownProps =
+	ComponentAcceptingClassesProps & {
+		usage: Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS>;
+	};
 
-export function OptionsPageBandwidthUsageOverTime(props:OptionsPageBandwidthUsageOverTimeProps){
-  onMount(() => {
-          Chart.register(Title, Tooltip, Legend, Colors)
-      })
+export function OptionsPageBandwidthUsageBreakdown(
+	props: OptionsPageBandwidthUsageBreakdownProps,
+) {
+	const bandwidthUsageObjectEntryArray = createMemo(() =>
+		Object.entries(props.usage),
+	);
 
+	const totalBandwidthUsed = createMemo(() =>
+		bandwidthUsageObjectEntryArray().reduce(
+			(total, [_, val]) => total + val,
+			0,
+		),
+	);
 
-  return <BaseCard title='Bandwidth Usage Over Time'  class={props.class} ><Line data={{labels: props.usage.map(usage=>usage.date.toDateString()),datasets:[]}} options={{}} /></BaseCard>
-}
+	const bandwidthUsageBreakdown = createMemo(() =>
+		bandwidthUsageObjectEntryArray().map<
+			FlatSeriesObjectValue<FlatSeriesPrimitiveValue>
+		>(([key, val]) => {
+			return {
+				name: key,
+				value: Math.round((val / totalBandwidthUsed()) * 100),
+			};
+		}),
+	);
 
-type OptionsPageBandwidthUsageBreakdownProps = ComponentAcceptingClassesProps & {
-  usage: Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS>
-}
+	let chartWrapper$!: HTMLDivElement;
 
-export function OptionsPageBandwidthUsageBreakdown(props:OptionsPageBandwidthUsageBreakdownProps){
-  return <BaseCard title='Bandwidth Usage Breakdown' class={props.class} ><Pie /></BaseCard>
+	createEffect(
+		() =>
+			new PieChart(
+				chartWrapper$,
+				{
+					labels: bandwidthUsageBreakdown().map(
+						(usage) =>
+							`${capitalizeString(`${usage.name}s`)} (${usage.value}%)`,
+					),
+					series: bandwidthUsageBreakdown(),
+				},
+				{
+					donut: true,
+					donutWidth: "50%",
+					ignoreEmptyValues: true,
+					labelDirection: "explode",
+					// labelOffset: 5,
+					preventOverlappingLabelOffset: 10,
+				},
+			),
+	);
+
+	return (
+		<BaseCard class={props.class} title="Bandwidth Usage Breakdown">
+			<div ref={chartWrapper$}></div>
+		</BaseCard>
+	);
 }
