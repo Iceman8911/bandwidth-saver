@@ -117,8 +117,7 @@ export function OptionsPageBandwidthUsageBreakdown(
 				chartWrapper$,
 				{
 					labels: bandwidthUsageBreakdown().map(
-						(usage) =>
-							`${capitalizeString(`${usage.name}s`)} (${usage.value}%)`,
+						(usage) => `${capitalizeString(`${usage.name}`)} (${usage.value}%)`,
 					),
 					series: bandwidthUsageBreakdown(),
 				},
