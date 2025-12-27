@@ -13,7 +13,9 @@ function ExtensionLogoAndName() {
 				</div>
 			</div>
 
-			<h1 class="font-bold text-base">{ExtensionData.NAME}</h1>
+			<h1 class="whitespace-nowrap font-bold text-base">
+				{ExtensionData.NAME}
+			</h1>
 		</div>
 	);
 }
@@ -39,7 +41,7 @@ function NavigationBarLink(props: NavigationBarLinkProps) {
 function NavigationBarLinks() {
 	return (
 		<NavigationMenu
-			class="navbar menu menu-horizontal *:text-base"
+			class="navbar menu menu-horizontal flex-nowrap *:text-base"
 			orientation="horizontal"
 		>
 			<NavigationMenu.Menu>
@@ -69,7 +71,7 @@ function NavigationBarLinks() {
 
 export default function OptionsPageNavigationBar() {
 	return (
-		<div class="flex h-16 items-center justify-around bg-base-300 p-4">
+		<div class="flex h-16 items-center justify-around gap-8 overflow-auto overflow-y-clip bg-base-300 p-4">
 			<ExtensionLogoAndName />
 
 			<NavigationBarLinks />
