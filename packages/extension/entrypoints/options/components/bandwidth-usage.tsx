@@ -12,6 +12,16 @@ import { capitalizeString } from "@bandwidth-saver/shared";
 import type { JSXElement } from "solid-js";
 import { convertBytesToMB } from "@/utils/size";
 
+function extractMonthAndDayOfMonthFromDate(date: Date): string {
+	const dateString = date.toDateString();
+
+	const splitDateString = dateString.split(" ");
+
+	const monthAndDay = `${splitDateString[1]} ${splitDateString[2]}`;
+
+	return monthAndDay;
+}
+
 type BaseCardProps = {
 	class?: string | undefined;
 	title: string;
@@ -53,15 +63,9 @@ export function OptionsPageBandwidthUsageOverTime(
 			new LineChart(
 				chartWrapper$,
 				{
-					labels: props.usage.map((usage) => {
-						const dateString = usage.date.toDateString();
-
-						const splitDateString = dateString.split(" ");
-
-						const monthAndDay = `${splitDateString[1]} ${splitDateString[2]}`;
-
-						return monthAndDay;
-					}),
+					labels: props.usage.map((usage) =>
+						extractMonthAndDayOfMonthFromDate(usage.date),
+					),
 					series: [
 						props.usage.map((usage) => convertBytesToMB(usage.dataUsed)),
 					],
