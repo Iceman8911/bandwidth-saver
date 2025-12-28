@@ -113,7 +113,7 @@ export default function OptionsPageOverviewRoute() {
 			/>
 
 			<OptionsPageRequestsCompressedChart
-				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:row-start-8 md:h-auto"
 				usage={weeklyRequestsCompressed()}
 			/>
 
@@ -123,7 +123,7 @@ export default function OptionsPageOverviewRoute() {
 			/>
 
 			<OptionsPageBytesSavedChart
-				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:row-start-8 md:h-auto"
 				usage={weeklyBytesSaved()}
 			/>
 		</div>
