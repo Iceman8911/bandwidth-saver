@@ -13,7 +13,7 @@ import {
 	OptionsPageRequestsBlockedChart,
 	OptionsPageRequestsCompressedChart,
 	OptionsPageRequestsMadeChart,
-} from "../components/statistics";
+} from "../components/statistic-charts";
 import { getDailyStatisticsForWeek } from "../shared/utils";
 
 /**
