@@ -6,8 +6,8 @@ import {
 } from "@/models/storage";
 import { statisticsStorageItem } from "@/shared/storage";
 import {
-	OptionsPageBandwidthUsageBreakdown,
-	OptionsPageBandwidthUsageOverTime,
+	OptionsPageBandwidthUsageBreakdownChart,
+	OptionsPageBandwidthUsageOverTimeChart,
 	type OptionsPageBandwidthUsageOverTimeProps,
 } from "../components/bandwidth-usage";
 
@@ -78,12 +78,12 @@ export default function OptionsPageOverviewRoute() {
 
 	return (
 		<div class="grid h-full grid-cols-8 grid-rows-10 gap-4">
-			<OptionsPageBandwidthUsageOverTime
+			<OptionsPageBandwidthUsageOverTimeChart
 				class="col-span-full row-span-5 md:col-span-5"
 				usage={dailyBandwidthStats()}
 			/>
 
-			<OptionsPageBandwidthUsageBreakdown
+			<OptionsPageBandwidthUsageBreakdownChart
 				class="col-span-full row-span-5 md:col-span-3"
 				usage={bandwidthUsageBreakdown()}
 			/>

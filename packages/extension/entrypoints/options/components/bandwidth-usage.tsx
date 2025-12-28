@@ -54,7 +54,7 @@ export type OptionsPageBandwidthUsageOverTimeProps =
 		}>;
 	};
 
-export function OptionsPageBandwidthUsageOverTime(
+export function OptionsPageBandwidthUsageOverTimeChart(
 	props: OptionsPageBandwidthUsageOverTimeProps,
 ) {
 	let chartWrapper$!: HTMLDivElement;
@@ -94,7 +94,7 @@ type OptionsPageBandwidthUsageBreakdownProps =
 		usage: Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS>;
 	};
 
-export function OptionsPageBandwidthUsageBreakdown(
+export function OptionsPageBandwidthUsageBreakdownChart(
 	props: OptionsPageBandwidthUsageBreakdownProps,
 ) {
 	const bandwidthUsageObjectEntryArray = createMemo(() =>
