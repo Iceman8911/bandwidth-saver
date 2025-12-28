@@ -14,6 +14,7 @@ import {
 	OptionsPageRequestsCompressedChart,
 	OptionsPageRequestsMadeChart,
 } from "../components/statistic-charts";
+import { OptionsPageStatisticSummaryTable } from "../components/statistic-table";
 import { getDailyStatisticsForWeek } from "../shared/utils";
 
 /**
@@ -96,7 +97,7 @@ export default function OptionsPageOverviewRoute() {
 	);
 
 	return (
-		<div class="flex h-full flex-col gap-4 overflow-y-auto md:grid md:grid-cols-8 md:grid-rows-10 md:gap-4">
+		<div class="flex h-full flex-col gap-4 overflow-y-auto md:grid md:grid-cols-8 md:grid-rows-9 md:gap-4">
 			<OptionsPageBandwidthUsageOverTimeChart
 				class="h-72 w-full flex-none md:col-span-5 md:row-span-5 md:h-auto"
 				usage={weeklyBandwidthStats()}
@@ -126,6 +127,8 @@ export default function OptionsPageOverviewRoute() {
 				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:row-start-8 md:h-auto"
 				usage={weeklyBytesSaved()}
 			/>
+
+			<OptionsPageStatisticSummaryTable class="h-76 w-full flex-none md:col-span-4 md:row-span-4 md:h-auto" />
 		</div>
 	);
 }
