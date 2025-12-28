@@ -46,7 +46,7 @@ function BaseCard(props: BaseCardProps) {
 
 export type OptionsPageBandwidthUsageOverTimeProps =
 	ComponentAcceptingClassesProps & {
-		/** Only 28 ~ 31 entries are needed */
+		/** Only 7 ~ 8 entries are needed */
 		usage: ReadonlyArray<{
 			date: Date;
 			/** In bytes */
