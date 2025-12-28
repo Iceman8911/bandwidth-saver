@@ -1,4 +1,5 @@
 import { createAsync } from "@solidjs/router";
+import { createMemo } from "solid-js";
 import {
 	type DEFAULT_COMBINED_ASSET_STATISTICS,
 	DEFAULT_SINGLE_ASSET_STATISTICS,
@@ -15,6 +16,9 @@ import {
 } from "../components/statistics";
 import { getDailyStatisticsForWeek } from "../shared/utils";
 
+/**
+ * Sum combined daily stats into a single asset statistics object.
+ */
 function getTotalBandwidthStatisticsBreakdown(
 	combinedStats: typeof DEFAULT_COMBINED_ASSET_STATISTICS,
 ): Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS> {
@@ -92,34 +96,34 @@ export default function OptionsPageOverviewRoute() {
 	);
 
 	return (
-		<div class="grid h-full grid-cols-8 grid-rows-10 gap-4">
+		<div class="flex h-full flex-col gap-4 overflow-y-auto md:grid md:grid-cols-8 md:grid-rows-10 md:gap-4">
 			<OptionsPageBandwidthUsageOverTimeChart
-				class="col-span-full row-span-5 md:col-span-5"
+				class="h-72 w-full flex-none md:col-span-5 md:row-span-5 md:h-auto"
 				usage={weeklyBandwidthStats()}
 			/>
 
 			<OptionsPageBandwidthUsageBreakdownChart
-				class="col-span-full row-span-5 md:col-span-3"
+				class="h-72 w-full flex-none md:col-span-3 md:row-span-5 md:h-auto"
 				usage={bandwidthUsageBreakdown()}
 			/>
 
 			<OptionsPageRequestsMadeChart
-				class="col-span-full row-span-2 md:col-span-2"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
 				usage={weeklyRequestsMade()}
 			/>
 
 			<OptionsPageRequestsCompressedChart
-				class="col-span-full row-span-2 md:col-span-2"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
 				usage={weeklyRequestsCompressed()}
 			/>
 
 			<OptionsPageRequestsBlockedChart
-				class="col-span-full row-span-2 md:col-span-2"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
 				usage={weeklyRequestsBlocked()}
 			/>
 
 			<OptionsPageBytesSavedChart
-				class="col-span-full row-span-2 md:col-span-2"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
 				usage={weeklyBytesSaved()}
 			/>
 		</div>

@@ -180,9 +180,9 @@ function HorizontalCard(
 		<BaseCard class={props.class}>
 			<div class="card-body h-full flex-row">
 				<h2 class="card-title flex-col items-center justify-center gap-0.5 *:text-center">
-					<p class="text-xs">{props.title}</p>
+					<p class="text-sm">{props.title}</p>
 
-					<p>{props.largeText}</p>
+					<p class="whitespace-nowrap">{props.largeText}</p>
 				</h2>
 
 				<div class="relative h-full" ref={props.ref}>
