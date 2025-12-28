@@ -11,7 +11,7 @@ import {
 } from "@/shared/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
-import { convertBytesToMB } from "@/utils/size";
+import { convertBytesToAppropriateNotation } from "@/utils/size";
 import { DEFAULT_SITE_SPECIFIC_STATISTICS } from "../../models/storage";
 
 export function PopupStatistics(props: {
@@ -50,7 +50,7 @@ export function PopupStatistics(props: {
 
 		if (Number.isNaN(ratio)) return 0;
 
-		return convertBytesToMB(ratio);
+		return ratio * 100;
 	});
 
 	return (
@@ -70,7 +70,10 @@ export function PopupStatistics(props: {
 					)}
 				</div>
 
-				<div>Data Consumed today: {convertBytesToMB(bytesUsed())} MB</div>
+				<div>
+					Data Consumed today:{" "}
+					{convertBytesToAppropriateNotation(bytesUsed()).join(" ")}{" "}
+				</div>
 
 				<div>Data Saved today: {percentageOfBytesSaved()}% </div>
 			</Suspense>

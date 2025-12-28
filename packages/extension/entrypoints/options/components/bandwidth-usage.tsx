@@ -10,7 +10,8 @@ import "chartist/dist/index.css";
 import "./bandwidth-usage.css";
 import { capitalizeString } from "@bandwidth-saver/shared";
 import type { JSXElement } from "solid-js";
-import { convertBytesToMB } from "@/utils/size";
+import { convertBytesToMB } from "#imports";
+import { convertBytesToAppropriateNotation } from "@/utils/size";
 
 function extractMonthAndDayOfMonthFromDate(date: Date): string {
 	const dateString = date.toDateString();
@@ -150,7 +151,9 @@ export function OptionsPageBandwidthUsageBreakdown(
 			<div class="absolute top-[40%] right-[41.5%] grid grid-rows-2 place-items-center font-semibold">
 				<p>Total Used:</p>
 
-				<p>{convertBytesToMB(totalBandwidthUsed())}MB</p>
+				<p>
+					{convertBytesToAppropriateNotation(totalBandwidthUsed()).join(" ")}
+				</p>
 			</div>
 		</BaseCard>
 	);
