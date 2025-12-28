@@ -44,26 +44,25 @@ function BaseCard(props: BaseCardProps) {
 	);
 }
 
-export type OptionsPageBandwidthUsageOverTimeProps =
-	ComponentAcceptingClassesProps & {
-		/** Only 7 ~ 8 entries are needed */
-		usage: ReadonlyArray<{
-			date: Date;
-			/** In bytes */
-			dataUsed: number;
-		}>;
-	};
+export type OptionsPageUsageOverTimeProps = ComponentAcceptingClassesProps & {
+	/** Only 7 ~ 8 entries are needed */
+	usage: ReadonlyArray<{
+		date: Date;
+		/** In bytes */
+		used: number;
+	}>;
+};
 
 export function OptionsPageBandwidthUsageOverTimeChart(
-	props: OptionsPageBandwidthUsageOverTimeProps,
+	props: OptionsPageUsageOverTimeProps,
 ) {
 	let chartWrapper$!: HTMLDivElement;
 
 	createEffect(() => {
 		const [labels, series] = props.usage.reduce<[string[], number[]]>(
-			(chartLabelsAndSeries, { dataUsed, date }) => {
+			(chartLabelsAndSeries, { used, date }) => {
 				chartLabelsAndSeries[0].push(extractMonthAndDayOfMonthFromDate(date));
-				chartLabelsAndSeries[1].push(convertBytesToMB(dataUsed));
+				chartLabelsAndSeries[1].push(convertBytesToMB(used));
 
 				return chartLabelsAndSeries;
 			},

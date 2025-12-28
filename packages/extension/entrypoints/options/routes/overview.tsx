@@ -8,28 +8,8 @@ import { statisticsStorageItem } from "@/shared/storage";
 import {
 	OptionsPageBandwidthUsageBreakdownChart,
 	OptionsPageBandwidthUsageOverTimeChart,
-	type OptionsPageBandwidthUsageOverTimeProps,
 } from "../components/bandwidth-usage";
-
-function getDailyBandwidthStatisticsForWeek(
-	dailyStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats>,
-): OptionsPageBandwidthUsageOverTimeProps["usage"] {
-	const dailyStatsAsArray = Object.entries(dailyStats);
-
-	const dailyStatsWithAggregatedValues = dailyStatsAsArray
-		.map(([dateNumberString, stats]) => ({
-			dataUsed: getSumOfValuesInObject(stats),
-			date: new Date(Number(dateNumberString)),
-		}))
-		// In descending order so the most recent entries are at the beginning of the array
-		.sort(({ date: a }, { date: b }) => Number(b) - Number(a))
-		// Get at most 8 days (yeah, I know it's not exactly a week :p)
-		.slice(0, 8)
-		// Reverse the order for the chart so the most recent entries will be rightmost
-		.reverse();
-
-	return dailyStatsWithAggregatedValues;
-}
+import { getDailyStatisticsForWeek } from "../shared/utils";
 
 function getTotalBandwidthStatisticsBreakdown(
 	combinedStats: typeof DEFAULT_COMBINED_ASSET_STATISTICS,
@@ -60,10 +40,7 @@ export default function OptionsPageOverviewRoute() {
 	);
 
 	const dailyBandwidthStats = createMemo(
-		() =>
-			getDailyBandwidthStatisticsForWeek(
-				totalBandwidthUsedStatistics().dailyStats,
-			),
+		() => getDailyStatisticsForWeek(totalBandwidthUsedStatistics().dailyStats),
 		undefined,
 		{ equals: false },
 	);
