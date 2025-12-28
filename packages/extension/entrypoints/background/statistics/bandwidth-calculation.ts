@@ -120,7 +120,13 @@ async function storeBandwidthDataFromPayload(
 			valueToAdd: assetSize,
 		});
 
-	globalStore.requestsMade++;
+	globalStore.requestsMade =
+		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+			combinedStats: globalStore.requestsMade,
+			day,
+			type,
+			valueToAdd: 1,
+		});
 
 	const globalStatisticsSavePromise =
 		statisticsStorageItem.setValue(globalStore);
@@ -133,7 +139,13 @@ async function storeBandwidthDataFromPayload(
 			valueToAdd: assetSize,
 		});
 
-	siteScopedStore.requestsMade++;
+	siteScopedStore.requestsMade =
+		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+			combinedStats: siteScopedStore.requestsMade,
+			day,
+			type,
+			valueToAdd: 1,
+		});
 
 	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
 

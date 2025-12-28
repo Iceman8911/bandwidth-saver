@@ -151,7 +151,7 @@ const StatisticsSchema = v.object({
 	requestsCompressed: CombinedAssetStatisticsSchema,
 
 	/** Amount of non-cached requests made by site(s) in total */
-	requestsMade: IntegerFromAtLeastZeroSchema,
+	requestsMade: CombinedAssetStatisticsSchema,
 });
 
 const DetailedStatisticsSchema = v.object({
@@ -244,7 +244,7 @@ export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	bytesUsed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsBlocked: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsCompressed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
-	requestsMade: 0,
+	requestsMade: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
 
 export const DEFAULT_SITE_SPECIFIC_STATISTICS = v.parse(
