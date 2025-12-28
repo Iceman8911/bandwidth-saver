@@ -1,4 +1,7 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import {
+	getDayStartInMillisecondsUTC,
+	type UrlSchema,
+} from "@bandwidth-saver/shared";
 import { createMemo } from "solid-js";
 import type { SettingsScope } from "@/models/context";
 import { DEFAULT_STATISTICS } from "@/models/storage";
@@ -15,6 +18,8 @@ export function PopupStatistics(props: {
 	scope: SettingsScope;
 	tabUrl: UrlSchema;
 }) {
+	const day = getDayStartInMillisecondsUTC();
+
 	const siteSpecificStatisticsStorageItem = () =>
 		getSiteSpecificStatisticsStorageItem(props.tabUrl);
 
@@ -35,10 +40,10 @@ export function PopupStatistics(props: {
 	);
 
 	const bytesSaved = createMemo(() =>
-		getSumOfValuesInObject(statistics()?.bytesSaved ?? {}),
+		getSumOfValuesInObject(statistics()?.bytesSaved.dailyStats[day] ?? {}),
 	);
 	const bytesUsed = createMemo(() =>
-		getSumOfValuesInObject(statistics()?.bytesUsed ?? {}),
+		getSumOfValuesInObject(statistics()?.bytesUsed.dailyStats[day] ?? {}),
 	);
 	const percentageOfBytesSaved = createMemo(() => {
 		const ratio = bytesSaved() / (bytesUsed() + bytesSaved());
@@ -52,18 +57,22 @@ export function PopupStatistics(props: {
 		<div class="grid grid-cols-2 grid-rows-2 gap-4 text-info">
 			<Suspense>
 				<div>
-					Requests Processed:{" "}
-					{getSumOfValuesInObject(statistics()?.requestsCompressed ?? {})}
+					Requests Processed today:{" "}
+					{getSumOfValuesInObject(
+						statistics()?.requestsCompressed.dailyStats[day] ?? {},
+					)}
 				</div>
 
 				<div>
-					Requests Blocked:{" "}
-					{getSumOfValuesInObject(statistics()?.requestsBlocked ?? {})}
+					Requests Blocked today:{" "}
+					{getSumOfValuesInObject(
+						statistics()?.requestsBlocked.dailyStats[day] ?? {},
+					)}
 				</div>
 
-				<div>Data Consumed: {convertBytesToMB(bytesUsed())} MB</div>
+				<div>Data Consumed today: {convertBytesToMB(bytesUsed())} MB</div>
 
-				<div>Data Saved: {percentageOfBytesSaved()}% </div>
+				<div>Data Saved today: {percentageOfBytesSaved()}% </div>
 			</Suspense>
 		</div>
 	);
