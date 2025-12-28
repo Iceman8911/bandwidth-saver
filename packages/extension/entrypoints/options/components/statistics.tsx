@@ -25,14 +25,25 @@ function extractMonthAndDayOfMonthFromDate(date: Date): string {
 
 type BaseCardProps = {
 	class?: string | undefined;
+	children?: JSXElement;
+};
+
+type ExtendedCardProps = BaseCardProps & {
 	title: string;
 	ref: HTMLDivElement;
-	children?: JSXElement;
 };
 
 function BaseCard(props: BaseCardProps) {
 	return (
 		<div class={`card card-border bg-base-200 ${props.class}`}>
+			{props.children}
+		</div>
+	);
+}
+
+function VerticalCard(props: ExtendedCardProps) {
+	return (
+		<BaseCard class={props.class}>
 			<div class="card-body">
 				<h2 class="card-title">{props.title}</h2>
 
@@ -40,7 +51,7 @@ function BaseCard(props: BaseCardProps) {
 					{props.children}
 				</div>
 			</div>
-		</div>
+		</BaseCard>
 	);
 }
 
@@ -80,7 +91,7 @@ export function OptionsPageBandwidthUsageOverTimeChart(
 	});
 
 	return (
-		<BaseCard
+		<VerticalCard
 			class={props.class}
 			ref={chartWrapper$}
 			title="Bandwidth Usage Over Time"
@@ -142,7 +153,7 @@ export function OptionsPageBandwidthUsageBreakdownChart(
 	);
 
 	return (
-		<BaseCard
+		<VerticalCard
 			class={props.class}
 			ref={chartWrapper$}
 			title="Bandwidth Usage Breakdown"
@@ -154,6 +165,123 @@ export function OptionsPageBandwidthUsageBreakdownChart(
 					{convertBytesToAppropriateNotation(totalBandwidthUsed()).join(" ")}
 				</p>
 			</div>
+		</VerticalCard>
+	);
+}
+
+function HorizontalCard(
+	props: ExtendedCardProps & {
+		largeText: string;
+		/** The title here will not be the largest text */
+		title: string;
+	},
+) {
+	return (
+		<BaseCard class={props.class}>
+			<div class="card-body h-full flex-row">
+				<h2 class="card-title flex-col items-center justify-center gap-0.5 *:text-center">
+					<p class="text-xs">{props.title}</p>
+
+					<p>{props.largeText}</p>
+				</h2>
+
+				<div class="relative h-full" ref={props.ref}>
+					{props.children}
+				</div>
+			</div>
 		</BaseCard>
+	);
+}
+
+type BaseStatisticsChartProps = OptionsPageUsageOverTimeProps & {
+	title: string;
+
+	/** Receives the stat total and does some extra transformations with it to return a string */
+	statTotalTextMod?: (total: number) => string;
+};
+
+function BaseStatisticsChart(props: BaseStatisticsChartProps) {
+	let chartWrapper$!: HTMLDivElement;
+
+	const usageSeriesAndTotal = createMemo(() =>
+		props.usage.reduce<{ series: number[]; total: number }>(
+			(seriesAndTotal, { used }) => {
+				seriesAndTotal.series.push(used);
+				seriesAndTotal.total += used;
+
+				return seriesAndTotal;
+			},
+			{ series: [], total: 0 },
+		),
+	);
+
+	createEffect(() => {
+		new LineChart(
+			chartWrapper$,
+			{
+				series: [usageSeriesAndTotal().series],
+			},
+			{ showArea: true, showPoint: false },
+		);
+	});
+
+	return (
+		<HorizontalCard
+			class={props.class}
+			largeText={`${props.statTotalTextMod?.(usageSeriesAndTotal().total) ?? usageSeriesAndTotal().total}`}
+			ref={chartWrapper$}
+			title={props.title}
+		/>
+	);
+}
+
+export function OptionsPageRequestsMadeChart(
+	props: OptionsPageUsageOverTimeProps,
+) {
+	return (
+		<BaseStatisticsChart
+			class={props.class}
+			title="Requests Made"
+			usage={props.usage}
+		/>
+	);
+}
+
+export function OptionsPageRequestsCompressedChart(
+	props: OptionsPageUsageOverTimeProps,
+) {
+	return (
+		<BaseStatisticsChart
+			class={props.class}
+			title="Requests Compressed"
+			usage={props.usage}
+		/>
+	);
+}
+
+export function OptionsPageRequestsBlockedChart(
+	props: OptionsPageUsageOverTimeProps,
+) {
+	return (
+		<BaseStatisticsChart
+			class={props.class}
+			title="Requests Blocked"
+			usage={props.usage}
+		/>
+	);
+}
+
+export function OptionsPageBytesSavedChart(
+	props: OptionsPageUsageOverTimeProps,
+) {
+	return (
+		<BaseStatisticsChart
+			class={props.class}
+			statTotalTextMod={(total) =>
+				convertBytesToAppropriateNotation(total).join(" ")
+			}
+			title="Data Saved"
+			usage={props.usage}
+		/>
 	);
 }

@@ -33,3 +33,10 @@
 		@apply font-semibold;
 	}
 }
+
+/* Target the horizontal cards */
+.flex-row {
+	.ct-label.ct-vertical.ct-start {
+		@apply hidden;
+	}
+}

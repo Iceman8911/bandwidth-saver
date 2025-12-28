@@ -1,5 +1,5 @@
 import type { DEFAULT_COMBINED_ASSET_STATISTICS } from "@/models/storage";
-import type { OptionsPageUsageOverTimeProps } from "../components/bandwidth-usage";
+import type { OptionsPageUsageOverTimeProps } from "../components/statistics";
 
 export function getDailyStatisticsForWeek(
 	dailyStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats>,
