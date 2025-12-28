@@ -3,6 +3,10 @@
 .ct-label {
 	@apply text-base-content;
 	@apply fill-base-content;
+
+	&.ct-vertical.ct-start::after {
+		content: "MB";
+	}
 }
 
 .ct-series-a {
