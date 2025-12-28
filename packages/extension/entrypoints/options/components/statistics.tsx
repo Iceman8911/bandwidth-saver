@@ -14,6 +14,7 @@ import { convertBytesToMB } from "#imports";
 import { convertBytesToAppropriateNotation } from "@/utils/size";
 
 function extractMonthAndDayOfMonthFromDate(date: Date): string {
+	// TODO: deal with locale issues
 	const dateString = date.toDateString();
 
 	const splitDateString = dateString.split(" ");
