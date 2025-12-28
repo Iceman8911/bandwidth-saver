@@ -69,7 +69,9 @@ export function OptionsPageBandwidthUsageOverTimeChart(
 ) {
 	let chartWrapper$!: HTMLDivElement;
 
-	createEffect(() => {
+	createEffect<LineChart>((oldChart) => {
+		oldChart?.detach();
+
 		const [labels, series] = props.usage.reduce<[string[], number[]]>(
 			(chartLabelsAndSeries, { used, date }) => {
 				chartLabelsAndSeries[0].push(extractMonthAndDayOfMonthFromDate(date));
@@ -80,7 +82,7 @@ export function OptionsPageBandwidthUsageOverTimeChart(
 			[[], []],
 		);
 
-		new LineChart(
+		return new LineChart(
 			chartWrapper$,
 			{
 				labels,
@@ -131,26 +133,27 @@ export function OptionsPageBandwidthUsageBreakdownChart(
 
 	let chartWrapper$!: HTMLDivElement;
 
-	createEffect(
-		() =>
-			new PieChart(
-				chartWrapper$,
-				{
-					labels: bandwidthUsageBreakdown().map(
-						(usage) => `${capitalizeString(`${usage.name}`)} (${usage.value}%)`,
-					),
-					series: bandwidthUsageBreakdown(),
-				},
-				{
-					donut: true,
-					donutWidth: "33%",
-					ignoreEmptyValues: true,
-					labelDirection: "explode",
-					// labelOffset: 5,
-					preventOverlappingLabelOffset: 10,
-				},
-			),
-	);
+	createEffect<PieChart>((oldChart) => {
+		oldChart?.detach();
+
+		return new PieChart(
+			chartWrapper$,
+			{
+				labels: bandwidthUsageBreakdown().map(
+					(usage) => `${capitalizeString(`${usage.name}`)} (${usage.value}%)`,
+				),
+				series: bandwidthUsageBreakdown(),
+			},
+			{
+				donut: true,
+				donutWidth: "33%",
+				ignoreEmptyValues: true,
+				labelDirection: "explode",
+				// labelOffset: 5,
+				preventOverlappingLabelOffset: 10,
+			},
+		);
+	});
 
 	return (
 		<VerticalCard
@@ -215,8 +218,10 @@ function BaseStatisticsChart(props: BaseStatisticsChartProps) {
 		),
 	);
 
-	createEffect(() => {
-		new LineChart(
+	createEffect<LineChart>((oldChart) => {
+		oldChart?.detach();
+
+		return new LineChart(
 			chartWrapper$,
 			{
 				series: [usageSeriesAndTotal().series],
