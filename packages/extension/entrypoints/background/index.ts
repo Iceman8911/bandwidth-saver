@@ -1,3 +1,4 @@
+import { blockingToggleWatcher } from "./block";
 import { compressionToggleWatcher } from "./compression";
 import { registerStaticRules } from "./compression/static-rules";
 import { cspBypassToggleWatcher } from "./csp-workaround";
@@ -14,4 +15,5 @@ export default defineBackground(() => {
 	saveDataToggleWatcher();
 	compressionToggleWatcher();
 	cspBypassToggleWatcher();
+	blockingToggleWatcher();
 });

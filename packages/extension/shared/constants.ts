@@ -114,6 +114,11 @@ export enum DeclarativeNetRequestRuleIds {
 	_$END_SITE_COMPRESSION_MODE_MV2_REMOVE = SITE_COMPRESSION_MODE_MV2_REMOVE +
 		_DECLARATIVE_NET_REQUEST_RULE_ID_RANGE,
 
+	/** Explicit blocking rule ID ranges (global and site-specific) */
+	GLOBAL_BLOCKING,
+	SITE_BLOCKING,
+	_$END_BLOCKING = SITE_BLOCKING + _DECLARATIVE_NET_REQUEST_RULE_ID_RANGE,
+
 	/** CSP removal for sites that block external image sources
 	 *
 	 * I've only seen need of it for sites like discord, and ofc I'll warn the user of the dangers of enabling this
