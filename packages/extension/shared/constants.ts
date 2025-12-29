@@ -49,30 +49,30 @@ export type CompressionMode = ObjectToEnum<typeof CompressionMode>;
 
 export const StorageKey = {
 	/** Default settings for blocking assets */
-	DEFAULT_SETTINGS_BLOCK: "sync:block",
+	DEFAULT_SETTINGS_BLOCK: "local:block",
 
 	/** Default settings for customizing compression */
-	DEFAULT_SETTINGS_COMPRESSION: "sync:compression",
+	DEFAULT_SETTINGS_COMPRESSION: "local:compression",
 
 	/** Other default generic settings beyond the other classifications */
-	DEFAULT_SETTINGS_GENERAL: "sync:general",
+	DEFAULT_SETTINGS_GENERAL: "local:general",
 
 	/** Default settings for the remote proxy that requests will be redirected to */
-	DEFAULT_SETTINGS_PROXY: "sync:proxy",
+	DEFAULT_SETTINGS_PROXY: "local:proxy",
 
-	SCHEMA_VERSION: "sync:schemaVersion",
+	SCHEMA_VERSION: "local:schemaVersion",
 
 	/** Site-specific settings for blocking assets */
-	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX: "sync:siteScopeBlock-",
+	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX: "local:siteScopeBlock-",
 
 	/** Site-specific settings for customizing compression */
-	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX: "sync:siteScopeCompression-",
+	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX: "local:siteScopeCompression-",
 
 	/** Site-specific settings toggles scoped to a site */
-	SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX: "sync:siteScopeGeneral-",
+	SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX: "local:siteScopeGeneral-",
 
 	/** Site-specific settings for the remote proxy that requests will be redirected to */
-	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX: "sync:siteScopeProxy-",
+	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX: "local:siteScopeProxy-",
 
 	/** Device-specific statistics per site */
 	SITE_SPECIFIC_STATISTICS_PREFIX: "local:siteScopeStatistics-",
