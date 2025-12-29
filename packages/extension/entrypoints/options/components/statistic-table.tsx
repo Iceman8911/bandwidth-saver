@@ -1,4 +1,11 @@
+import { createAsync } from "@solidjs/router";
+import { getSiteSpecificStatisticsStorageItem } from "@/shared/storage";
 import type { ComponentAcceptingClassesProps } from "@/shared/types";
+import { convertBytesToAppropriateNotation } from "@/utils/size";
+import { getDailyStatisticsForWeek } from "../shared/utils";
+
+const convertBytesToAppropriateNotationString = (bytes: number) =>
+	convertBytesToAppropriateNotation(bytes).join(" ");
 
 type OptionsPageStatisticSummaryTableProps =
 	ComponentAcceptingClassesProps & {};
@@ -6,36 +13,87 @@ type OptionsPageStatisticSummaryTableProps =
 export function OptionsPageStatisticSummaryTable(
 	props: OptionsPageStatisticSummaryTableProps,
 ) {
+	const allStatistics = createAsync(
+		async () => {
+			const urls = await getSiteUrlOriginsFromStorage();
+
+			const statisticValues = await Promise.all(
+				urls.map((url) =>
+					getSiteSpecificStatisticsStorageItem(url)
+						.getValue()
+						.then((stats) => [url, stats] as const),
+				),
+			);
+
+			return statisticValues;
+		},
+		{ initialValue: [] },
+	);
+
 	return (
 		<div class={`overflow-x-auto ${props.class ?? ""}`}>
-			<table class="table-zebra table">
+			<table class="table-zebra table-pin-rows table">
 				<thead>
-					<tr>
-						<th></th>
-						<th>Name</th>
-						<th>Job</th>
-						<th>Favorite Color</th>
+					<tr class="*:text-center">
+						<th>Site</th>
+						<th>
+							<p>Data Used</p>
+
+							<p class="text-xs">(Over a week)</p>
+						</th>
+						<th>
+							<p>Data Saved</p>
+
+							<p class="text-xs">(Over a week)</p>
+						</th>
+						<th>
+							<p>Data Used</p>
+
+							<p class="text-xs">(Total)</p>
+						</th>
+						<th>
+							<p>Data Saved</p>
+
+							<p class="text-xs">(Total)</p>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr>
-						<th>1</th>
-						<td>Cy Ganderton</td>
-						<td>Quality Control Specialist</td>
-						<td>Blue</td>
-					</tr>
-					<tr>
-						<th>2</th>
-						<td>Hart Hagerty</td>
-						<td>Desktop Support Technician</td>
-						<td>Purple</td>
-					</tr>
-					<tr>
-						<th>3</th>
-						<td>Brice Swyre</td>
-						<td>Tax Accountant</td>
-						<td>Red</td>
-					</tr>
+					<For each={allStatistics.latest}>
+						{(val) => {
+							return (
+								<tr>
+									<th class="max-w-40 overflow-auto text-primary">
+										{getHostnameForDeclarativeNetRequest(val[0])}
+									</th>
+									<th>
+										{convertBytesToAppropriateNotationString(
+											getDailyStatisticsForWeek(
+												val[1].bytesUsed.dailyStats,
+											).reduce((total, { used }) => total + used, 0),
+										)}
+									</th>
+									<th>
+										{convertBytesToAppropriateNotationString(
+											getDailyStatisticsForWeek(
+												val[1].bytesSaved.dailyStats,
+											).reduce((total, { used }) => total + used, 0),
+										)}
+									</th>
+									<th>
+										{convertBytesToAppropriateNotationString(
+											getSumOfValuesInObject(val[1].bytesUsed),
+										)}
+									</th>
+									<th>
+										{convertBytesToAppropriateNotationString(
+											getSumOfValuesInObject(val[1].bytesSaved),
+										)}
+									</th>
+								</tr>
+							);
+						}}
+					</For>
 				</tbody>
 			</table>
 		</div>
