@@ -1,7 +1,6 @@
 import { getRandomUUID, type UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
 import { createSignal } from "solid-js";
-import { PopupBlockSettings } from "@/components/popup/block-settings";
 import { PopupCompressionSettings } from "@/components/popup/compression-settings";
 import { PopupFooter } from "@/components/popup/footer";
 import { PopupHeader } from "@/components/popup/header";
@@ -20,12 +19,6 @@ function PopupSettings(props: { scope: SettingsScope; tabUrl: UrlSchema }) {
 	return (
 		<div class="join join-vertical bg-base-100">
 			<PopupCompressionSettings
-				name={accordionName}
-				scope={props.scope}
-				tabUrl={props.tabUrl}
-			/>
-
-			<PopupBlockSettings
 				name={accordionName}
 				scope={props.scope}
 				tabUrl={props.tabUrl}

@@ -7,14 +7,12 @@ import { StorageKey } from "./constants";
 
 const {
 	SCHEMA_VERSION,
-	DEFAULT_SETTINGS_BLOCK,
 	DEFAULT_SETTINGS_COMPRESSION,
 	DEFAULT_SETTINGS_PROXY,
 	SITE_SPECIFIC_STATISTICS_PREFIX,
 	DEFAULT_SETTINGS_GENERAL,
 	SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX,
 	STATISTICS,
-	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX,
 	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX,
 	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
 } = StorageKey;
@@ -48,14 +46,6 @@ export const defaultProxySettingsStorageItem = storage.defineItem(
 	},
 );
 
-export const defaultBlockSettingsStorageItem = storage.defineItem(
-	DEFAULT_SETTINGS_BLOCK,
-	{
-		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
-		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
-	},
-);
-
 export const statisticsStorageItem = storage.defineItem(STATISTICS, {
 	fallback: clone(STORAGE_DEFAULTS[STATISTICS]),
 	init: () => clone(STORAGE_DEFAULTS[STATISTICS]),
@@ -75,14 +65,6 @@ const siteSpecificGeneralSettingsStorageItemCache =
 	lru<
 		WxtStorageItem<
 			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_GENERAL],
-			Record<string, unknown>
-		>
-	>(CACHE_SIZE);
-
-const siteSpecificBlockSettingsStorageItemCache =
-	lru<
-		WxtStorageItem<
-			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_BLOCK],
 			Record<string, unknown>
 		>
 	>(CACHE_SIZE);
@@ -137,25 +119,6 @@ export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
 	});
 
 	siteSpecificGeneralSettingsStorageItemCache.set(key, storageItem);
-
-	return storageItem;
-};
-
-export const getSiteSpecificBlockSettingsStorageItem = (url: UrlSchema) => {
-	const key =
-		`${SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX}${getUrlSchemaOrigin(url)}` as const;
-
-	const possibleCachedStorageItem =
-		siteSpecificBlockSettingsStorageItemCache.get(key);
-
-	if (possibleCachedStorageItem) return possibleCachedStorageItem;
-
-	const storageItem = storage.defineItem(key, {
-		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_BLOCK]),
-		init: defaultBlockSettingsStorageItem.getValue,
-	});
-
-	siteSpecificBlockSettingsStorageItemCache.set(key, storageItem);
 
 	return storageItem;
 };

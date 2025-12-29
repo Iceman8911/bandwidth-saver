@@ -9,8 +9,8 @@ import { statisticsStorageItem } from "@/shared/storage";
 import {
 	OptionsPageBandwidthUsageBreakdownChart,
 	OptionsPageBandwidthUsageOverTimeChart,
+	OptionsPageBytedUsedChart,
 	OptionsPageBytesSavedChart,
-	OptionsPageRequestsBlockedChart,
 	OptionsPageRequestsCompressedChart,
 	OptionsPageRequestsMadeChart,
 } from "../components/statistic-charts";
@@ -44,18 +44,16 @@ export default function OptionsPageOverviewRoute() {
 		initialValue: DEFAULT_STATISTICS,
 	});
 
-	const totalBandwidthUsedStatistics = createMemo(
-		() => allStatistics.latest.bytesUsed,
-	);
+	const bytesUsed = createMemo(() => allStatistics.latest.bytesUsed);
 
-	const weeklyBandwidthStats = createMemo(
-		() => getDailyStatisticsForWeek(totalBandwidthUsedStatistics().dailyStats),
+	const weeklyBytesUsed = createMemo(
+		() => getDailyStatisticsForWeek(bytesUsed().dailyStats),
 		undefined,
 		{ equals: false },
 	);
 
 	const bandwidthUsageBreakdown = createMemo(
-		() => getTotalBandwidthStatisticsBreakdown(totalBandwidthUsedStatistics()),
+		() => getTotalBandwidthStatisticsBreakdown(bytesUsed()),
 		undefined,
 		{ equals: false },
 	);
@@ -78,16 +76,6 @@ export default function OptionsPageOverviewRoute() {
 		{ equals: false },
 	);
 
-	const requestsBlocked = createMemo(
-		() => allStatistics.latest.requestsBlocked,
-	);
-
-	const weeklyRequestsBlocked = createMemo(
-		() => getDailyStatisticsForWeek(requestsBlocked().dailyStats),
-		undefined,
-		{ equals: false },
-	);
-
 	const bytesSaved = createMemo(() => allStatistics.latest.bytesSaved);
 
 	const weeklyBytesSaved = createMemo(
@@ -100,7 +88,7 @@ export default function OptionsPageOverviewRoute() {
 		<div class="flex h-full flex-col gap-4 overflow-y-auto md:grid md:grid-cols-8 md:grid-rows-9 md:gap-4">
 			<OptionsPageBandwidthUsageOverTimeChart
 				class="h-72 w-full flex-none md:col-span-5 md:row-span-5 md:h-auto"
-				usage={weeklyBandwidthStats()}
+				usage={weeklyBytesUsed()}
 			/>
 
 			<OptionsPageBandwidthUsageBreakdownChart
@@ -114,13 +102,13 @@ export default function OptionsPageOverviewRoute() {
 			/>
 
 			<OptionsPageRequestsCompressedChart
-				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:row-start-8 md:h-auto"
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
 				usage={weeklyRequestsCompressed()}
 			/>
 
-			<OptionsPageRequestsBlockedChart
-				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:h-auto"
-				usage={weeklyRequestsBlocked()}
+			<OptionsPageBytedUsedChart
+				class="h-40 w-full flex-none md:col-span-2 md:row-span-2 md:row-start-8 md:h-auto"
+				usage={weeklyBytesUsed()}
 			/>
 
 			<OptionsPageBytesSavedChart

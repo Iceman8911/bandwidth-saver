@@ -1,6 +1,6 @@
 # Bandwidth Saver
 
-A Chrome / Firefox extension for monitoring and reducing data usage by blocking, compressing and modifying network request headers.
+A Chrome / Firefox extension for monitoring and reducing data usage by compressing and modifying network request headers.
 
 Settings are configured globally and may be optionally toggled per site.[^2]
 
@@ -14,24 +14,6 @@ Statistics are stored per day for at most 90 days of use, beyond that, older ent
 
 - `webRequest` doesn't help here if the request is lacking the `Content-Length` header.
 - `Performance API` has issues with cross-origin resources that don't have the  `Timing-Allow-Origin` header properly set.
-
-## Blocking
-
-Assets like videos, audios, fonts and images can be optionally blocked depending on their size[^1].
-
-### Modes
-
-#### Simple Blocking
-
-The simplest implementation that blocks any matching domains / urls / assets without concern for it's actual payload size. This is due to limitations of `declarativeNetRequest`.
-
-#### MV2 webRequestBlocking
-
-Only supports MV2, but we can inspect the payload here and have full power to block as we wish.
-
-#### Server-side Proxy 
-
-Redirects to a remote proxy that can do fine-grained blocking.
 
 ## Compression
 
@@ -68,7 +50,7 @@ Settings are synced to the user's profile while statistics are local since they 
 
 ## What will not be supported
 
-- Ad-blocking.
+- Ad or asset blocking.
 	- There are better suited extensions for that like Ublock, and it's recommended to have an ad-blocker to get rid of all the trash bogging up websites.
 
 [^1]: Depending on if manifest v2 is available or a proxy server is set up.

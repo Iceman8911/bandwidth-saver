@@ -53,10 +53,6 @@ function NavigationBarLinks() {
 					Compression
 				</NavigationBarLink>
 
-				<NavigationBarLink href={OptionsPageRoute.BLOCK}>
-					Blocking
-				</NavigationBarLink>
-
 				<NavigationBarLink href={OptionsPageRoute.PROXY}>
 					Proxy
 				</NavigationBarLink>

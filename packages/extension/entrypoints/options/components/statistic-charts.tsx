@@ -265,13 +265,18 @@ export function OptionsPageRequestsCompressedChart(
 	);
 }
 
-export function OptionsPageRequestsBlockedChart(
+function convertStatTotalToAppropriateNotation(total: number) {
+	return convertBytesToAppropriateNotation(total).join(" ");
+}
+
+export function OptionsPageBytedUsedChart(
 	props: OptionsPageUsageOverTimeProps,
 ) {
 	return (
 		<BaseStatisticsChart
 			class={props.class}
-			title="Requests Blocked"
+			statTotalTextMod={convertStatTotalToAppropriateNotation}
+			title="Data Used"
 			usage={props.usage}
 		/>
 	);
@@ -283,9 +288,7 @@ export function OptionsPageBytesSavedChart(
 	return (
 		<BaseStatisticsChart
 			class={props.class}
-			statTotalTextMod={(total) =>
-				convertBytesToAppropriateNotation(total).join(" ")
-			}
+			statTotalTextMod={convertStatTotalToAppropriateNotation}
 			title="Data Saved"
 			usage={props.usage}
 		/>

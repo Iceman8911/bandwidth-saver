@@ -66,41 +66,6 @@ const ProxySettingsSchema = v.object({
 	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
 });
 
-const BlockedAssetSharedSchema = v.object({
-	enabled: v.boolean(),
-	minSize: v.pipe(v.number(), v.minValue(0)),
-});
-
-const BlockedAssetSchema = v.variant("type", [
-	v.object({
-		...BlockedAssetSharedSchema.entries,
-		fileType: v.picklist(["audio", "font", "image", "video"]),
-		type: v.literal("type"),
-	}),
-
-	v.object({
-		...BlockedAssetSharedSchema.entries,
-		extension: v.string(),
-		type: v.literal("ext"),
-	}),
-
-	// Block by MIME type pattern
-	v.object({
-		...BlockedAssetSharedSchema.entries,
-		mimePattern: v.string(), // e.g., "application/pdf", "text/*"
-		type: v.literal("mime"),
-	}),
-
-	// Block by URL pattern (domain, path, etc.)
-	v.object({
-		...BlockedAssetSharedSchema.entries,
-		type: v.literal("url"),
-		urlPattern: v.string(), // e.g., "*.doubleclick.net/*", "cdn.analytics.com/*"
-	}),
-]);
-
-const BlockSettingsSchema = v.array(BlockedAssetSchema);
-
 const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.number(),
 	v.integer(),
@@ -144,9 +109,6 @@ const StatisticsSchema = v.object({
 
 	lastReset: v.optional(v.pipe(v.string(), v.isoTimestamp())),
 
-	/** Amount of requests blocked */
-	requestsBlocked: CombinedAssetStatisticsSchema,
-
 	/** Amount of non-cached requests re-routed to the compression service */
 	requestsCompressed: CombinedAssetStatisticsSchema,
 
@@ -167,12 +129,10 @@ const DetailedStatisticsSchema = v.object({
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const STORAGE_SCHEMA = {
-	[StorageKey.DEFAULT_SETTINGS_BLOCK]: BlockSettingsSchema,
 	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.DEFAULT_SETTINGS_PROXY]: ProxySettingsSchema,
 	[StorageKey.DEFAULT_SETTINGS_GENERAL]: GeneralSettingsSchema,
 
-	[StorageKey.SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX]: BlockSettingsSchema,
 	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]:
 		CompressionSettingsSchema,
 	[StorageKey.SITE_SPECIFIC_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
@@ -198,13 +158,6 @@ export const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
 	host: VITE_SERVER_HOST,
 	port: VITE_SERVER_PORT,
 } as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
-
-export const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
-	{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
-	{ enabled: false, fileType: "font", minSize: 50, type: "type" },
-	{ enabled: false, fileType: "image", minSize: 100, type: "type" },
-	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
-] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
 
 export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	block: true,
@@ -242,7 +195,6 @@ export const DEFAULT_COMBINED_ASSET_STATISTICS = v.parse(
 export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
 	bytesSaved: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	bytesUsed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
-	requestsBlocked: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsCompressed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsMade: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 } as const satisfies v.InferOutput<typeof StatisticsSchema>);
@@ -260,16 +212,12 @@ const DEFAULT_SCHEMA_VERSION = v.parse(
 );
 
 export const STORAGE_DEFAULTS = {
-	[StorageKey.DEFAULT_SETTINGS_BLOCK]: clone(DEFAULT_BLOCK_SETTINGS),
 	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: clone(
 		DEFAULT_COMPRESSION_SETTINGS,
 	),
 	[StorageKey.DEFAULT_SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
 	[StorageKey.DEFAULT_SETTINGS_GENERAL]: clone(DEFAULT_GENERAL_SETTINGS),
 
-	[StorageKey.SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX]: clone(
-		DEFAULT_BLOCK_SETTINGS,
-	),
 	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]: clone(
 		DEFAULT_COMPRESSION_SETTINGS,
 	),

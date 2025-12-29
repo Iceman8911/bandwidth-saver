@@ -57,16 +57,16 @@ export function PopupStatistics(props: {
 		<div class="grid grid-cols-2 grid-rows-2 gap-4 text-info">
 			<Suspense>
 				<div>
-					Requests Compressed today:{" "}
+					Requests Made today:{" "}
 					{getSumOfValuesInObject(
-						statistics()?.requestsCompressed.dailyStats[day] ?? {},
+						statistics()?.requestsMade.dailyStats[day] ?? {},
 					)}
 				</div>
 
 				<div>
-					Requests Blocked today:{" "}
+					Requests Compressed today:{" "}
 					{getSumOfValuesInObject(
-						statistics()?.requestsBlocked.dailyStats[day] ?? {},
+						statistics()?.requestsCompressed.dailyStats[day] ?? {},
 					)}
 				</div>
 
