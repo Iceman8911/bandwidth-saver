@@ -71,10 +71,10 @@ const BlockedAssetSharedSchema = v.object({
 	minSize: v.pipe(v.number(), v.minValue(0)),
 });
 
-export const BlockedAssetSchema = v.variant("type", [
+const BlockedAssetSchema = v.variant("type", [
 	v.object({
 		...BlockedAssetSharedSchema.entries,
-		fileType: v.picklist(["media", "font", "image"]),
+		fileType: v.picklist(["audio", "font", "image", "video"]),
 		type: v.literal("type"),
 	}),
 
@@ -82,6 +82,13 @@ export const BlockedAssetSchema = v.variant("type", [
 		...BlockedAssetSharedSchema.entries,
 		extension: v.string(),
 		type: v.literal("ext"),
+	}),
+
+	// Block by MIME type pattern
+	v.object({
+		...BlockedAssetSharedSchema.entries,
+		mimePattern: v.string(), // e.g., "application/pdf", "text/*"
+		type: v.literal("mime"),
 	}),
 
 	// Block by URL pattern (domain, path, etc.)
@@ -193,9 +200,10 @@ export const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
 } as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
 
 export const DEFAULT_BLOCK_SETTINGS = v.parse(BlockSettingsSchema, [
-	{ enabled: false, fileType: "media", minSize: 100, type: "type" },
+	{ enabled: false, fileType: "audio", minSize: 100, type: "type" },
 	{ enabled: false, fileType: "font", minSize: 50, type: "type" },
 	{ enabled: false, fileType: "image", minSize: 100, type: "type" },
+	{ enabled: false, fileType: "video", minSize: 100, type: "type" },
 ] as const satisfies v.InferOutput<typeof BlockSettingsSchema>);
 
 export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
