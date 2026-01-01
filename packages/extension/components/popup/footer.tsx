@@ -3,7 +3,12 @@ export function PopupFooter() {
 		<footer class="flex items-center justify-between">
 			<span>Made with love :3</span>
 
-			<BaseButton class="btn-primary btn-soft">Options</BaseButton>
+			<BaseButton
+				class="btn-primary btn-soft"
+				onClick={() => void browser.runtime.openOptionsPage()}
+			>
+				Options
+			</BaseButton>
 		</footer>
 	);
 }
