@@ -66,3 +66,4 @@
 - [x] Site-specific data should be at the top level in the extension local storage scope, indexed by their origins so we won't have to load unrelated entries when trying to update a single site's data
 - [ ] Convert "jpg" to "jpeg" since that's what most sites want i think.
 - [ ] Focus on commonly used sites like scoical media like Youtube, Facebook, Reddit, Discord, Twitter, Instagram, etc and other popular image-heavy sites and apply focused optimizations e.g since reddit uses custom web components for a lot of stuff, we need to account for that.
+- [ ] Make the broken img link fixer work faster.
