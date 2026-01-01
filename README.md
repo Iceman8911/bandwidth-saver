@@ -33,6 +33,8 @@ Only available in browsers that still support `webRequest` with the blocking pri
 
 Simply redirects all relevant requests to a remote / self-hosted proxy that returns the compressed version.
 
+A free test proxy that can be used is `bandwidth-saver.onrender.com`. Use that in the popup.
+
 #### Comparison
 
 | S/N                                   | Simple Redirect | MV2 WebRequest Redirect | Server-side Proxy |
