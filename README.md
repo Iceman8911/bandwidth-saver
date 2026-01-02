@@ -6,14 +6,15 @@ Settings are configured globally and may be optionally toggled per site.[^2]
 
 ## Bandwidth Monitoring
 
-Using both the observational `webRequest` and the `Performance API`, the bandwidth consumed by requested assets can be measured *mostly* accurately.
+Using the non-blocking `webRequest`, `Performance API`, and optionally, the `debugger`, the bandwidth consumed by requested assets can be measured *mostly* accurately (the highest accuracy need the `debugger`).
 
 Statistics are stored per day for at most 90 days of use, beyond that, older entries get combined into a total sum, to prevent unbounded growth (and especially because data that old won't have much use).
 
-### Why use both of them?
+### Why use the three of them?
 
 - `webRequest` doesn't help here if the request is lacking the `Content-Length` header.
 - `Performance API` has issues with cross-origin resources that don't have the  `Timing-Allow-Origin` header properly set.
+- `debugger` is the most accurate but there may be performance issues and heavier memroy usage when attaching multiple instances to different tabs, and it stops working when the user opens their devtools for the page.
 
 ## Compression
 

@@ -60,6 +60,7 @@
 
 - [-] ~~Add websocket statistics~~
   - Not practical since it'll probably tank performance if I try to patch Websocket APIs to monitor data flow
+- [ ] Add an extra accurate network montioring mode using the debugger; specifically the network part. Expose it as a toggle as default or for specific sites since it may result in perf issues.
 
 # Optimization
 
