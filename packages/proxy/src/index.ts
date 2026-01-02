@@ -15,6 +15,7 @@ const [REDIRECTED_SEARCH_PARAM_KEY = "", REDIRECTED_SEARCH_PARAM_VALUE = ""] =
 	REDIRECTED_SEARCH_PARAM_FLAG.split("=");
 
 const app = new Elysia()
+	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`

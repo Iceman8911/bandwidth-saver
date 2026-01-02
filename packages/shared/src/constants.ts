@@ -49,6 +49,7 @@ export enum ImageCompressorEndpoint {
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
 
 export enum ServerAPIEndpoint {
+	HEALTH = "health",
 	COMPRESS_IMAGE = "compress-image",
 }
 
