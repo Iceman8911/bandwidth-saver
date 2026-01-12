@@ -21,19 +21,38 @@ import {
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getUrlSchemaOrigin } from "@/utils/url";
 
-const DELAY_TILL_RAW_DATA_PROCESSING_IN_MS = 1000;
+const URL_ENTRY_SETTLE_MS = 900;
+const URL_ENTRY_MAX_AGE_MS = 3000;
+
+const FLUSH_INTERVAL_MS = 500;
+const FLUSH_TIME_BUDGET_MS = 8;
 
 const IMAGE_COMPRESSOR_ENDPOINTS: ReadonlyArray<string> = Object.values(
 	ImageCompressorEndpoint,
 );
 
-type BandwidthRawDataFromMessages = {
+type BandwidthRawDataPayload = {
 	perfApi: Readonly<BandwidthMonitoringMessagePayload | null>;
 	webRequest: Readonly<BandwidthMonitoringMessagePayload | null>;
-	timerId?: number | null;
+
+	firstSeenAtMs: number;
+	lastUpdatedAtMs: number;
 };
 
-const bandwidthRawDataMap = new Map<UrlSchema, BandwidthRawDataFromMessages>();
+type CombinedStatsStoreValue = Awaited<
+	ReturnType<typeof statisticsStorageItem.getValue>
+>;
+type SiteStatsStoreValue = Awaited<
+	ReturnType<
+		Awaited<ReturnType<typeof getSiteSpecificStatisticsStorageItem>>["getValue"]
+	>
+>;
+
+const pendingBandwidthMeasurementsByUrl = new Map<
+	UrlSchema,
+	BandwidthRawDataPayload
+>();
+const dirtyAssetUrls = new Set<UrlSchema>();
 
 /** Returns the overload of keys that don't fit within the limit */
 function getOverloadDailyStatsKeys(
@@ -93,21 +112,14 @@ function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
 	return newCombinedStats;
 }
 
-async function storeBandwidthDataFromPayload(
+function applyBandwidthDataToStores(
 	data: BandwidthMonitoringMessagePayload,
-	globalStore: Awaited<ReturnType<typeof statisticsStorageItem.getValue>>,
-	siteScopedStore: Awaited<
-		ReturnType<
-			Awaited<
-				ReturnType<typeof getSiteSpecificStatisticsStorageItem>
-			>["getValue"]
-		>
-	>,
+	globalStore: CombinedStatsStoreValue,
+	siteScopedStore: SiteStatsStoreValue,
 ) {
 	const { bytes, type, assetUrl, hostOrigin } = data;
 
 	const assetSize = bytes[type];
-
 	if (!assetSize) return;
 
 	const day = getDayStartInMillisecondsUTC();
@@ -127,9 +139,6 @@ async function storeBandwidthDataFromPayload(
 			type,
 			valueToAdd: 1,
 		});
-
-	const globalStatisticsSavePromise =
-		statisticsStorageItem.setValue(globalStore);
 
 	siteScopedStore.bytesUsed =
 		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
@@ -163,7 +172,6 @@ async function storeBandwidthDataFromPayload(
 			});
 	}
 
-	// TODO: This may result in false positives if this compressor endpoints ccan be accessed as functional websites
 	if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
 		globalStore.requestsCompressed =
 			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
@@ -172,6 +180,7 @@ async function storeBandwidthDataFromPayload(
 				type,
 				valueToAdd: 1,
 			});
+
 		siteScopedStore.requestsCompressed =
 			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
 				combinedStats: siteScopedStore.requestsCompressed,
@@ -180,61 +189,20 @@ async function storeBandwidthDataFromPayload(
 				valueToAdd: 1,
 			});
 	}
-
-	const siteScopedStatisticsSavePromise =
-		getSiteSpecificStatisticsStorageItem(hostOrigin).setValue(siteScopedStore);
-
-	await Promise.all([
-		globalStatisticsSavePromise,
-		siteScopedStatisticsSavePromise,
-	]);
-
-	// Remove any cached raw data for this URL (we've persisted the measurement)
-	bandwidthRawDataMap.delete(assetUrl);
 }
 
-/**
- * Process cached raw data for a given URL entry immediately.
- * The callers schedule this with setTimeout; we intentionally do
- * not wrap this function in another timeout to allow callers to
- * implement debouncing per-URL.
- */
-async function processCachedBandwidthData(
-	storage: typeof bandwidthRawDataMap,
+function createMergedPayload(
 	urlEntry: UrlSchema,
-) {
-	const rawDataEntry = storage.get(urlEntry);
+	entry: BandwidthRawDataPayload,
+): BandwidthMonitoringMessagePayload | null {
+	const { perfApi, webRequest } = entry;
 
-	if (!rawDataEntry) return;
-
-	// clear stored timerId on the entry (if any) so we don't try to clear it later
-	if (rawDataEntry.timerId) {
-		rawDataEntry.timerId = null;
-		storage.set(urlEntry, rawDataEntry);
-	}
-
-	const rawData = storage.get(urlEntry);
-	if (!rawData) return;
-
-	const { perfApi, webRequest } = rawData;
-
-	if (!perfApi && !webRequest) return;
-
-	const hostOrigin =
-		(webRequest?.hostOrigin || perfApi?.hostOrigin) ?? DUMMY_TAB_URL;
-
-	const [globalStatisticsValue, siteStatisticsValue] = await Promise.all([
-		statisticsStorageItem.getValue(),
-		getSiteSpecificStatisticsStorageItem(
-			getUrlSchemaOrigin(hostOrigin),
-		).getValue(),
-	]);
+	if (!perfApi && !webRequest) return null;
 
 	if (perfApi && webRequest) {
-		// Prioritize the webRequest's type and the perfApi's size when present
 		const { type } = webRequest;
 
-		const data: BandwidthMonitoringMessagePayload = {
+		return {
 			assetUrl: urlEntry,
 			bytes: {
 				...DEFAULT_SINGLE_ASSET_STATISTICS,
@@ -243,104 +211,171 @@ async function processCachedBandwidthData(
 			hostOrigin: webRequest.hostOrigin || perfApi.hostOrigin,
 			type,
 		};
-
-		await storeBandwidthDataFromPayload(
-			data,
-			globalStatisticsValue,
-			siteStatisticsValue,
-		);
-	} else if (perfApi) {
-		await storeBandwidthDataFromPayload(
-			perfApi,
-			globalStatisticsValue,
-			siteStatisticsValue,
-		);
-	} else if (webRequest) {
-		await storeBandwidthDataFromPayload(
-			webRequest,
-			globalStatisticsValue,
-			siteStatisticsValue,
-		);
-	} else {
-		// nothing to process
-		return;
 	}
+
+	return (perfApi ?? webRequest) || null;
 }
 
-function cacheBandwidthDataFromPerformanceApi(
-	storage: typeof bandwidthRawDataMap,
-) {
-	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) => {
-		const { assetUrl: url } = data;
-		const prevMapData = storage.get(url);
+function readUrlHostOrigin(entry: BandwidthRawDataPayload): UrlSchema {
+	const hostOrigin =
+		(entry.webRequest?.hostOrigin || entry.perfApi?.hostOrigin) ??
+		DUMMY_TAB_URL;
 
-		const base = prevMapData ?? {
-			perfApi: null,
-			timerId: null,
-			webRequest: null,
-		};
+	return getUrlSchemaOrigin(hostOrigin) as UrlSchema;
+}
 
-		// clear any pending timer so we debounce per-URL
-		if (base.timerId) {
-			try {
-				clearTimeout(base.timerId);
-			} catch {}
+function takeFlushableUrls(nowMs: number): UrlSchema[] {
+	const urls: UrlSchema[] = [];
+
+	for (const url of dirtyAssetUrls) {
+		const entry = pendingBandwidthMeasurementsByUrl.get(url);
+		if (!entry) {
+			dirtyAssetUrls.delete(url);
+			continue;
 		}
 
-		const newEntry: BandwidthRawDataFromMessages = {
-			...base,
+		if (!shouldFlushUrlEntry(entry, nowMs)) continue;
+
+		dirtyAssetUrls.delete(url);
+		urls.push(url);
+	}
+
+	return urls;
+}
+
+async function flushBandwidthMeasurementsOnce() {
+	const nowMs = Date.now();
+	const urlsToFlush = takeFlushableUrls(nowMs);
+
+	if (urlsToFlush.length === 0) return;
+
+	const globalStore = await statisticsStorageItem.getValue();
+
+	const siteStoresByOrigin = new Map<
+		UrlSchema,
+		{
+			storageItem: ReturnType<typeof getSiteSpecificStatisticsStorageItem>;
+			value: SiteStatsStoreValue;
+		}
+	>();
+
+	for (const urlEntry of urlsToFlush) {
+		const entry = pendingBandwidthMeasurementsByUrl.get(urlEntry);
+		if (!entry) continue;
+
+		const data = createMergedPayload(urlEntry, entry);
+		if (!data) {
+			pendingBandwidthMeasurementsByUrl.delete(urlEntry);
+			continue;
+		}
+
+		const siteOrigin = readUrlHostOrigin(entry);
+
+		let siteStore = siteStoresByOrigin.get(siteOrigin);
+		if (!siteStore) {
+			const storageItem = getSiteSpecificStatisticsStorageItem(siteOrigin);
+			const value = await storageItem.getValue();
+			siteStore = { storageItem, value };
+			siteStoresByOrigin.set(siteOrigin, siteStore);
+		}
+
+		applyBandwidthDataToStores(data, globalStore, siteStore.value);
+
+		pendingBandwidthMeasurementsByUrl.delete(urlEntry);
+	}
+
+	const savePromises: Array<Promise<unknown>> = [
+		statisticsStorageItem.setValue(globalStore),
+	];
+
+	for (const { storageItem, value } of siteStoresByOrigin.values()) {
+		savePromises.push(storageItem.setValue(value));
+	}
+
+	await Promise.all(savePromises);
+}
+
+function shouldFlushUrlEntry(
+	entry: BandwidthRawDataPayload,
+	nowMs: number,
+): boolean {
+	if (!entry.perfApi && !entry.webRequest) return false;
+
+	const ageMs = nowMs - entry.firstSeenAtMs;
+	const quietMs = nowMs - entry.lastUpdatedAtMs;
+
+	if (ageMs >= URL_ENTRY_MAX_AGE_MS) return true;
+	if (quietMs >= URL_ENTRY_SETTLE_MS) return true;
+
+	return false;
+}
+
+function createNewBandwidthRawDataPayload(
+	nowMs: number,
+): BandwidthRawDataPayload {
+	return {
+		firstSeenAtMs: nowMs,
+		lastUpdatedAtMs: nowMs,
+		perfApi: null,
+		webRequest: null,
+	};
+}
+
+export function cacheBandwidthDataFromPerformanceApi() {
+	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) => {
+		const { assetUrl } = data;
+
+		const nowMs = Date.now();
+		const previousEntry =
+			pendingBandwidthMeasurementsByUrl.get(assetUrl) ??
+			createNewBandwidthRawDataPayload(nowMs);
+
+		const updatedEntry: BandwidthRawDataPayload = {
+			...previousEntry,
+			lastUpdatedAtMs: nowMs,
 			perfApi: data,
-			timerId: null,
 		};
 
-		// schedule processing after the configured delay
-		const timerId = setTimeout(() => {
-			processCachedBandwidthData(storage, url);
-		}, DELAY_TILL_RAW_DATA_PROCESSING_IN_MS) as unknown as number;
-
-		newEntry.timerId = timerId;
-
-		storage.set(url, newEntry);
+		pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
+		dirtyAssetUrls.add(assetUrl);
 	});
 }
 
 /** Since background can't message background, we'll export htis and call it elsewhere */
 export function cacheBandwidthDataFromWebRequest(
 	data: BandwidthMonitoringMessagePayload,
-	storage = bandwidthRawDataMap,
 ) {
-	const { assetUrl: url } = data;
-	const prevMapData = storage.get(url);
+	const { assetUrl } = data;
 
-	const base = prevMapData ?? {
-		perfApi: null,
-		timerId: null,
-		webRequest: null,
-	};
+	const nowMs = Date.now();
+	const previousEntry =
+		pendingBandwidthMeasurementsByUrl.get(assetUrl) ??
+		createNewBandwidthRawDataPayload(nowMs);
 
-	// clear any pending timer so we debounce per-URL
-	if (base.timerId) {
-		try {
-			clearTimeout(base.timerId);
-		} catch {}
-	}
-
-	const newEntry: BandwidthRawDataFromMessages = {
-		...base,
-		timerId: null,
+	const updatedEntry: BandwidthRawDataPayload = {
+		...previousEntry,
+		lastUpdatedAtMs: nowMs,
 		webRequest: data,
 	};
 
-	// schedule processing after the configured delay
-	const timerId = setTimeout(() => {
-		processCachedBandwidthData(storage, url);
-	}, DELAY_TILL_RAW_DATA_PROCESSING_IN_MS) as unknown as number;
-
-	newEntry.timerId = timerId;
-
-	storage.set(url, newEntry);
+	pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
+	dirtyAssetUrls.add(assetUrl);
 }
 
-export function processMonitoredBandwidthData() {
-	cacheBandwidthDataFromPerformanceApi(bandwidthRawDataMap);
-}
+let isFlushInProgress = false;
+
+setInterval(() => {
+	const flushStartMs = Date.now();
+
+	if (isFlushInProgress) return;
+	isFlushInProgress = true;
+
+	void (async () => {
+		while (Date.now() - flushStartMs < FLUSH_TIME_BUDGET_MS) {
+			await flushBandwidthMeasurementsOnce();
+			if (dirtyAssetUrls.size === 0) return;
+		}
+	})().finally(() => {
+		isFlushInProgress = false;
+	});
+}, FLUSH_INTERVAL_MS);
