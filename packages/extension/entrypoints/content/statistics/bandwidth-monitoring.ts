@@ -1,7 +1,7 @@
 import { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
-import { DEFAULT_SINGLE_ASSET_STATISTICS } from "@/models/storage";
+import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
 import { detectAssetTypeFromUrl } from "@/utils/url";
@@ -21,10 +21,10 @@ const observer = new PerformanceObserver((list) => {
 					initiatorType,
 				);
 
-				const assetSize = { ...DEFAULT_SINGLE_ASSET_STATISTICS };
+				let assetSize = 0;
 
 				// determine which asset key to increment
-				let assetType: keyof typeof assetSize = "other";
+				let assetType: keyof SingleAssetStatisticsSchema = "other";
 
 				switch (parsedInitiatorType) {
 					case "audio":
@@ -65,7 +65,7 @@ const observer = new PerformanceObserver((list) => {
 						break;
 				}
 
-				assetSize[assetType] += transferSize;
+				assetSize += transferSize;
 
 				sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
 					assetUrl: v.parse(UrlSchema, name),

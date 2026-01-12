@@ -117,9 +117,8 @@ function applyBandwidthDataToStores(
 	globalStore: CombinedStatsStoreValue,
 	siteScopedStore: SiteStatsStoreValue,
 ) {
-	const { bytes, type, assetUrl, hostOrigin } = data;
+	const { bytes: assetSize, type, assetUrl, hostOrigin } = data;
 
-	const assetSize = bytes[type];
 	if (!assetSize) return;
 
 	const day = getDayStartInMillisecondsUTC();
@@ -204,10 +203,7 @@ function createMergedPayload(
 
 		return {
 			assetUrl: urlEntry,
-			bytes: {
-				...DEFAULT_SINGLE_ASSET_STATISTICS,
-				[type]: perfApi.bytes[type] || webRequest.bytes[type],
-			},
+			bytes: perfApi.bytes ?? webRequest.bytes,
 			hostOrigin: webRequest.hostOrigin || perfApi.hostOrigin,
 			type,
 		};
