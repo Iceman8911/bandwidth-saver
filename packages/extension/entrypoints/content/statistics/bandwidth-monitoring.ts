@@ -4,76 +4,118 @@ import { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-typ
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
-import { detectAssetTypeFromUrl } from "@/utils/url";
+import { detectAssetTypeFromUrl, getUrlSchemaOrigin } from "@/utils/url";
+
+const FLUSH_INTERVAL_MS = 500;
+const FLUSH_TIME_BUDGET_MS = 8;
+
+type PendingBandwidthDelta = {
+	assetUrl: UrlSchema;
+	hostOrigin: UrlSchema;
+	type: keyof SingleAssetStatisticsSchema;
+	bytes: number;
+};
+
+const pendingDeltasByAssetUrl = new Map<UrlSchema, PendingBandwidthDelta>();
+
+function readHostOrigin(): UrlSchema {
+	// @ts-expect-error location.origin is always a valid URL origin
+	return getUrlSchemaOrigin(location.origin);
+}
+
+function detectAssetTypeFromInitiatorOrUrl(
+	initiatorType: string,
+	assetUrl: string,
+): keyof SingleAssetStatisticsSchema {
+	const parsedInitiatorType = v.parse(
+		PerformanceResourceTimingIntiatorTypeSchema,
+		initiatorType,
+	);
+
+	switch (parsedInitiatorType) {
+		case "audio":
+			return "audio";
+		case "css":
+			return "style";
+		case "image":
+		case "img":
+		case "icon":
+		case "input":
+			return "image";
+		case "script":
+			return "script";
+		case "video":
+			return "video";
+		case "link":
+			return "style";
+		case "navigation":
+		case "frame":
+		case "iframe":
+			return "html";
+		default:
+			return detectAssetTypeFromUrl(new URL(assetUrl));
+	}
+}
+
+function queueTransferSizeFromEntry(
+	entry: PerformanceResourceTiming,
+	hostOrigin: UrlSchema,
+) {
+	if (entry.transferSize <= 0) return;
+
+	const assetUrl = v.parse(UrlSchema, entry.name);
+	const assetType = detectAssetTypeFromInitiatorOrUrl(
+		entry.initiatorType,
+		entry.name,
+	);
+
+	const existing = pendingDeltasByAssetUrl.get(assetUrl);
+
+	if (existing) {
+		existing.bytes += entry.transferSize;
+		pendingDeltasByAssetUrl.set(assetUrl, existing);
+		return;
+	}
+
+	pendingDeltasByAssetUrl.set(assetUrl, {
+		assetUrl,
+		bytes: entry.transferSize,
+		hostOrigin,
+		type: assetType,
+	});
+}
+
+function flushPendingBandwidthDeltas() {
+	if (!pendingDeltasByAssetUrl.size) return;
+
+	const flushStartMs = Date.now();
+
+	while (Date.now() - flushStartMs < FLUSH_TIME_BUDGET_MS) {
+		const nextEntry = pendingDeltasByAssetUrl.entries().next().value;
+
+		if (!nextEntry) return;
+
+		const [assetUrl, delta] = nextEntry;
+
+		sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
+			assetUrl: delta.assetUrl,
+			bytes: delta.bytes,
+			hostOrigin: delta.hostOrigin,
+			type: delta.type,
+		});
+
+		pendingDeltasByAssetUrl.delete(assetUrl);
+	}
+}
+
+setInterval(flushPendingBandwidthDeltas, FLUSH_INTERVAL_MS);
 
 const observer = new PerformanceObserver((list) => {
-	const entries = list.getEntries();
-	const hostOrigin = getUrlSchemaOrigin(v.parse(UrlSchema, location.origin));
+	const hostOrigin = readHostOrigin();
 
-	for (const entry of entries) {
+	for (const entry of list.getEntries()) {
 		if (entry instanceof PerformanceResourceTiming) {
-			const { transferSize, initiatorType, name } = entry;
-
-			// 0 transferSize usually means it came from Cache
-			if (transferSize > 0) {
-				const parsedInitiatorType = v.parse(
-					PerformanceResourceTimingIntiatorTypeSchema,
-					initiatorType,
-				);
-
-				let assetSize = 0;
-
-				// determine which asset key to increment
-				let assetType: keyof SingleAssetStatisticsSchema = "other";
-
-				switch (parsedInitiatorType) {
-					case "audio":
-						assetType = "audio";
-						break;
-
-					case "css":
-						assetType = "style";
-						break;
-
-					case "image":
-					case "img":
-					case "icon":
-					case "input":
-						assetType = "image";
-						break;
-
-					case "script":
-						assetType = "script";
-						break;
-
-					case "video":
-						assetType = "video";
-						break;
-
-					case "link":
-						// typically a stylesheet, but fallback to URL heuristics
-						assetType = "style";
-						break;
-
-					case "navigation":
-					case "frame":
-					case "iframe":
-						assetType = "html";
-						break;
-					default:
-						assetType = detectAssetTypeFromUrl(new URL(name));
-						break;
-				}
-
-				assetSize += transferSize;
-
-				sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
-					assetUrl: v.parse(UrlSchema, name),
-					bytes: assetSize,
-					hostOrigin,
-					type: assetType,
-				});
-			}
+			queueTransferSizeFromEntry(entry, hostOrigin);
 		}
 	}
 });
@@ -81,12 +123,12 @@ const observer = new PerformanceObserver((list) => {
 export function monitorBandwidthUsageViaContentScript() {
 	observer.observe({ buffered: true, type: "resource" });
 
-	// cleanup when the page is unloaded or navigated away from
 	const cleanup = () => {
 		try {
 			observer.disconnect();
 		} catch {}
 		window.removeEventListener("pagehide", cleanup, true);
 	};
+
 	window.addEventListener("pagehide", cleanup, true);
 }
