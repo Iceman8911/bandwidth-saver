@@ -92,6 +92,6 @@ export function monitorBandwidthUsageViaBackground() {
 			return undefined;
 		},
 		{ urls: ["<all_urls>"] },
-		["responseHeaders", "extraHeaders"],
+		["responseHeaders"],
 	);
 }
