@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import DEFAULT_COMPRESSION_WHITELISTED_DOMAIN_JSON from "@/data/compression-whilelisted-domains.json";
 import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
-import { UPDATE_INTERVAL_IN_MS } from "@/shared/constants";
+import { UPDATE_INTERVAL_IN_MINUTES } from "@/shared/constants";
 
 const REMOTE_COMPRESSION_WHITELISTED_DOMAIN_URL =
 	"https://raw.githubusercontent.com/iceman8911/bandwidth-saver/main/packages/extension/data/compression-whilelisted-domains.json";
@@ -28,9 +28,12 @@ async function getUpToDateWhitelistedDomains(): Promise<ReadonlyArray<string>> {
 	}
 }
 
-setInterval(async () => {
-	whitelistedDomains = await getUpToDateWhitelistedDomains();
-}, UPDATE_INTERVAL_IN_MS);
+browser.alarms.create(
+	{ periodInMinutes: UPDATE_INTERVAL_IN_MINUTES },
+	async () => {
+		whitelistedDomains = await getUpToDateWhitelistedDomains();
+	},
+);
 
 export function getWhitelistedDomains(): ReadonlyArray<string> {
 	return whitelistedDomains;

@@ -133,7 +133,7 @@ export enum DeclarativeNetRequestPriority {
 	HIGHEST,
 }
 
-export const UPDATE_INTERVAL_IN_MS = 1000 * 60 * 60;
+export const UPDATE_INTERVAL_IN_MINUTES = 5;
 
 /** A no-op rule condition that matches no requests.
  *
