@@ -1,5 +1,10 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import { getActiveTabUrl } from "@/shared/constants";
+import {
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
+} from "@/shared/storage";
 import {
 	disableAutoplayFromMutationObserver,
 	disableAutoplayOnPageLoad,
@@ -13,17 +18,33 @@ import {
 	disablePrefetchFromMutationObserver,
 	disablePrefetchOnPageLoad,
 } from "./prefetch";
+import type { ContentScriptMutationObserverCallback } from "./shared";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
 
+const getDefaultAndSiteGeneralSettings = (url: UrlSchema) =>
+	Promise.all([
+		defaultGeneralSettingsStorageItem.getValue(),
+		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
+	]);
+
 // Add all mutation observer stuff here
-const observer = (pageUrl: UrlSchema) =>
+const observer = (
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+) =>
 	new MutationObserver((mutationsList) => {
 		for (const mutation of mutationsList) {
 			if (mutation.type === "childList") {
 				mutation.addedNodes.forEach((node) => {
-					disableAutoplayFromMutationObserver(node, pageUrl);
-					disablePrefetchFromMutationObserver(node, pageUrl);
-					forceLazyLoadingFromMutationObserver(node, pageUrl);
+					const arg: Parameters<ContentScriptMutationObserverCallback>[0] = {
+						defaultSettings,
+						node,
+						siteSettings,
+					};
+
+					disableAutoplayFromMutationObserver(arg);
+					disablePrefetchFromMutationObserver(arg);
+					forceLazyLoadingFromMutationObserver(arg);
 				});
 			}
 		}
@@ -33,18 +54,21 @@ export default defineContentScript({
 	async main() {
 		const PAGE_URL = await getActiveTabUrl();
 
+		const [defaultSettings, siteSettings] =
+			await getDefaultAndSiteGeneralSettings(PAGE_URL);
+
 		monitorBandwidthUsageViaContentScript();
 
 		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
 
-		disableAutoplayOnPageLoad(PAGE_URL);
+		disableAutoplayOnPageLoad(defaultSettings, siteSettings);
 
-		disablePrefetchOnPageLoad(PAGE_URL);
+		disablePrefetchOnPageLoad(defaultSettings, siteSettings);
 
-		forceLazyLoadingOnPageLoad(PAGE_URL);
+		forceLazyLoadingOnPageLoad(defaultSettings, siteSettings);
 
 		// Start observing the document for added nodes
-		observer(PAGE_URL).observe(document.documentElement, {
+		observer(defaultSettings, siteSettings).observe(document.documentElement, {
 			childList: true,
 			subtree: true,
 		});

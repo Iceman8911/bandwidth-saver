@@ -1,9 +1,6 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { ContentScriptMutationObserverCallback } from "./shared";
 
 const PREFETCH_REGEX = /prefetch|preload|prerender/i;
 
@@ -17,21 +14,22 @@ function disablePrefetch(el: HTMLLinkElement) {
 	}
 }
 
-async function shouldDisablePrefetchForSite(url: UrlSchema): Promise<boolean> {
-	const [defaultSettings, siteSpecificSettings] = await Promise.all([
-		defaultGeneralSettingsStorageItem.getValue(),
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-	]);
-
-	if (siteSpecificSettings.ruleIdOffset != null) {
-		return siteSpecificSettings.enabled && siteSpecificSettings.lazyLoad;
+function shouldDisablePrefetchForSite(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+): boolean {
+	if (siteSettings.ruleIdOffset != null) {
+		return siteSettings.enabled && siteSettings.lazyLoad;
 	}
 
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export async function disablePrefetchOnPageLoad(url: UrlSchema) {
-	if (!(await shouldDisablePrefetchForSite(url))) return;
+export function disablePrefetchOnPageLoad(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+) {
+	if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
 
 	querySelectorAllDeep("link").forEach((linkElement) => {
 		if (isLinkElement(linkElement)) {
@@ -40,21 +38,19 @@ export async function disablePrefetchOnPageLoad(url: UrlSchema) {
 	});
 }
 
-export async function disablePrefetchFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	if (!(await shouldDisablePrefetchForSite(url))) return;
+export const disablePrefetchFromMutationObserver: ContentScriptMutationObserverCallback =
+	({ defaultSettings, node, siteSettings }) => {
+		if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
 
-	if (isLinkElement(node)) {
-		disablePrefetch(node);
-	}
+		if (isLinkElement(node)) {
+			disablePrefetch(node);
+		}
 
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("link", node).forEach((linkElement) => {
-			if (isLinkElement(linkElement)) {
-				disablePrefetch(linkElement);
-			}
-		});
-	}
-}
+		if (node instanceof HTMLElement) {
+			querySelectorAllDeep("link", node).forEach((linkElement) => {
+				if (isLinkElement(linkElement)) {
+					disablePrefetch(linkElement);
+				}
+			});
+		}
+	};

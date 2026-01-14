@@ -1,9 +1,6 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { ContentScriptMutationObserverCallback } from "./shared";
 
 // Autoplay is not restored when the toggle is reversed. A page reload will be needed
 
@@ -21,21 +18,22 @@ function disableAutoplay(element: HTMLMediaElement) {
 	element.setAttribute("preload", "none");
 }
 
-async function shouldDisableAutoplayForSite(url: UrlSchema): Promise<boolean> {
-	const [defaultSettings, siteSpecificSettings] = await Promise.all([
-		defaultGeneralSettingsStorageItem.getValue(),
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-	]);
-
-	if (siteSpecificSettings.ruleIdOffset != null) {
-		return siteSpecificSettings.enabled && siteSpecificSettings.noAutoplay;
+function shouldDisableAutoplayForSite(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+): boolean {
+	if (siteSettings.ruleIdOffset != null) {
+		return siteSettings.enabled && siteSettings.noAutoplay;
 	}
 
 	return defaultSettings.enabled && defaultSettings.noAutoplay;
 }
 
-export async function disableAutoplayOnPageLoad(url: UrlSchema) {
-	if (!(await shouldDisableAutoplayForSite(url))) return;
+export function disableAutoplayOnPageLoad(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+) {
+	if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
 
 	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
 		if (isMediaElement(mediaElement)) {
@@ -44,21 +42,19 @@ export async function disableAutoplayOnPageLoad(url: UrlSchema) {
 	});
 }
 
-export async function disableAutoplayFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	if (!(await shouldDisableAutoplayForSite(url))) return;
+export const disableAutoplayFromMutationObserver: ContentScriptMutationObserverCallback =
+	({ defaultSettings, node, siteSettings }) => {
+		if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
 
-	if (isMediaElement(node)) {
-		disableAutoplay(node);
-	}
+		if (isMediaElement(node)) {
+			disableAutoplay(node);
+		}
 
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("audio,video", node).forEach((mediaElement) => {
-			if (isMediaElement(mediaElement)) {
-				disableAutoplay(mediaElement);
-			}
-		});
-	}
-}
+		if (node instanceof HTMLElement) {
+			querySelectorAllDeep("audio,video", node).forEach((mediaElement) => {
+				if (isMediaElement(mediaElement)) {
+					disableAutoplay(mediaElement);
+				}
+			});
+		}
+	};
