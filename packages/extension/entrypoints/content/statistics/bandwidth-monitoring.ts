@@ -5,75 +5,101 @@ import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
 import { detectAssetTypeFromUrl } from "@/utils/url";
+import BatchQueue from "../../../../shared/src/utils/batch";
+
+type PerformanceResourceTimingPayload = {
+	initiatorType: string;
+	name: string;
+	transferSize: number;
+	hostOrigin: UrlSchema;
+};
+
+const pendingPerformanceResourceTimingPayloadBatchQueue =
+	new BatchQueue<PerformanceResourceTimingPayload>({
+		batchSize: 25,
+		intervalMs: 750,
+	});
+
+pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
+	for (const { hostOrigin, initiatorType, name, transferSize } of details) {
+		// 0 transferSize usually means it came from Cache
+		if (transferSize > 0) {
+			const parsedInitiatorType = v.parse(
+				PerformanceResourceTimingIntiatorTypeSchema,
+				initiatorType,
+			);
+
+			let assetSize = 0;
+
+			// determine which asset key to increment
+			let assetType: keyof SingleAssetStatisticsSchema = "other";
+
+			switch (parsedInitiatorType) {
+				case "audio":
+					assetType = "audio";
+					break;
+
+				case "css":
+					assetType = "style";
+					break;
+
+				case "image":
+				case "img":
+				case "icon":
+				case "input":
+					assetType = "image";
+					break;
+
+				case "script":
+					assetType = "script";
+					break;
+
+				case "video":
+					assetType = "video";
+					break;
+
+				case "link":
+					// typically a stylesheet, but fallback to URL heuristics
+					assetType = "style";
+					break;
+
+				case "navigation":
+				case "frame":
+				case "iframe":
+					assetType = "html";
+					break;
+				default:
+					assetType = detectAssetTypeFromUrl(new URL(name));
+					break;
+			}
+
+			assetSize += transferSize;
+
+			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
+				assetUrl: v.parse(UrlSchema, name),
+				bytes: assetSize,
+				hostOrigin,
+				type: assetType,
+			});
+		}
+	}
+});
 
 const observer = new PerformanceObserver((list) => {
 	const entries = list.getEntries();
-	const hostOrigin = getUrlSchemaOrigin(v.parse(UrlSchema, location.origin));
+	//@ts-expect-error This will always be a valid url since its da Web API
+	const hostOrigin = getUrlSchemaOrigin(location.origin);
 
 	for (const entry of entries) {
 		if (entry instanceof PerformanceResourceTiming) {
 			const { transferSize, initiatorType, name } = entry;
 
-			// 0 transferSize usually means it came from Cache
-			if (transferSize > 0) {
-				const parsedInitiatorType = v.parse(
-					PerformanceResourceTimingIntiatorTypeSchema,
-					initiatorType,
-				);
-
-				let assetSize = 0;
-
-				// determine which asset key to increment
-				let assetType: keyof SingleAssetStatisticsSchema = "other";
-
-				switch (parsedInitiatorType) {
-					case "audio":
-						assetType = "audio";
-						break;
-
-					case "css":
-						assetType = "style";
-						break;
-
-					case "image":
-					case "img":
-					case "icon":
-					case "input":
-						assetType = "image";
-						break;
-
-					case "script":
-						assetType = "script";
-						break;
-
-					case "video":
-						assetType = "video";
-						break;
-
-					case "link":
-						// typically a stylesheet, but fallback to URL heuristics
-						assetType = "style";
-						break;
-
-					case "navigation":
-					case "frame":
-					case "iframe":
-						assetType = "html";
-						break;
-					default:
-						assetType = detectAssetTypeFromUrl(new URL(name));
-						break;
-				}
-
-				assetSize += transferSize;
-
-				sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
-					assetUrl: v.parse(UrlSchema, name),
-					bytes: assetSize,
-					hostOrigin,
-					type: assetType,
-				});
-			}
+			pendingPerformanceResourceTimingPayloadBatchQueue.enqueue({
+				hostOrigin,
+				initiatorType,
+				name,
+				transferSize,
+			});
 		}
 	}
 });
