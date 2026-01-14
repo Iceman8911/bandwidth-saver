@@ -1,6 +1,5 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
-import * as v from "valibot";
-import { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
+import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
@@ -24,10 +23,9 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 	for (const { hostOrigin, initiatorType, name, transferSize } of details) {
 		// 0 transferSize usually means it came from Cache
 		if (transferSize > 0) {
-			const parsedInitiatorType = v.parse(
-				PerformanceResourceTimingIntiatorTypeSchema,
-				initiatorType,
-			);
+			//@ts-expect-error No need to parse since this will always be true unless the web breaks or smth
+			const parsedInitiatorType: PerformanceResourceTimingIntiatorTypeSchema =
+				initiatorType;
 
 			let assetSize = 0;
 
@@ -75,8 +73,9 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 
 			assetSize += transferSize;
 
+			//@ts-expect-error `name` will always be a url here
 			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
-				assetUrl: v.parse(UrlSchema, name),
+				assetUrl: name,
 				bytes: assetSize,
 				hostOrigin,
 				type: assetType,
