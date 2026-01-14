@@ -1,6 +1,6 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+
 import { getActiveTabUrl } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -8,22 +8,27 @@ import {
 } from "@/shared/storage";
 import {
 	AUTOPLAYABLE_ELEMENT_SELECTOR,
-	disableAutoplayFromMutationObserver,
-	disableAutoplayOnPageLoad,
+	disableAutoplayViaContentScript,
+	shouldDisableAutoplayForSite,
 } from "./autoplay";
 import { fixImageElementsBrokenFromFailedCompression } from "./compression-patch";
 import {
-	forceLazyLoadingFromMutationObserver,
-	forceLazyLoadingOnPageLoad,
+	forceLazyLoadingViaContentScript,
 	LAZY_LOADABLE_ELEMENT_SELECTOR,
+	shouldLazyLoadOnSite,
 } from "./lazyload";
 import {
-	disablePrefetchFromMutationObserver,
-	disablePrefetchOnPageLoad,
+	disablePrefetchViaContentScript,
 	PREFETCHABLE_ELEMENT_SELECTOR,
+	shouldDisablePrefetchForSite,
 } from "./prefetch";
-import type { ContentScriptMutationObserverCallback } from "./shared";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
+
+type SettingsToApply = Readonly<{
+	disableAutoplay: boolean;
+	lazyload: boolean;
+	prefetch: boolean;
+}>;
 
 const getDefaultAndSiteGeneralSettings = (url: UrlSchema) =>
 	Promise.all([
@@ -49,26 +54,27 @@ function queryMatchingElements(
 }
 
 // Add all mutation observer stuff here
-const observer = (
-	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
-) =>
+const observer = ({ disableAutoplay, lazyload, prefetch }: SettingsToApply) =>
 	new MutationObserver((mutationsList) => {
 		for (const mutation of mutationsList) {
 			if (mutation.type === "childList") {
 				mutation.addedNodes.forEach((node) => {
 					if (node instanceof HTMLElement) {
 						for (const ele of queryMatchingElements(node)) {
-							const arg: Parameters<ContentScriptMutationObserverCallback>[0] =
-								{
-									defaultSettings,
-									ele,
-									siteSettings,
-								};
+							disableAutoplayViaContentScript({
+								applySetting: disableAutoplay,
+								ele,
+							});
 
-							disableAutoplayFromMutationObserver(arg);
-							disablePrefetchFromMutationObserver(arg);
-							forceLazyLoadingFromMutationObserver(arg);
+							disablePrefetchViaContentScript({
+								applySetting: prefetch,
+								ele,
+							});
+
+							forceLazyLoadingViaContentScript({
+								applySetting: lazyload,
+								ele,
+							});
 						}
 					}
 				});
@@ -87,16 +93,34 @@ export default defineContentScript({
 
 		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
 
+		const settingsToApply: SettingsToApply = {
+			disableAutoplay: shouldDisableAutoplayForSite(
+				defaultSettings,
+				siteSettings,
+			),
+			lazyload: shouldLazyLoadOnSite(defaultSettings, siteSettings),
+			prefetch: shouldDisablePrefetchForSite(defaultSettings, siteSettings),
+		};
+
 		for (const ele of queryMatchingElements(document)) {
-			disableAutoplayOnPageLoad(defaultSettings, siteSettings, ele);
+			disableAutoplayViaContentScript({
+				applySetting: settingsToApply.disableAutoplay,
+				ele,
+			});
 
-			disablePrefetchOnPageLoad(defaultSettings, siteSettings, ele);
+			disablePrefetchViaContentScript({
+				applySetting: settingsToApply.prefetch,
+				ele,
+			});
 
-			forceLazyLoadingOnPageLoad(defaultSettings, siteSettings, ele);
+			forceLazyLoadingViaContentScript({
+				applySetting: settingsToApply.lazyload,
+				ele,
+			});
 		}
 
 		// Start observing the document for added nodes
-		observer(defaultSettings, siteSettings).observe(document.documentElement, {
+		observer(settingsToApply).observe(document.documentElement, {
 			childList: true,
 			subtree: true,
 		});

@@ -1,5 +1,5 @@
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
-import type { ContentScriptMutationObserverCallback } from "./shared";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Autoplay is not restored when the toggle is reversed. A page reload will be needed
 
@@ -19,7 +19,7 @@ function disableAutoplay(element: HTMLMediaElement) {
 	element.setAttribute("preload", "none");
 }
 
-function shouldDisableAutoplayForSite(
+export function shouldDisableAutoplayForSite(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
 ): boolean {
@@ -30,21 +30,9 @@ function shouldDisableAutoplayForSite(
 	return defaultSettings.enabled && defaultSettings.noAutoplay;
 }
 
-export function disableAutoplayOnPageLoad(
-	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	ele: HTMLElement,
-) {
-	if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
-
-	if (isMediaElement(ele)) {
-		disableAutoplay(ele);
-	}
-}
-
-export const disableAutoplayFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, ele, siteSettings }) => {
-		if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
+export const disableAutoplayViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
 		if (isMediaElement(ele)) {
 			disableAutoplay(ele);

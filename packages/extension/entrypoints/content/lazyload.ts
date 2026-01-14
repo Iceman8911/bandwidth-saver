@@ -1,5 +1,5 @@
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
-import type { ContentScriptMutationObserverCallback } from "./shared";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Lazyload images and iframes
 
@@ -15,7 +15,7 @@ function forceLazyLoading(el: HTMLImageOrIframeElement) {
 	el.loading = "lazy";
 }
 
-function shouldLazyLoadOnSite(
+export function shouldLazyLoadOnSite(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
 ): boolean {
@@ -26,21 +26,9 @@ function shouldLazyLoadOnSite(
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export function forceLazyLoadingOnPageLoad(
-	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	ele: HTMLElement,
-) {
-	if (!shouldLazyLoadOnSite(defaultSettings, siteSettings)) return;
-
-	if (isImageOrIframeElement(ele)) {
-		forceLazyLoading(ele);
-	}
-}
-
-export const forceLazyLoadingFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, ele, siteSettings }) => {
-		if (!shouldLazyLoadOnSite(defaultSettings, siteSettings)) return;
+export const forceLazyLoadingViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
 		if (isImageOrIframeElement(ele)) {
 			forceLazyLoading(ele);

@@ -1,5 +1,5 @@
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
-import type { ContentScriptMutationObserverCallback } from "./shared";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 export const PREFETCHABLE_ELEMENT_SELECTOR = "link";
 
@@ -15,7 +15,7 @@ function disablePrefetch(el: HTMLLinkElement) {
 	}
 }
 
-function shouldDisablePrefetchForSite(
+export function shouldDisablePrefetchForSite(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
 ): boolean {
@@ -26,21 +26,9 @@ function shouldDisablePrefetchForSite(
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export function disablePrefetchOnPageLoad(
-	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	ele: HTMLElement,
-) {
-	if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
-
-	if (isLinkElement(ele)) {
-		disablePrefetch(ele);
-	}
-}
-
-export const disablePrefetchFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, ele, siteSettings }) => {
-		if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
+export const disablePrefetchViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
 		if (isLinkElement(ele)) {
 			disablePrefetch(ele);
