@@ -36,7 +36,8 @@ async function repairImageElement(
 ): Promise<void> {
 	if (repairedImgElements.has(img)) return;
 
-	if (!compressionCache) compressionCache = await isCompressionEnabled(url);
+	if (compressionCache == null)
+		compressionCache = await isCompressionEnabled(url);
 
 	if (!compressionCache) return;
 
