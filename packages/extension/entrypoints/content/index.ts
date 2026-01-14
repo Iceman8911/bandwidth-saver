@@ -6,6 +6,7 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import BatchQueue from "../../../shared/src/utils/batch";
 import {
 	AUTOPLAYABLE_ELEMENT_SELECTOR,
 	disableAutoplayViaContentScript,
@@ -53,35 +54,6 @@ function queryMatchingElements(
 	return elements;
 }
 
-// Add all mutation observer stuff here
-const observer = ({ disableAutoplay, lazyload, prefetch }: SettingsToApply) =>
-	new MutationObserver((mutationsList) => {
-		for (const mutation of mutationsList) {
-			if (mutation.type === "childList") {
-				mutation.addedNodes.forEach((node) => {
-					if (node instanceof HTMLElement) {
-						for (const ele of queryMatchingElements(node)) {
-							disableAutoplayViaContentScript({
-								applySetting: disableAutoplay,
-								ele,
-							});
-
-							disablePrefetchViaContentScript({
-								applySetting: prefetch,
-								ele,
-							});
-
-							forceLazyLoadingViaContentScript({
-								applySetting: lazyload,
-								ele,
-							});
-						}
-					}
-				});
-			}
-		}
-	});
-
 export default defineContentScript({
 	async main() {
 		const PAGE_URL = await getActiveTabUrl();
@@ -93,7 +65,7 @@ export default defineContentScript({
 
 		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
 
-		const settingsToApply: SettingsToApply = {
+		const { disableAutoplay, lazyload, prefetch }: SettingsToApply = {
 			disableAutoplay: shouldDisableAutoplayForSite(
 				defaultSettings,
 				siteSettings,
@@ -102,28 +74,92 @@ export default defineContentScript({
 			prefetch: shouldDisablePrefetchForSite(defaultSettings, siteSettings),
 		};
 
+		// If none of the toggles are set, no use of going further
+		if (!disableAutoplay && !lazyload && !prefetch) return;
+
 		for (const ele of queryMatchingElements(document)) {
-			disableAutoplayViaContentScript({
-				applySetting: settingsToApply.disableAutoplay,
-				ele,
-			});
+			if (disableAutoplay)
+				disableAutoplayViaContentScript({
+					applySetting: disableAutoplay,
+					ele,
+				});
 
-			disablePrefetchViaContentScript({
-				applySetting: settingsToApply.prefetch,
-				ele,
-			});
+			if (prefetch)
+				disablePrefetchViaContentScript({
+					applySetting: prefetch,
+					ele,
+				});
 
-			forceLazyLoadingViaContentScript({
-				applySetting: settingsToApply.lazyload,
-				ele,
-			});
+			if (lazyload)
+				forceLazyLoadingViaContentScript({
+					applySetting: lazyload,
+					ele,
+				});
 		}
 
+		const mutationBatchQueue = new BatchQueue<HTMLElement>({
+			batchSize: 200,
+			intervalMs: 100,
+		});
+
+		const processedElements = new WeakSet<HTMLElement>();
+
+		mutationBatchQueue.addCallbacks((nodes) => {
+			for (const node of new Set(nodes)) {
+				for (const ele of queryMatchingElements(node)) {
+					if (processedElements.has(ele)) continue;
+
+					if (disableAutoplay)
+						disableAutoplayViaContentScript({
+							applySetting: disableAutoplay,
+							ele,
+						});
+
+					if (prefetch)
+						disablePrefetchViaContentScript({
+							applySetting: prefetch,
+							ele,
+						});
+
+					if (lazyload)
+						forceLazyLoadingViaContentScript({
+							applySetting: lazyload,
+							ele,
+						});
+
+					processedElements.add(ele);
+				}
+			}
+		});
+
+		// Add all mutation observer stuff here
+		const observer = new MutationObserver((mutationsList) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === "childList") {
+					mutation.addedNodes.forEach((node) => {
+						if (node instanceof HTMLElement) {
+							mutationBatchQueue.enqueue(node);
+						}
+					});
+				}
+			}
+		});
+
 		// Start observing the document for added nodes
-		observer(settingsToApply).observe(document.documentElement, {
+		observer.observe(document.documentElement, {
 			childList: true,
 			subtree: true,
 		});
+
+		const cleanup = () => {
+			try {
+				observer.disconnect();
+				mutationBatchQueue.stopFlush();
+				mutationBatchQueue.clearCallbacks();
+			} catch {}
+			window.removeEventListener("pagehide", cleanup, true);
+		};
+		window.addEventListener("pagehide", cleanup, true);
 	},
 	matches: ["<all_urls>"],
 	runAt: "document_start",
