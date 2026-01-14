@@ -1,6 +1,7 @@
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import type { ContentScriptMutationObserverCallback } from "./shared";
+
+export const PREFETCHABLE_ELEMENT_SELECTOR = "link";
 
 const PREFETCH_REGEX = /prefetch|preload|prerender/i;
 
@@ -28,29 +29,20 @@ function shouldDisablePrefetchForSite(
 export function disablePrefetchOnPageLoad(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	ele: HTMLElement,
 ) {
 	if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
 
-	querySelectorAllDeep("link").forEach((linkElement) => {
-		if (isLinkElement(linkElement)) {
-			disablePrefetch(linkElement);
-		}
-	});
+	if (isLinkElement(ele)) {
+		disablePrefetch(ele);
+	}
 }
 
 export const disablePrefetchFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, node, siteSettings }) => {
+	({ defaultSettings, ele, siteSettings }) => {
 		if (!shouldDisablePrefetchForSite(defaultSettings, siteSettings)) return;
 
-		if (isLinkElement(node)) {
-			disablePrefetch(node);
-		}
-
-		if (node instanceof HTMLElement) {
-			querySelectorAllDeep("link", node).forEach((linkElement) => {
-				if (isLinkElement(linkElement)) {
-					disablePrefetch(linkElement);
-				}
-			});
+		if (isLinkElement(ele)) {
+			disablePrefetch(ele);
 		}
 	};

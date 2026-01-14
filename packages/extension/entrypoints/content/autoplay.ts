@@ -1,8 +1,9 @@
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import type { ContentScriptMutationObserverCallback } from "./shared";
 
 // Autoplay is not restored when the toggle is reversed. A page reload will be needed
+
+export const AUTOPLAYABLE_ELEMENT_SELECTOR = "audio,video";
 
 function isMediaElement(element: Node): element is HTMLMediaElement {
 	return element instanceof HTMLMediaElement;
@@ -32,29 +33,20 @@ function shouldDisableAutoplayForSite(
 export function disableAutoplayOnPageLoad(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	ele: HTMLElement,
 ) {
 	if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
 
-	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
-		if (isMediaElement(mediaElement)) {
-			disableAutoplay(mediaElement);
-		}
-	});
+	if (isMediaElement(ele)) {
+		disableAutoplay(ele);
+	}
 }
 
 export const disableAutoplayFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, node, siteSettings }) => {
+	({ defaultSettings, ele, siteSettings }) => {
 		if (!shouldDisableAutoplayForSite(defaultSettings, siteSettings)) return;
 
-		if (isMediaElement(node)) {
-			disableAutoplay(node);
-		}
-
-		if (node instanceof HTMLElement) {
-			querySelectorAllDeep("audio,video", node).forEach((mediaElement) => {
-				if (isMediaElement(mediaElement)) {
-					disableAutoplay(mediaElement);
-				}
-			});
+		if (isMediaElement(ele)) {
+			disableAutoplay(ele);
 		}
 	};

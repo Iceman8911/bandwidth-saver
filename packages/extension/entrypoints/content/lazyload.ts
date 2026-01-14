@@ -1,8 +1,9 @@
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import type { ContentScriptMutationObserverCallback } from "./shared";
 
 // Lazyload images and iframes
+
+export const LAZY_LOADABLE_ELEMENT_SELECTOR = "img,iframe";
 
 type HTMLImageOrIframeElement = HTMLImageElement | HTMLIFrameElement;
 
@@ -25,32 +26,23 @@ function shouldLazyLoadOnSite(
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export async function forceLazyLoadingOnPageLoad(
+export function forceLazyLoadingOnPageLoad(
 	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
 	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	ele: HTMLElement,
 ) {
 	if (!shouldLazyLoadOnSite(defaultSettings, siteSettings)) return;
 
-	querySelectorAllDeep("img,iframe").forEach((ele) => {
-		if (isImageOrIframeElement(ele)) {
-			forceLazyLoading(ele);
-		}
-	});
+	if (isImageOrIframeElement(ele)) {
+		forceLazyLoading(ele);
+	}
 }
 
 export const forceLazyLoadingFromMutationObserver: ContentScriptMutationObserverCallback =
-	({ defaultSettings, node, siteSettings }) => {
+	({ defaultSettings, ele, siteSettings }) => {
 		if (!shouldLazyLoadOnSite(defaultSettings, siteSettings)) return;
 
-		if (isImageOrIframeElement(node)) {
-			forceLazyLoading(node);
-		}
-
-		if (node instanceof HTMLElement) {
-			querySelectorAllDeep("img,iframe", node).forEach((ele) => {
-				if (isImageOrIframeElement(ele)) {
-					forceLazyLoading(ele);
-				}
-			});
+		if (isImageOrIframeElement(ele)) {
+			forceLazyLoading(ele);
 		}
 	};
