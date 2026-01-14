@@ -10,6 +10,9 @@
 		".": "./src/index.ts"
 	},
 	"name": "@bandwidth-saver/shared",
+	"scripts": {
+		"test": "bun test"
+	},
 	"type": "module",
 	"version": "0.0.0"
 }
