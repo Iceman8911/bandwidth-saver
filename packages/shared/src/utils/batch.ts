@@ -52,6 +52,8 @@ type BatchQueueConstructorOptions = {
 	intervalMs: number;
 };
 
+type TimeoutId = ReturnType<typeof setTimeout>;
+
 /** For queuing up pending data to process and processing them efficiently in batches of defined or variable size (if a time budget is given).
  *
  * I.e adding a new entry/ies will cause
@@ -60,7 +62,7 @@ export default class BatchQueue<
 	TQueueItem extends Readonly<unknown>,
 > extends Queue<TQueueItem> {
 	private _callbacks = new Set<(data: ReadonlyArray<TQueueItem>) => void>();
-	private _flushTimeoutId: number | null = null;
+	private _flushTimeoutId: TimeoutId | null = null;
 
 	constructor(
 		private readonly _options: Readonly<BatchQueueConstructorOptions>,

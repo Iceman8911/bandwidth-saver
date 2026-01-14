@@ -20,12 +20,13 @@ import {
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getUrlSchemaOrigin } from "@/utils/url";
+import BatchQueue from "../../../../shared/src/utils/batch";
 
 const URL_ENTRY_SETTLE_MS = 900;
 const URL_ENTRY_MAX_AGE_MS = 3000;
 
-const FLUSH_INTERVAL_MS = 500;
-const FLUSH_TIME_BUDGET_MS = 8;
+const FLUSH_BATCH_SIZE = 50;
+const FLUSH_INTERVAL_MS = 1000;
 
 const IMAGE_COMPRESSOR_ENDPOINTS: ReadonlyArray<string> = Object.values(
 	ImageCompressorEndpoint,
@@ -220,77 +221,6 @@ function readUrlHostOrigin(entry: BandwidthRawDataPayload): UrlSchema {
 	return getUrlSchemaOrigin(hostOrigin) as UrlSchema;
 }
 
-function takeFlushableUrls(nowMs: number): UrlSchema[] {
-	const urls: UrlSchema[] = [];
-
-	for (const url of dirtyAssetUrls) {
-		const entry = pendingBandwidthMeasurementsByUrl.get(url);
-		if (!entry) {
-			dirtyAssetUrls.delete(url);
-			continue;
-		}
-
-		if (!shouldFlushUrlEntry(entry, nowMs)) continue;
-
-		dirtyAssetUrls.delete(url);
-		urls.push(url);
-	}
-
-	return urls;
-}
-
-async function flushBandwidthMeasurementsOnce() {
-	const nowMs = Date.now();
-	const urlsToFlush = takeFlushableUrls(nowMs);
-
-	if (urlsToFlush.length === 0) return;
-
-	const globalStore = await statisticsStorageItem.getValue();
-
-	const siteStoresByOrigin = new Map<
-		UrlSchema,
-		{
-			storageItem: ReturnType<typeof getSiteSpecificStatisticsStorageItem>;
-			value: SiteStatsStoreValue;
-		}
-	>();
-
-	for (const urlEntry of urlsToFlush) {
-		const entry = pendingBandwidthMeasurementsByUrl.get(urlEntry);
-		if (!entry) continue;
-
-		const data = createMergedPayload(urlEntry, entry);
-		if (!data) {
-			pendingBandwidthMeasurementsByUrl.delete(urlEntry);
-			continue;
-		}
-
-		const siteOrigin = readUrlHostOrigin(entry);
-
-		let siteStore = siteStoresByOrigin.get(siteOrigin);
-		if (!siteStore) {
-			const storageItem = getSiteSpecificStatisticsStorageItem(siteOrigin);
-			const value = await storageItem.getValue();
-			siteStore = { storageItem, value };
-			siteStoresByOrigin.set(siteOrigin, siteStore);
-		}
-
-		applyBandwidthDataToStores(data, globalStore, siteStore.value);
-
-		pendingBandwidthMeasurementsByUrl.delete(urlEntry);
-	}
-
-	const savePromises: Array<Promise<unknown>> = [
-		statisticsStorageItem.setValue(globalStore),
-	];
-
-	for (const { storageItem, value } of siteStoresByOrigin.values()) {
-		savePromises.push(storageItem.setValue(value));
-	}
-
-	await Promise.all(savePromises);
-}
-
 function shouldFlushUrlEntry(
 	entry: BandwidthRawDataPayload,
 	nowMs: number,
@@ -317,6 +247,18 @@ function createNewBandwidthRawDataPayload(
 	};
 }
 
+const pendingFlushUrlBatchQueue = new BatchQueue<UrlSchema>({
+	batchSize: FLUSH_BATCH_SIZE,
+	intervalMs: FLUSH_INTERVAL_MS,
+});
+
+function scheduleFlushForUrl(url: UrlSchema) {
+	// Dedupe: only enqueue the URL once until it’s actually flushed.
+	if (dirtyAssetUrls.has(url)) return;
+	dirtyAssetUrls.add(url);
+	pendingFlushUrlBatchQueue.enqueue(url);
+}
+
 export function cacheBandwidthDataFromPerformanceApi() {
 	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) => {
 		const { assetUrl } = data;
@@ -333,11 +275,11 @@ export function cacheBandwidthDataFromPerformanceApi() {
 		};
 
 		pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
-		dirtyAssetUrls.add(assetUrl);
+		scheduleFlushForUrl(assetUrl);
 	});
 }
 
-/** Since background can't message background, we'll export htis and call it elsewhere */
+/** Since background can't message background, we'll export this and call it elsewhere */
 export function cacheBandwidthDataFromWebRequest(
 	data: BandwidthMonitoringMessagePayload,
 ) {
@@ -355,23 +297,85 @@ export function cacheBandwidthDataFromWebRequest(
 	};
 
 	pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
-	dirtyAssetUrls.add(assetUrl);
+	scheduleFlushForUrl(assetUrl);
 }
 
-let isFlushInProgress = false;
+pendingFlushUrlBatchQueue.addCallbacks(async (urls) => {
+	const nowMs = Date.now();
 
-setInterval(() => {
-	const flushStartMs = Date.now();
+	const flushableUrls: UrlSchema[] = [];
+	const retryUrls: UrlSchema[] = [];
 
-	if (isFlushInProgress) return;
-	isFlushInProgress = true;
+	for (const url of urls) {
+		const entry = pendingBandwidthMeasurementsByUrl.get(url);
 
-	void (async () => {
-		while (Date.now() - flushStartMs < FLUSH_TIME_BUDGET_MS) {
-			await flushBandwidthMeasurementsOnce();
-			if (dirtyAssetUrls.size === 0) return;
+		// Stale queue item; clear dirty state.
+		if (!entry) {
+			dirtyAssetUrls.delete(url);
+			continue;
 		}
-	})().finally(() => {
-		isFlushInProgress = false;
-	});
-}, FLUSH_INTERVAL_MS);
+
+		if (shouldFlushUrlEntry(entry, nowMs)) {
+			flushableUrls.push(url);
+		} else {
+			retryUrls.push(url);
+		}
+	}
+
+	if (flushableUrls.length > 0) {
+		// We’re going to process these now; remove from dirty set.
+		for (const url of flushableUrls) {
+			dirtyAssetUrls.delete(url);
+		}
+
+		const globalStore = await statisticsStorageItem.getValue();
+
+		const siteStoresByOrigin = new Map<
+			UrlSchema,
+			{
+				storageItem: ReturnType<typeof getSiteSpecificStatisticsStorageItem>;
+				value: SiteStatsStoreValue;
+			}
+		>();
+
+		for (const urlEntry of flushableUrls) {
+			const entry = pendingBandwidthMeasurementsByUrl.get(urlEntry);
+			if (!entry) continue;
+
+			const data = createMergedPayload(urlEntry, entry);
+			if (!data) {
+				pendingBandwidthMeasurementsByUrl.delete(urlEntry);
+				continue;
+			}
+
+			const siteOrigin = readUrlHostOrigin(entry);
+
+			let siteStore = siteStoresByOrigin.get(siteOrigin);
+			if (!siteStore) {
+				const storageItem = getSiteSpecificStatisticsStorageItem(siteOrigin);
+				const value = await storageItem.getValue();
+				siteStore = { storageItem, value };
+				siteStoresByOrigin.set(siteOrigin, siteStore);
+			}
+
+			applyBandwidthDataToStores(data, globalStore, siteStore.value);
+
+			pendingBandwidthMeasurementsByUrl.delete(urlEntry);
+		}
+
+		const savePromises: Array<Promise<unknown>> = [
+			statisticsStorageItem.setValue(globalStore),
+		];
+
+		for (const { storageItem, value } of siteStoresByOrigin.values()) {
+			savePromises.push(storageItem.setValue(value));
+		}
+
+		await Promise.all(savePromises);
+	}
+
+	// Re-queue URLs that haven't settled yet. They remain dirty.
+	for (const url of retryUrls) {
+		pendingFlushUrlBatchQueue.enqueue(url);
+	}
+});
