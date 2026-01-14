@@ -34,6 +34,7 @@
 		"dev": "wxt",
 		"dev:firefox": "wxt -b firefox",
 		"postinstall": "wxt prepare",
+		"test": "vitest",
 		"zip": "wxt zip",
 		"zip:firefox": "wxt zip -b firefox"
 	},
