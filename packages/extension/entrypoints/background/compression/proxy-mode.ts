@@ -76,7 +76,8 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 					resourceTypes: ["image"],
 				},
 				id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
-				priority: DeclarativeNetRequestPriority.LOWEST,
+				// Set to high to override some static rules
+				priority: DeclarativeNetRequestPriority.HIGH,
 			},
 		],
 		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY],
@@ -150,7 +151,8 @@ export async function getSiteProxyCompressionRules(
 					resourceTypes: ["image"],
 				},
 				id: ruleIdWithOffset,
-				priority: DeclarativeNetRequestPriority.LOWEST,
+				// Set to high to override some static rules
+				priority: DeclarativeNetRequestPriority.HIGH,
 			},
 		],
 		removeRuleIds: [ruleIdWithOffset],
