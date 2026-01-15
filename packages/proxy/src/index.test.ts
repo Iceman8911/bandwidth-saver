@@ -35,7 +35,11 @@ const sampleImageUrls = [
 	"https://raw.githubusercontent.com/github/explore/main/topics/typescript/typescript.png",
 	"https://raw.githubusercontent.com/github/explore/main/topics/nodejs/nodejs.png",
 
+	"https://avatars.githubusercontent.com/u/108531451?s=40&v=4",
+	"https://raw.githubusercontent.com/jesseduffield/lazygit/assets/demo/interactive_rebase-compressed.gif",
+
 	"https://preview.redd.it/okay-im-done-with-this-for-now-mechanic-girl-returns-again-v0-pkou5s4rrcdg1.gif?width=640&crop=smart&format=png8&s=9a911e78547d99775b8d471ebdf861c73fdd15d8",
+	"https://preview.redd.it/mimis-older-vs-newer-character-design-v0-9pvpps5hqgdg1.png?auto=webp&s=74e9b302f53a02b5fc389e39994f67754d2c3b35",
 ] as const satisfies string[];
 
 async function fetchCompressedAndRegularImage(
