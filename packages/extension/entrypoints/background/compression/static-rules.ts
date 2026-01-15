@@ -119,6 +119,21 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 				DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 			],
 		},
+
+		// Don't touch recaptcha urls
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: { urlFilter: "recaptcha" },
+					id: DeclarativeNetRequestRuleIds.EXEMPT_RECAPTCHA_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_RECAPTCHA_FROM_COMPRESSION,
+			],
+		},
 	];
 }
 
