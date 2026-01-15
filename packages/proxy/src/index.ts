@@ -19,7 +19,7 @@ const app = new Elysia()
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
-		async ({ query, redirect, set }) => {
+		async ({ query, redirect, set, request: { headers } }) => {
 			// I'll make this cleaner later
 			const redirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
@@ -37,7 +37,7 @@ const app = new Elysia()
 			} else {
 				try {
 					// Compress the image ourselves
-					const response = await fetch(redirectedUrl);
+					const response = await fetch(redirectedUrl, { headers });
 
 					const imgBuffer = await response.arrayBuffer();
 
