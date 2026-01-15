@@ -7,6 +7,7 @@
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
+		"bun": "^1.2.0",
 		"bun-types": "latest"
 	},
 	"exports": {
