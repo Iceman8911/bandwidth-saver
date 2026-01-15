@@ -3,6 +3,9 @@
   - [x] Add more fine grained rules per site.
     - I had an old attempt in this, but the main limitation with MV3 was the fact that each site would have to have it's own rules and the maximum amount of rules is ~30000 as of December, 2025. So this new attempt will allocate a couple thousand rules for each site, and let the user know of it. Once the limits are reached, users can reset rules for older sites or depend on the global / default rules if they don't want to delete any.
       - [ ] I should also add a way of autodeleting the config for older / rarely used sites too.
+- [ ] Enabling the extension causes cloudflare captchas to fail :/
+- [x] Figure out why some sites don't have their css properly parsed when the extension is enabled.
+  - It was part of the content script that deleted `preload` links which occasionally had crucial css
 
 # Reducing Bandwidth Usage by
 
@@ -34,10 +37,11 @@
     - It's probably better to not remove the query strings at all, me thinks.
   - [x] Rename query string props to prevent conflicts.
 - [x] Prevent autoplay
-- [x] Get rid of prefetching (`<link rel="preload|prefetch|prerender">` and `dns-prefetch`)
+- [x] Get rid of prefetching (`<link rel="prefetch|prerender">` and `dns-prefetch`)
 - [x] Patch relevant elements to make them lazy load (`loading=lazy`)
 - [x] Use a content script as a fallback for failed compressed images so that they'll default to their original url (maybe using a hash fragment that includes a flag).
   - Since MV3 DNR redirecting is rather limited, perhaps I can eventually try to do proper redirecting here, and of couse still fallback to the orignal url if it doens't work out. Although this would break any site functionality that relies on expecting the original url.
+- [x] Ignore recaptcha urls; any url with `/recaptcha/`.
 - [ ] **Experimental**:
   - [-] ~~Replace `no-store` with `no-cache` on large resources~~
   - [-] ~~Replace `no-cache` with a short-lived time ~~
