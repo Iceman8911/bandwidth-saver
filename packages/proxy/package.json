@@ -1,6 +1,7 @@
 {
 	"dependencies": {
 		"@bandwidth-saver/shared": "workspace:*",
+		"@elysiajs/eden": "^1.4.5",
 		"dotenv": "^17.2.3",
 		"elysia": "latest",
 		"sharp": "^0.34.5",
