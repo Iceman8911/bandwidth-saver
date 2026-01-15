@@ -3,7 +3,7 @@ import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 export const PREFETCHABLE_ELEMENT_SELECTOR = "link";
 
-const PREFETCH_REGEX = /prefetch|preload|prerender/i;
+const PREFETCH_REGEX = /prefetch|prerender/i;
 
 function isLinkElement(node: Node): node is HTMLLinkElement {
 	return node instanceof HTMLLinkElement;
