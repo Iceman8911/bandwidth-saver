@@ -1,5 +1,4 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
-import * as v from "valibot";
+import type { UrlSchema } from "@bandwidth-saver/shared";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 
 const IMAGE_EXTS = [
@@ -42,7 +41,8 @@ export function detectAssetTypeFromUrl(
 }
 
 export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
-	return v.parse(UrlSchema, new URL(url).origin);
+	//@ts-expect-error This will always be a valid url
+	return new URL(url).origin;
 }
 
 const PROTOCOL_REGEX = /^.*\/\//;

@@ -5,7 +5,7 @@ export function PopupFooter() {
 
 			<BaseButton
 				class="btn-primary btn-soft"
-				onClick={browser.runtime.openOptionsPage}
+				onClick={() => void browser.runtime.openOptionsPage()}
 			>
 				Options
 			</BaseButton>

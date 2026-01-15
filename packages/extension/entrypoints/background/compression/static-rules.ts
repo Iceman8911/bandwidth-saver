@@ -54,7 +54,8 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						regexFilter: "^https?://[^/]+/.*_next/image(?:[/?#]|$)",
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
-					priority: DeclarativeNetRequestPriority.HIGHEST,
+					// Put at mid so the proxy mode can override it
+					priority: DeclarativeNetRequestPriority.MID,
 				},
 			],
 			removeRuleIds: [
@@ -112,11 +113,27 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						requestDomains: [...getWhitelistedDomains()],
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
-					priority: DeclarativeNetRequestPriority.HIGHEST,
+					// Put at mid so the proxy mode can override it
+					priority: DeclarativeNetRequestPriority.MID,
 				},
 			],
 			removeRuleIds: [
 				DeclarativeNetRequestRuleIds.EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
+			],
+		},
+
+		// Don't touch recaptcha urls
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: { urlFilter: "recaptcha" },
+					id: DeclarativeNetRequestRuleIds.EXEMPT_RECAPTCHA_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_RECAPTCHA_FROM_COMPRESSION,
 			],
 		},
 	];

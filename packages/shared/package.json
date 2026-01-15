@@ -4,12 +4,17 @@
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
+		"bun": "^1.2.0",
+		"bun-types": "latest",
 		"typescript": "^5.3.0"
 	},
 	"exports": {
 		".": "./src/index.ts"
 	},
 	"name": "@bandwidth-saver/shared",
+	"scripts": {
+		"test": "bun test"
+	},
 	"type": "module",
 	"version": "0.0.0"
 }

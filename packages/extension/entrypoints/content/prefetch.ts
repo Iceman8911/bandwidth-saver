@@ -1,11 +1,9 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
-const PREFETCH_REGEX = /prefetch|preload|prerender/i;
+export const PREFETCHABLE_ELEMENT_SELECTOR = "link";
+
+const PREFETCH_REGEX = /prefetch|prerender/i;
 
 function isLinkElement(node: Node): node is HTMLLinkElement {
 	return node instanceof HTMLLinkElement;
@@ -17,44 +15,22 @@ function disablePrefetch(el: HTMLLinkElement) {
 	}
 }
 
-async function shouldDisablePrefetchForSite(url: UrlSchema): Promise<boolean> {
-	const [defaultSettings, siteSpecificSettings] = await Promise.all([
-		defaultGeneralSettingsStorageItem.getValue(),
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-	]);
-
-	if (siteSpecificSettings.ruleIdOffset != null) {
-		return siteSpecificSettings.enabled && siteSpecificSettings.lazyLoad;
+export function shouldDisablePrefetchForSite(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+): boolean {
+	if (siteSettings.ruleIdOffset != null) {
+		return siteSettings.enabled && siteSettings.lazyLoad;
 	}
 
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export async function disablePrefetchOnPageLoad(url: UrlSchema) {
-	if (!(await shouldDisablePrefetchForSite(url))) return;
+export const disablePrefetchViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
-	querySelectorAllDeep("link").forEach((linkElement) => {
-		if (isLinkElement(linkElement)) {
-			disablePrefetch(linkElement);
+		if (isLinkElement(ele)) {
+			disablePrefetch(ele);
 		}
-	});
-}
-
-export async function disablePrefetchFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	if (!(await shouldDisablePrefetchForSite(url))) return;
-
-	if (isLinkElement(node)) {
-		disablePrefetch(node);
-	}
-
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("link", node).forEach((linkElement) => {
-			if (isLinkElement(linkElement)) {
-				disablePrefetch(linkElement);
-			}
-		});
-	}
-}
+	};

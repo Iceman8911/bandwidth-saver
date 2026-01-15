@@ -11,7 +11,7 @@ export type BandwidthMonitoringMessagePayload = {
 	hostOrigin: UrlSchema;
 
 	/** Bytes downloaded for the asset type */
-	bytes: SingleAssetStatisticsSchema;
+	bytes: number;
 
 	/** The asset type */
 	type: keyof SingleAssetStatisticsSchema;

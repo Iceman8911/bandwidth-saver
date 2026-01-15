@@ -1,11 +1,9 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Autoplay is not restored when the toggle is reversed. A page reload will be needed
+
+export const AUTOPLAYABLE_ELEMENT_SELECTOR = "audio,video";
 
 function isMediaElement(element: Node): element is HTMLMediaElement {
 	return element instanceof HTMLMediaElement;
@@ -21,44 +19,22 @@ function disableAutoplay(element: HTMLMediaElement) {
 	element.setAttribute("preload", "none");
 }
 
-async function shouldDisableAutoplayForSite(url: UrlSchema): Promise<boolean> {
-	const [defaultSettings, siteSpecificSettings] = await Promise.all([
-		defaultGeneralSettingsStorageItem.getValue(),
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-	]);
-
-	if (siteSpecificSettings.ruleIdOffset != null) {
-		return siteSpecificSettings.enabled && siteSpecificSettings.noAutoplay;
+export function shouldDisableAutoplayForSite(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+): boolean {
+	if (siteSettings.ruleIdOffset != null) {
+		return siteSettings.enabled && siteSettings.noAutoplay;
 	}
 
 	return defaultSettings.enabled && defaultSettings.noAutoplay;
 }
 
-export async function disableAutoplayOnPageLoad(url: UrlSchema) {
-	if (!(await shouldDisableAutoplayForSite(url))) return;
+export const disableAutoplayViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
-	querySelectorAllDeep("audio,video").forEach((mediaElement) => {
-		if (isMediaElement(mediaElement)) {
-			disableAutoplay(mediaElement);
+		if (isMediaElement(ele)) {
+			disableAutoplay(ele);
 		}
-	});
-}
-
-export async function disableAutoplayFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	if (!(await shouldDisableAutoplayForSite(url))) return;
-
-	if (isMediaElement(node)) {
-		disableAutoplay(node);
-	}
-
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("audio,video", node).forEach((mediaElement) => {
-			if (isMediaElement(mediaElement)) {
-				disableAutoplay(mediaElement);
-			}
-		});
-	}
-}
+	};

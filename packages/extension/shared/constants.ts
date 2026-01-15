@@ -123,6 +123,7 @@ export enum DeclarativeNetRequestRuleIds {
 	EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
 	EXEMPT_SVGS_FROM_COMPRESSION,
 	EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
+	EXEMPT_RECAPTCHA_FROM_COMPRESSION,
 }
 
 export enum DeclarativeNetRequestPriority {
@@ -133,7 +134,7 @@ export enum DeclarativeNetRequestPriority {
 	HIGHEST,
 }
 
-export const UPDATE_INTERVAL_IN_MS = 1000 * 60 * 60;
+export const UPDATE_INTERVAL_IN_MINUTES = 5;
 
 /** A no-op rule condition that matches no requests.
  *

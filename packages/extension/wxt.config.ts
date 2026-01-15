@@ -9,15 +9,16 @@ export default defineConfig({
 		description:
 			"MV3-compatible browser extension for monitoring and reducing bandwidth usage online",
 		host_permissions: ["<all_urls>"],
-		name: "Bandwidth Saver & Monitor",
+		name: "Bandwidth Saver And Monitor",
 		permissions: [
 			"webRequest",
 			"declarativeNetRequest",
 			"declarativeNetRequestWithHostAccess",
 			"storage",
 			"tabs",
+			"alarms",
 		],
-		short_name: "Bandwidth Saver",
+		short_name: "Bandwidth Saver And Monitor",
 		version: "0.0.1",
 	},
 	modules: ["@wxt-dev/module-solid", "@wxt-dev/auto-icons"],

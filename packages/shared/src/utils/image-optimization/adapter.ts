@@ -142,7 +142,26 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	const { success } = await checkIfUrlReturnsValidImage(newUrl);
 	if (!success) return null;
 
-	return v.parse(UrlSchema, newUrl);
+	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
+		fetch(payload.url_bwsvr8911, { method: "HEAD" }).then(({ headers }) =>
+			headers.get("content-length"),
+		),
+		fetch(newUrl, { method: "HEAD" }).then(({ headers }) =>
+			headers.get("content-length"),
+		),
+	]);
+
+	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
+	if (!altUrlSizeString) return payload.url_bwsvr8911;
+
+	if (originalUrlSizeString) {
+		const originalUrlSize = Number(originalUrlSizeString);
+		const altUrlSize = Number(altUrlSizeString);
+
+		return altUrlSize < originalUrlSize ? newUrl : payload.url_bwsvr8911;
+	}
+
+	return newUrl;
 };
 
 /**
@@ -154,9 +173,11 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 ): Promise<UrlSchema> {
-	for (const url of Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS)) {
+	for (const urlConstructor of Object.values(
+		IMAGE_COMPRESSION_URL_CONSTRUCTORS,
+	)) {
 		try {
-			const result = await imageCompressionAdapter(payload, url);
+			const result = await imageCompressionAdapter(payload, urlConstructor);
 			if (result) return result;
 		} catch (error) {
 			console.warn(

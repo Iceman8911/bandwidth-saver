@@ -1,11 +1,9 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
-import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
+import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Lazyload images and iframes
+
+export const LAZY_LOADABLE_ELEMENT_SELECTOR = "img,iframe";
 
 type HTMLImageOrIframeElement = HTMLImageElement | HTMLIFrameElement;
 
@@ -17,44 +15,22 @@ function forceLazyLoading(el: HTMLImageOrIframeElement) {
 	el.loading = "lazy";
 }
 
-async function shouldLazyLoadOnSite(url: UrlSchema): Promise<boolean> {
-	const [defaultSettings, siteSpecificSettings] = await Promise.all([
-		defaultGeneralSettingsStorageItem.getValue(),
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-	]);
-
-	if (siteSpecificSettings.ruleIdOffset != null) {
-		return siteSpecificSettings.enabled && siteSpecificSettings.lazyLoad;
+export function shouldLazyLoadOnSite(
+	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+): boolean {
+	if (siteSettings.ruleIdOffset != null) {
+		return siteSettings.enabled && siteSettings.lazyLoad;
 	}
 
 	return defaultSettings.enabled && defaultSettings.lazyLoad;
 }
 
-export async function forceLazyLoadingOnPageLoad(url: UrlSchema) {
-	if (!(await shouldLazyLoadOnSite(url))) return;
+export const forceLazyLoadingViaContentScript: ContentScriptSettingsApplyCallback =
+	({ ele, applySetting }) => {
+		if (!applySetting) return;
 
-	querySelectorAllDeep("img,iframe").forEach((ele) => {
 		if (isImageOrIframeElement(ele)) {
 			forceLazyLoading(ele);
 		}
-	});
-}
-
-export async function forceLazyLoadingFromMutationObserver(
-	node: Node,
-	url: UrlSchema,
-) {
-	if (!(await shouldLazyLoadOnSite(url))) return;
-
-	if (isImageOrIframeElement(node)) {
-		forceLazyLoading(node);
-	}
-
-	if (node instanceof HTMLElement) {
-		querySelectorAllDeep("img,iframe", node).forEach((ele) => {
-			if (isImageOrIframeElement(ele)) {
-				forceLazyLoading(ele);
-			}
-		});
-	}
-}
+	};
