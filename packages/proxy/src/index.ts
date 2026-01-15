@@ -11,9 +11,6 @@ import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
 
 const env = getProxyEnv();
 
-const [REDIRECTED_SEARCH_PARAM_KEY = "", REDIRECTED_SEARCH_PARAM_VALUE = ""] =
-	REDIRECTED_SEARCH_PARAM_FLAG.split("=");
-
 const app = new Elysia()
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
@@ -27,13 +24,11 @@ const app = new Elysia()
 			});
 
 			if (redirectedUrl !== query.url_bwsvr8911) {
-				const redirectedUrlObject = new URL(redirectedUrl);
-
-				redirectedUrlObject.searchParams.append(
-					REDIRECTED_SEARCH_PARAM_KEY,
-					REDIRECTED_SEARCH_PARAM_VALUE,
+				return redirect(
+					decodeURIComponent(
+						`${redirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+					),
 				);
-				return redirect(decodeURIComponent(`${redirectedUrlObject}`));
 			} else {
 				try {
 					// Compress the image ourselves
@@ -58,14 +53,11 @@ const app = new Elysia()
 					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
 
 					// Default to the original url
-					const redirectedUrlObject = new URL(query.url_bwsvr8911);
-
-					redirectedUrlObject.searchParams.append(
-						REDIRECTED_SEARCH_PARAM_KEY,
-						REDIRECTED_SEARCH_PARAM_VALUE,
+					return redirect(
+						decodeURIComponent(
+							`${query.url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						),
 					);
-
-					return redirect(decodeURIComponent(`${redirectedUrlObject}`));
 				}
 			}
 		},
