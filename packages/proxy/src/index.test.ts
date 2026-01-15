@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { getProxyEnv, UrlSchema } from "@bandwidth-saver/shared";
-import { edenTreaty } from "@elysiajs/eden";
+import {
+	getProxyEnv,
+	ServerAPIEndpoint,
+	UrlSchema,
+} from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import type { ElysiaApp } from ".";
 
 type ImageSizeAndType = {
 	size: number;
@@ -17,9 +19,7 @@ type TestImageResponse = {
 
 const env = getProxyEnv();
 
-const app = edenTreaty<ElysiaApp>(
-	`http://${env.VITE_SERVER_HOST}:${env.VITE_SERVER_PORT}`,
-);
+const proxyBaseUrl = `http://${env.VITE_SERVER_HOST}:${env.VITE_SERVER_PORT}`;
 
 const sampleImageUrls = [
 	// Wikimedia Commons (stable direct file URLs for PNG/JPEG)
@@ -43,38 +43,37 @@ async function fetchCompressedAndRegularImage(
 ): Promise<TestImageResponse> {
 	const url = v.parse(UrlSchema, imgUrl);
 
-	const [compressBlob, regularBlob] = await Promise.all([
-		app["compress-image"]
-			.get({
-				$query: {
-					format_bwsvr8911: "auto",
-					preserveAnim_bwsvr8911: true,
-					quality_bwsvr8911: 75,
-					url_bwsvr8911: url,
-				},
-			})
-			.then(async ({ data, headers }) => {
-				const parsedHeaders = new Headers(headers);
+	const compressedUrl = new URL(
+		`${proxyBaseUrl}/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
+	);
+	compressedUrl.searchParams.set("format_bwsvr8911", "auto");
+	compressedUrl.searchParams.set("preserveAnim_bwsvr8911", "true");
+	compressedUrl.searchParams.set("quality_bwsvr8911", "75");
+	compressedUrl.searchParams.set("url_bwsvr8911", url);
 
-				const contentType = parsedHeaders.get("content-type") ?? "image/png";
+	const [compressedResponse, regularResponse] = await Promise.all([
+		fetch(compressedUrl),
+		fetch(url),
+	]);
 
-				const blob: Blob = !data
-					? await fetch(url).then((res) => res.blob())
-					: data instanceof Response
-						? await data.blob()
-						: // Bun hasn't implemented the `type` prop yet :p
-							new Blob([data], { type: contentType });
-
-				// console.log(blob)
-
-				return { size: blob.size, type: blob.type || contentType };
-			}),
-		fetch(url).then((res) => res.blob()),
+	const [compressedBlob, regularBlob] = await Promise.all([
+		compressedResponse.blob(),
+		regularResponse.blob(),
 	]);
 
 	return {
-		compressed: { size: compressBlob.size, type: compressBlob.type },
-		regular: { size: regularBlob.size, type: regularBlob.type },
+		compressed: {
+			size: compressedBlob.size,
+			type:
+				compressedBlob.type ||
+				compressedResponse.headers.get("content-type") ||
+				"",
+		},
+		regular: {
+			size: regularBlob.size,
+			type:
+				regularBlob.type || regularResponse.headers.get("content-type") || "",
+		},
 		url,
 	};
 }
