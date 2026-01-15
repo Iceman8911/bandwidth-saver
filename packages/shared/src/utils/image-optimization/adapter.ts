@@ -142,7 +142,7 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	const { success } = await checkIfUrlReturnsValidImage(newUrl);
 	if (!success) return null;
 
-	return v.parse(UrlSchema, newUrl);
+	return newUrl;
 };
 
 /**
@@ -154,9 +154,11 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 ): Promise<UrlSchema> {
-	for (const url of Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS)) {
+	for (const urlConstructor of Object.values(
+		IMAGE_COMPRESSION_URL_CONSTRUCTORS,
+	)) {
 		try {
-			const result = await imageCompressionAdapter(payload, url);
+			const result = await imageCompressionAdapter(payload, urlConstructor);
 			if (result) return result;
 		} catch (error) {
 			console.warn(
