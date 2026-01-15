@@ -142,6 +142,25 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	const { success } = await checkIfUrlReturnsValidImage(newUrl);
 	if (!success) return null;
 
+	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
+		fetch(payload.url_bwsvr8911, { method: "HEAD" }).then(({ headers }) =>
+			headers.get("content-length"),
+		),
+		fetch(newUrl, { method: "HEAD" }).then(({ headers }) =>
+			headers.get("content-length"),
+		),
+	]);
+
+	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
+	if (!altUrlSizeString) return payload.url_bwsvr8911;
+
+	if (originalUrlSizeString) {
+		const originalUrlSize = Number(originalUrlSizeString);
+		const altUrlSize = Number(altUrlSizeString);
+
+		return altUrlSize < originalUrlSize ? newUrl : payload.url_bwsvr8911;
+	}
+
 	return newUrl;
 };
 

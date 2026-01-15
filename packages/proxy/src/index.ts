@@ -19,7 +19,7 @@ const app = new Elysia()
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
-		async ({ query, redirect, set, request: { headers } }) => {
+		async ({ query, redirect, request: { headers } }) => {
 			// I'll make this cleaner later
 			const redirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
@@ -47,9 +47,15 @@ const app = new Elysia()
 						query,
 					);
 
-					set.headers["content-type"] = contentType;
-
-					return compressedImgBuffer;
+					return new Response(Buffer.from(compressedImgBuffer), {
+						headers: {
+							"cache-control":
+								"public, max-age=86400, stale-while-revalidate=3600",
+							"content-length": `${compressedImgBuffer.byteLength}`,
+							"content-type": contentType,
+							vary: "Accept",
+						},
+					});
 				} catch (e) {
 					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
 
