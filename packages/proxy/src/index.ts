@@ -43,6 +43,7 @@ const app = new Elysia()
 
 					const [compressedImgBuffer, contentType] = await compressImage(
 						imgBuffer,
+						headers.get("content-type"),
 						query,
 					);
 
