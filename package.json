@@ -6,8 +6,8 @@
 		"turbo": "^2.5.6"
 	},
 	"lint-staged": {
-		"*": [
-			"biome check --write"
+		"*.{js,ts,jsx,tsx,json,css}": [
+			"biome check ./ --write"
 		]
 	},
 	"name": "bandwidth-saver-monorepo",
