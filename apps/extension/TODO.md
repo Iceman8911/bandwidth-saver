@@ -6,6 +6,7 @@
 - [ ] Enabling the extension causes cloudflare captchas to fail :/
 - [x] Figure out why some sites don't have their css properly parsed when the extension is enabled.
   - It was part of the content script that deleted `preload` links which occasionally had crucial css
+- [ ] Add setting exports.
 
 # Reducing Bandwidth Usage by
 

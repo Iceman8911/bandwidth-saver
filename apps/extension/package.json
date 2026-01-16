@@ -5,7 +5,6 @@
 		"@kobalte/core": "^0.13.11",
 		"@kobalte/tailwindcss": "^0.9.0",
 		"@webext-core/messaging": "^2.3.0",
-		"ky": "^1.14.1",
 		"query-selector-shadow-dom": "^1.0.1",
 		"solid-js": "^1.9.10",
 		"tiny-lru": "^11.4.5",
@@ -14,6 +13,7 @@
 	"description": "bandwidth-saver-and-monitor",
 	"devDependencies": {
 		"@bandwidth-saver/proxy": "workspace:*",
+		"@biomejs/biome": "^2.3.6",
 		"@iceman8911/unplugin-inline-enum": "^0.6.7",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/query-selector-shadow-dom": "^1.0.4",
@@ -28,15 +28,19 @@
 	"name": "bandwidth-saver-and-monitor",
 	"private": true,
 	"scripts": {
-		"build": "wxt build",
-		"build:firefox": "wxt build -b firefox",
+		"build": "bun run build:chromium & bun run build:firefox",
+		"build:chromium": "wxt zip",
+		"build:firefox": "wxt zip -b firefox",
 		"compile": "tsc --noEmit",
-		"dev": "wxt",
+		"dev": "bun run dev:chromium & bun run dev:firefox",
+		"dev:chromium": "wxt",
 		"dev:firefox": "wxt -b firefox",
+		"format": "biome format ./ --write",
+		"lint": "biome lint ./ --write",
 		"postinstall": "wxt prepare",
-		"test": "vitest",
-		"zip": "wxt zip",
-		"zip:firefox": "wxt zip -b firefox"
+
+		"start": "echo 'No start command for extension'",
+		"test": "vitest"
 	},
 	"trustedDependencies": [
 		"spawn-sync"

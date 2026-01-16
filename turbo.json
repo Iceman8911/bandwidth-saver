@@ -1,0 +1,34 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": [
+				".output/**",
+				"!.output/chrome-mv3-dev/**",
+				"!.output/firefox-mv2-dev/**"
+			]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"format": {
+			"dependsOn": ["^format"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"start": {
+			"cache": false,
+			"persistent": true
+		},
+		"test": {
+			"dependsOn": ["^test", "lint", "build"],
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": ["coverage/**"]
+		}
+	},
+	"ui": "tui"
+}

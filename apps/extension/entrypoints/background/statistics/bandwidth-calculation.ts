@@ -1,4 +1,5 @@
 import {
+	BatchQueue,
 	clone,
 	getDayStartInMillisecondsUTC,
 	ImageCompressorEndpoint,
@@ -20,7 +21,6 @@ import {
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getUrlSchemaOrigin } from "@/utils/url";
-import BatchQueue from "../../../../shared/src/utils/batch";
 
 const URL_ENTRY_SETTLE_MS = 900;
 const URL_ENTRY_MAX_AGE_MS = 3000;

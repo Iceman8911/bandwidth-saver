@@ -42,11 +42,9 @@ export type ProxyEnv = v.InferOutput<typeof ProxyEnvSchema>;
 export type ExtensionEnv = v.InferOutput<typeof ExtensionEnvSchema>;
 
 export function getProxyEnv(): ProxyEnv {
-	//@ts-expect-error
 	return v.parse(ProxyEnvSchema, process.env);
 }
 
 export function getExtensionEnv(): ExtensionEnv {
-	//@ts-expect-error
 	return v.parse(ExtensionEnvSchema, import.meta.env);
 }

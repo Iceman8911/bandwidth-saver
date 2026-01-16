@@ -1,10 +1,3 @@
-import ky, { type Options as KyOptions } from "ky";
-
-const NO_RETRY_OPTIONS = {
-	retry: 0,
-	timeout: 5000,
-} as const satisfies KyOptions;
-
 const IMAGE_MIME_TYPES = [
 	"image/jpeg",
 	"image/png",
@@ -23,7 +16,8 @@ export async function checkIfUrlReturnsValidResponse(
 	responseTypesToMatch?: ReadonlyArray<string>,
 ): Promise<{ success: true; url: string } | { success: false }> {
 	try {
-		const response = await ky.head(url, NO_RETRY_OPTIONS);
+		const response = await fetch(url, { method: "HEAD" });
+
 		const contentTypeSet = new Set(
 			(response.headers.get("content-type") ?? "")
 				.split(";")

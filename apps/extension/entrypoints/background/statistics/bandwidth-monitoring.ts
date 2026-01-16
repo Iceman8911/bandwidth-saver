@@ -1,8 +1,7 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { detectAssetTypeFromUrl } from "@/utils/url";
-import BatchQueue from "../../../../shared/src/utils/batch";
 import { cacheBandwidthDataFromWebRequest } from "./bandwidth-calculation";
 
 type RelevantPropsFromOnCompletedEventPayload = {
