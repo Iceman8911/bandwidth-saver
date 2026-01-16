@@ -22,7 +22,6 @@
         "@kobalte/core": "^0.13.11",
         "@kobalte/tailwindcss": "^0.9.0",
         "@webext-core/messaging": "^2.3.0",
-        "ky": "^1.14.1",
         "query-selector-shadow-dom": "^1.0.1",
         "solid-js": "^1.9.10",
         "tiny-lru": "^11.4.5",
