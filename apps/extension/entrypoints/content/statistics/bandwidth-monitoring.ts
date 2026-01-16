@@ -1,10 +1,9 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import type { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
 import { detectAssetTypeFromUrl } from "@/utils/url";
-import BatchQueue from "../../../../shared/src/utils/batch";
 
 type PerformanceResourceTimingPayload = {
 	initiatorType: string;

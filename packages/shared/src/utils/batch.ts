@@ -58,7 +58,7 @@ type TimeoutId = ReturnType<typeof setTimeout>;
  *
  * I.e adding a new entry/ies will cause
  */
-export default class BatchQueue<
+export class BatchQueue<
 	TQueueItem extends Readonly<unknown>,
 > extends Queue<TQueueItem> {
 	private _callbacks = new Set<(data: ReadonlyArray<TQueueItem>) => void>();

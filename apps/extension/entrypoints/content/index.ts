@@ -1,4 +1,4 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
 
 import { getActiveTabUrl } from "@/shared/constants";
@@ -6,7 +6,6 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import BatchQueue from "../../../shared/src/utils/batch";
 import {
 	AUTOPLAYABLE_ELEMENT_SELECTOR,
 	disableAutoplayViaContentScript,

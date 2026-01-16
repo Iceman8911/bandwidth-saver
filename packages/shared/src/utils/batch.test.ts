@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import BatchQueue from "./batch";
+import { BatchQueue } from "./batch";
 
 describe("Queue Batcher", () => {
 	const getSampleNumberBatcher = () =>
