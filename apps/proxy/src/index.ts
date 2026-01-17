@@ -54,9 +54,7 @@ const app = new Elysia()
 
 					// Default to the original url
 					return redirect(
-						decodeURIComponent(
-							`${query.url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
-						),
+						`${query.url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					);
 				}
 			}
