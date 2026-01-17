@@ -54,9 +54,9 @@ type BatchQueueConstructorOptions = {
 
 type TimeoutId = ReturnType<typeof setTimeout>;
 
-/** For queuing up pending data to process and processing them efficiently in batches of defined or variable size (if a time budget is given).
+/** For queuing up pending data to process and processing them efficiently in batches of defined size
  *
- * I.e adding a new entry/ies will cause
+ * I.e adding a new entry/ies will cause the attached callbacks to run
  */
 export class BatchQueue<
 	TQueueItem extends Readonly<unknown>,
