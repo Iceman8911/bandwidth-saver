@@ -15,7 +15,7 @@ export default defineConfig({
 			"declarativeNetRequest",
 			"declarativeNetRequestWithHostAccess",
 			"storage",
-			"tabs",
+			"activeTab",
 			"alarms",
 		],
 		short_name: "Bandwidth Saver And Monitor",
