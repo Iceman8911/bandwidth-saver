@@ -59,7 +59,8 @@
   - [ ] Maybe some other time ranges would be nice, like daily, weekly, monthly, etc.
 - [-] ~~Since only data for roughly 300 sites can be stored in the sync area, consider if it's worth implementing a hybrid model for stroing excess data in the local-scoped extension storage.~~
   - [ ] Meh, I'll just make it local and add export and import abilities.
-- Make the table statistics in the overview route of the options page better.
+- [ ] Make the table statistics in the overview route of the options page better.
+- [ ] Patch some js globals like fetch, xmlhttprequest, websocket, webrtc, etc to do more tracking ?.
 
 # Monitoring
 
