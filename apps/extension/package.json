@@ -32,7 +32,7 @@
 		"build:chromium": "wxt zip",
 		"build:firefox": "wxt zip -b firefox",
 		"compile": "tsc --noEmit",
-		"dev": "bun run dev:chromium & bun run dev:firefox",
+		"dev": "bun run dev:chromium",
 		"dev:chromium": "wxt",
 		"dev:firefox": "wxt -b firefox",
 		"format": "biome format ./ --write",
