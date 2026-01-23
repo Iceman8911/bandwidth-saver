@@ -84,6 +84,8 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 });
 
 const observer = new PerformanceObserver((list) => {
+	if (location.protocol.includes("extension")) return;
+
 	const entries = list.getEntries();
 	//@ts-expect-error This will always be a valid url since its da Web API
 	const hostOrigin = getUrlSchemaOrigin(location.origin);

@@ -60,6 +60,9 @@ function webRequestOnCompletedListener({
 
 	const parsedUrl = new URL(url);
 
+	// Don't count injected scripts
+	if (parsedUrl.protocol.includes("extension")) return;
+
 	let contentLength = 0;
 	let contentType = "other";
 
