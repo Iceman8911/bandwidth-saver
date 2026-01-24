@@ -53,8 +53,6 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.3.6",
-        "bun": "^1.2.0",
-        "bun-types": "latest",
       },
     },
     "packages/shared": {
