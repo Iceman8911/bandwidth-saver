@@ -128,6 +128,8 @@ const DetailedStatisticsSchema = v.object({
 
 const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
+const SiteUrlOriginsSchema = v.array(UrlSchema);
+
 export const STORAGE_SCHEMA = {
 	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: CompressionSettingsSchema,
 	[StorageKey.DEFAULT_SETTINGS_PROXY]: ProxySettingsSchema,
@@ -142,6 +144,7 @@ export const STORAGE_SCHEMA = {
 	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: DetailedStatisticsSchema,
 
 	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
+	[StorageKey.SITE_URL_ORIGINS]: SiteUrlOriginsSchema,
 } as const satisfies Record<StorageKey, AnyValibotSchema>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
@@ -234,6 +237,10 @@ export const STORAGE_DEFAULTS = {
 	),
 
 	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
+
+	[StorageKey.SITE_URL_ORIGINS]: [] as v.InferOutput<
+		typeof SiteUrlOriginsSchema
+	>,
 } as const satisfies {
 	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
 		(typeof STORAGE_SCHEMA)[STORAGE_KEY]

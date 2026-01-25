@@ -62,6 +62,7 @@ export const StorageKey = {
 
 	/** Device-specific statistics per site */
 	SITE_SPECIFIC_STATISTICS_PREFIX: "local:siteScopeStatistics-",
+	SITE_URL_ORIGINS: "local:siteUrlOrigins",
 
 	/** Device-specific global statistics */
 	STATISTICS: "local:statistics",

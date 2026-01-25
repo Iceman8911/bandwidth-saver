@@ -15,11 +15,17 @@ const {
 	STATISTICS,
 	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX,
 	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
+	SITE_URL_ORIGINS,
 } = StorageKey;
 
 export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
 	fallback: clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
 	init: () => clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
+});
+
+export const siteUrlOriginsStorageItem = storage.defineItem(SITE_URL_ORIGINS, {
+	fallback: clone(STORAGE_DEFAULTS[SITE_URL_ORIGINS]),
+	init: () => clone(STORAGE_DEFAULTS[SITE_URL_ORIGINS]),
 });
 
 export const defaultGeneralSettingsStorageItem = storage.defineItem(
