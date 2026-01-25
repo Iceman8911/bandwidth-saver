@@ -68,7 +68,7 @@ type StorageChanges = Record<string, Browser.storage.StorageChange>;
  *
  * @returns a callback to remove the listener
  */
-export function watchChangesToSiteSpecificSettings(
+export function watchChangesToSiteSpecificGeneralSettings(
 	callback: (changes: SiteSpecificStorageChange[]) => void,
 ) {
 	const onChanged = browser.storage[storageArea].onChanged;

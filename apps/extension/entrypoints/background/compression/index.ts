@@ -3,7 +3,7 @@ import {
 	defaultCompressionSettingsStorageItem,
 	defaultGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
+import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
 import {
 	getDefaultProxyCompressionRules,
 	getSiteProxyCompressionRules,
@@ -75,5 +75,5 @@ export async function compressionToggleWatcher() {
 		applyDefaultCompressionRules(),
 	);
 
-	watchChangesToSiteSpecificSettings(() => applyAllCompressionRules());
+	watchChangesToSiteSpecificGeneralSettings(() => applyAllCompressionRules());
 }

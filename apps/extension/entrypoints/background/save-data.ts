@@ -7,7 +7,7 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
-import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
+import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
@@ -133,7 +133,7 @@ export async function saveDataToggleWatcher() {
 
 	// Reapply BOTH default and site rules when site settings change
 	// This fixes stale excludedInitiatorDomains when useDefaultRules changes
-	watchChangesToSiteSpecificSettings(async () => {
+	watchChangesToSiteSpecificGeneralSettings(async () => {
 		await applyAllSaveDataRules(cachedEnabled);
 	});
 }
