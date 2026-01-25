@@ -6,15 +6,18 @@ import { saveDataToggleWatcher } from "./save-data";
 import { cacheBandwidthDataFromPerformanceApi } from "./statistics/bandwidth-calculation";
 import { monitorBandwidthUsageViaBackground } from "./statistics/bandwidth-monitoring";
 
-export default defineBackground(() => {
-	registerStaticRules();
+export default defineBackground({
+	main() {
+		registerStaticRules();
 
-	startRecordingPossibleSiteOriginsToEnqueue();
+		startRecordingPossibleSiteOriginsToEnqueue();
 
-	monitorBandwidthUsageViaBackground();
-	cacheBandwidthDataFromPerformanceApi();
+		monitorBandwidthUsageViaBackground();
+		cacheBandwidthDataFromPerformanceApi();
 
-	saveDataToggleWatcher();
-	compressionToggleWatcher();
-	cspBypassToggleWatcher();
+		saveDataToggleWatcher();
+		compressionToggleWatcher();
+		cspBypassToggleWatcher();
+	},
+	type: "module",
 });
