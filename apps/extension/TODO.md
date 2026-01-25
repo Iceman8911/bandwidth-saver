@@ -7,6 +7,7 @@
 - [x] Figure out why some sites don't have their css properly parsed when the extension is enabled.
   - It was part of the content script that deleted `preload` links which occasionally had crucial css
 - [ ] Add setting exports.
+- [ ] Inspect the high cpu usage that happens as result of using the extension for days (and racking up tonnes of stoed entries)
 
 # Reducing Bandwidth Usage by
 
