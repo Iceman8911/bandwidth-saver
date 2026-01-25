@@ -1,11 +1,11 @@
 import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
 
-import { getActiveTabUrl } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { getActiveTabUrl } from "@/utils/tabs";
 import {
 	AUTOPLAYABLE_ELEMENT_SELECTOR,
 	disableAutoplayViaContentScript,
@@ -55,14 +55,14 @@ function queryMatchingElements(
 
 export default defineContentScript({
 	async main() {
-		const PAGE_URL = await getActiveTabUrl();
+		const PAGE_ORIGIN = (await getActiveTabUrl()).origin as UrlSchema;
 
 		const [defaultSettings, siteSettings] =
-			await getDefaultAndSiteGeneralSettings(PAGE_URL);
+			await getDefaultAndSiteGeneralSettings(PAGE_ORIGIN);
 
 		monitorBandwidthUsageViaContentScript();
 
-		fixImageElementsBrokenFromFailedCompression(PAGE_URL);
+		fixImageElementsBrokenFromFailedCompression(PAGE_ORIGIN);
 
 		const { disableAutoplay, lazyload, prefetch }: SettingsToApply = {
 			disableAutoplay: shouldDisableAutoplayForSite(

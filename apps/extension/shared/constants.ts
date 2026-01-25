@@ -9,15 +9,6 @@ export enum ExtensionData {
 
 export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 
-/** TODO: rename this cus it may return the origin or full url */
-export const getActiveTabUrl = async () => {
-	try {
-		return (await getActiveTabOrigin()) ?? DUMMY_TAB_URL;
-	} catch {
-		return v.parse(UrlSchema, location.href);
-	}
-};
-
 export const MessageType = {
 	/** Sends the bandwidth used from content scripts to the background */
 	MONITOR_BANDWIDTH_WITH_PERFORMANCE_API: "1",

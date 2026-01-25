@@ -1,3 +1,4 @@
+import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
 import { PopupContext } from "@/components/popup/context";
 import PopupFooterContent from "@/components/popup/popup-footer-content";
@@ -6,16 +7,20 @@ import PopupModeToggleButton from "@/components/popup/popup-mode-toggle-button";
 import PopupSettingsTabsContent from "@/components/popup/popup-setting-tabs-content";
 import PopupStatisticsSummary from "@/components/popup/popup-statistics-summary";
 import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
-import { DUMMY_TAB_URL, getActiveTabUrl } from "@/shared/constants";
+import { DUMMY_TAB_URL } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { getActiveTabUrl } from "@/utils/tabs";
 
 export default function App() {
-	const activeTabUrl = createAsync(getActiveTabUrl, {
-		initialValue: DUMMY_TAB_URL,
-	});
+	const activeTabUrl = createAsync(
+		async () => (await getActiveTabUrl()).origin as UrlSchema,
+		{
+			initialValue: DUMMY_TAB_URL,
+		},
+	);
 
 	const [context, setContext] = PopupContext.defaultValue;
 
