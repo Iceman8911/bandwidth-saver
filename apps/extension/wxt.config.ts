@@ -1,5 +1,6 @@
 import InlineEnum from "@iceman8911/unplugin-inline-enum/vite";
 import tailwindcss from "@tailwindcss/vite";
+import lucidePreprocess from "vite-plugin-lucide-preprocess";
 import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
@@ -24,6 +25,7 @@ export default defineConfig({
 	modules: ["@wxt-dev/module-solid", "@wxt-dev/auto-icons"],
 	vite: () => ({
 		plugins: [
+			lucidePreprocess(),
 			tailwindcss(),
 			process.env.NODE_ENV === "production" ? InlineEnum() : [],
 		],
