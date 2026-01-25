@@ -16,7 +16,7 @@ type TabWrapperProps = {
 function TabWrapper(props: TabWrapperProps) {
 	return (
 		<>
-			<label class="tab">
+			<label class={`tab ${props.isSelected ? "text-primary" : ""}`}>
 				<input
 					checked={props.isSelected}
 					name={props.name}
