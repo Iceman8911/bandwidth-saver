@@ -1,8 +1,4 @@
-import { NavigationMenu } from "@kobalte/core/navigation-menu";
-import { A } from "@solidjs/router";
-import type { JSXElement } from "solid-js";
 import { ExtensionData } from "@/shared/constants";
-import { OptionsPageRoute } from "../shared/constants";
 
 function ExtensionLogoAndName() {
 	return (
@@ -13,64 +9,35 @@ function ExtensionLogoAndName() {
 				</div>
 			</div>
 
-			<h1 class="whitespace-nowrap font-bold text-base">
-				{ExtensionData.NAME}
-			</h1>
+			<div class="flex flex-col leading-tight">
+				<h1 class="whitespace-nowrap font-bold text-xl">
+					{ExtensionData.NAME}
+				</h1>
+
+				<p class="text-xs opacity-70">Options • Summary</p>
+			</div>
 		</div>
 	);
 }
 
-type NavigationBarLinkProps = {
-	href: `/${string}`;
-	children: JSXElement;
-};
-
-function NavigationBarLink(props: NavigationBarLinkProps) {
+function SummaryActions() {
 	return (
-		<NavigationMenu.Trigger
-			activeClass="menu-active text-primary"
-			as={A}
-			end={true}
-			href={props.href}
-		>
-			{props.children}
-		</NavigationMenu.Trigger>
-	);
-}
+		<div class="*:btn-soft flex items-center gap-2">
+			<BaseButton class="btn-secondary">Export</BaseButton>
 
-function NavigationBarLinks() {
-	return (
-		<NavigationMenu
-			class="navbar menu menu-horizontal flex-nowrap *:text-base"
-			orientation="horizontal"
-		>
-			<NavigationMenu.Menu>
-				<NavigationBarLink href={OptionsPageRoute.OVERVIEW}>
-					Overview
-				</NavigationBarLink>
+			<BaseButton class="btn-accent">Import</BaseButton>
 
-				<NavigationBarLink href={OptionsPageRoute.COMPRESSION}>
-					Compression
-				</NavigationBarLink>
-
-				<NavigationBarLink href={OptionsPageRoute.PROXY}>
-					Proxy
-				</NavigationBarLink>
-
-				<NavigationBarLink href={OptionsPageRoute.ABOUT}>
-					About
-				</NavigationBarLink>
-			</NavigationMenu.Menu>
-		</NavigationMenu>
+			<BaseButton class="btn-error">Reset Stats</BaseButton>
+		</div>
 	);
 }
 
 export default function OptionsPageNavigationBar() {
 	return (
-		<div class="flex h-16 items-center justify-around gap-8 overflow-auto overflow-y-clip bg-base-300 p-4">
+		<div class="flex h-16 items-center justify-between gap-6 overflow-auto overflow-y-clip bg-base-300 px-4">
 			<ExtensionLogoAndName />
 
-			<NavigationBarLinks />
+			<SummaryActions />
 		</div>
 	);
 }
