@@ -1,7 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { DeclarativeNetRequestRuleIds } from "@/shared/constants";
 import { getSiteSpecificGeneralSettingsStorageItem } from "@/shared/storage";
-import { getSiteUrlOriginsFromStorage } from "./storage";
+import { getSiteUrlOrigins } from "./storage";
 
 /**
  * Applies site-specific declarative net request rules to all sites with custom settings.
@@ -18,7 +18,7 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 		removeRuleIds: [],
 	};
 
-	for await (const url of getSiteUrlOriginsFromStorage()) {
+	for (const url of getSiteUrlOrigins()) {
 		const {
 			addRules: parsedRulesToAdd = [],
 			removeRuleIds: parsedRuleIdsToRemove = [],
@@ -49,7 +49,7 @@ type RuleAllocationUsage = {
 export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocationUsage> {
 	let used = 0;
 
-	for await (const url of getSiteUrlOriginsFromStorage()) {
+	for (const url of getSiteUrlOrigins()) {
 		const { ruleIdOffset } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -69,7 +69,7 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 > {
 	const domains: string[] = [];
 
-	for await (const url of getSiteUrlOriginsFromStorage()) {
+	for (const url of getSiteUrlOrigins()) {
 		const { ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -85,7 +85,7 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
 	const usedRuleIdOffsetPromises: Promise<number | null>[] = [];
 
-	for await (const url of getSiteUrlOriginsFromStorage()) {
+	for (const url of getSiteUrlOrigins()) {
 		usedRuleIdOffsetPromises.push(
 			getSiteSpecificGeneralSettingsStorageItem(url)
 				.getValue()

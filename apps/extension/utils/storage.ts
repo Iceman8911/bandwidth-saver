@@ -1,7 +1,8 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
+import { BatchQueue, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { type STORAGE_DEFAULTS, StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
+import { siteUrlOriginsStorageItem } from "@/shared/storage";
 
 function removeStorageAreaIdentifier<TKey extends string>(
 	key: `${StorageAreaSchema}:${TKey}`,
@@ -21,9 +22,39 @@ const storageArea = v.parse(
 	SITE_SPECIFIC_SETTINGS_PREFIX.split(":")[0],
 );
 
+const onChanged = browser.storage[storageArea].onChanged;
+
+/**
+ * In memory map for storing the site url origins. Strings are small enough to stay in memory without issue.
+ *
+ * On load, it restores persisted data. Occasionally, it writes back the data to disk
+ */
+const siteUrlOriginsMemorySet = new Set<UrlSchema>(
+	await getSiteUrlOriginsFromStorage(),
+);
+
+/** For storing urls encountered in the storage onChanged listener, and flushing them to disk at the end of each batch.
+ *
+ * This may be slightly out of date sometimes, but the short interval should be enough cope :p
+ */
+const siteUrlOriginsBatchQueue = new BatchQueue<UrlSchema>({
+	batchSize: 100,
+	intervalMs: 250,
+});
+
+siteUrlOriginsBatchQueue.addCallbacks(async (urls) => {
+	for (const url of urls) {
+		siteUrlOriginsMemorySet.add(url);
+	}
+
+	await siteUrlOriginsStorageItem.setValue([...siteUrlOriginsMemorySet]);
+});
+
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
 	// Since site scoped entry keys are `${prefix}-${url}`
-	const possibleUrl = key.split("-")[1];
+	const [_, ...possibleUrlParts] = key.split("-");
+
+	const possibleUrl = possibleUrlParts.join("-");
 
 	try {
 		return v.parse(UrlSchema, possibleUrl);
@@ -38,14 +69,46 @@ function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
 	}
 }
 
-export async function* getSiteUrlOriginsFromStorage(): AsyncGenerator<UrlSchema> {
-	const storageKeys = await browser.storage[storageArea].getKeys();
+async function getSiteUrlOriginsFromStorage(): Promise<
+	ReadonlyArray<UrlSchema>
+> {
+	const siteUrlOrigins = await siteUrlOriginsStorageItem.getValue();
 
-	for (const key of storageKeys) {
-		const possibleUrl = extractPossibleUrlFromStorageKey(key);
+	if (siteUrlOrigins.length) return siteUrlOrigins;
 
-		if (possibleUrl) yield possibleUrl;
+	const allStorageKeys = await browser.storage[storageArea].getKeys();
+
+	return allStorageKeys.reduce<UrlSchema[]>((origins, key) => {
+		const origin = extractPossibleUrlFromStorageKey(key);
+
+		if (origin) origins.push(origin);
+
+		return origins;
+	}, []);
+}
+
+function recordPossibleSiteOriginsToEnqueue(changes: StorageChanges) {
+	for (const storageKey in changes) {
+		const url = extractPossibleUrlFromStorageKey(storageKey);
+
+		if (!url) continue;
+
+		siteUrlOriginsBatchQueue.enqueue(url);
 	}
+}
+
+export function startRecordingPossibleSiteOriginsToEnqueue() {
+	onChanged.removeListener(recordPossibleSiteOriginsToEnqueue);
+
+	onChanged.addListener(recordPossibleSiteOriginsToEnqueue);
+}
+
+/** Returns all the site url origins for all the sites the user has visited* while this extension is active.
+ *
+ * By vistied, I mean any site that has scoped data changed.
+ */
+export function getSiteUrlOrigins(): ReadonlySet<UrlSchema> {
+	return siteUrlOriginsMemorySet;
 }
 
 type StorageChange<TStorageValue> =
@@ -82,8 +145,6 @@ type StorageChanges = Record<string, Browser.storage.StorageChange>;
 export function watchChangesToSiteSpecificGeneralSettings(
 	callback: (changes: SiteSpecificStorageChange[]) => void,
 ) {
-	const onChanged = browser.storage[storageArea].onChanged;
-
 	const listener = (changes: StorageChanges) => {
 		const siteSpecificChanges: SiteSpecificStorageChange[] = [];
 
