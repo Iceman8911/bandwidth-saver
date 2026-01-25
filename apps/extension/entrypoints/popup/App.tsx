@@ -1,77 +1,70 @@
-import { getRandomUUID, type UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
-import { createSignal } from "solid-js";
-import { PopupCompressionSettings } from "@/components/popup/compression-settings";
-import { PopupFooter } from "@/components/popup/footer";
-import { PopupHeader } from "@/components/popup/header";
-import { PopupOtherSettings } from "@/components/popup/other-settings";
-import { PopupProxySettings } from "@/components/popup/proxy-settings";
-import { PopupStatistics } from "@/components/popup/statistics";
-import { PopupToggles } from "@/components/popup/toggle";
-import type { SettingsScope } from "@/models/context";
+import { PopupContext } from "@/components/popup/context";
+import PopupFooterContent from "@/components/popup/popup-footer-content";
+import PopupHeaderScopeButtons from "@/components/popup/popup-header-scope-buttons";
+import PopupModeToggleButton from "@/components/popup/popup-mode-toggle-button";
+import PopupSettingsTabsContent from "@/components/popup/popup-setting-tabs-content";
+import PopupStatisticsSummary from "@/components/popup/popup-statistics-summary";
 import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import { DUMMY_TAB_URL, getActiveTabUrl } from "@/shared/constants";
-import { getSiteSpecificGeneralSettingsStorageItem } from "@/shared/storage";
-
-function PopupSettings(props: { scope: SettingsScope; tabUrl: UrlSchema }) {
-	const accordionName = getRandomUUID();
-
-	return (
-		<div class="join join-vertical bg-base-100">
-			<PopupCompressionSettings
-				name={accordionName}
-				scope={props.scope}
-				tabUrl={props.tabUrl}
-			/>
-
-			<PopupProxySettings
-				name={accordionName}
-				scope={props.scope}
-				tabUrl={props.tabUrl}
-			/>
-
-			<PopupOtherSettings
-				name={accordionName}
-				scope={props.scope}
-				tabUrl={props.tabUrl}
-			/>
-
-			{/*<Show when={siteSpecificGeneralSettings().useDefaultRules}>
-				<div class="absolute z-10 size-full bg-black opacity-25"></div>
-			</Show>*/}
-		</div>
-	);
-}
+import {
+	defaultGeneralSettingsStorageItem,
+	getSiteSpecificGeneralSettingsStorageItem,
+} from "@/shared/storage";
 
 export default function App() {
 	const activeTabUrl = createAsync(getActiveTabUrl, {
 		initialValue: DUMMY_TAB_URL,
 	});
 
-	const [scope, setScope] = createSignal<SettingsScope>("site");
+	const [context, setContext] = PopupContext.defaultValue;
 
-	const siteSpecificGeneralSettings = convertStorageItemToReactiveSignal(
-		() => getSiteSpecificGeneralSettingsStorageItem(activeTabUrl()),
+	const generalSettingsStorageItem = createMemo(() => {
+		if (context.scope === "default") return defaultGeneralSettingsStorageItem;
+
+		return getSiteSpecificGeneralSettingsStorageItem(context.tabOrigin);
+	});
+
+	const generalSettingsStorageItemValue = convertStorageItemToReactiveSignal(
+		generalSettingsStorageItem,
 		DEFAULT_GENERAL_SETTINGS,
 	);
 
-	const areSiteSpecificRulesEnabled = () =>
-		siteSpecificGeneralSettings().enabled &&
-		siteSpecificGeneralSettings().ruleIdOffset != null;
+	createEffect(() =>
+		setContext(
+			produce((state) => {
+				state.tabOrigin = activeTabUrl();
+				state.generalSettings = {
+					item: generalSettingsStorageItem(),
+					val: generalSettingsStorageItemValue(),
+				};
+
+				return state;
+			}),
+		),
+	);
 
 	return (
-		<div class="h-fit w-96 divide-y divide-base-300 *:w-full *:p-4">
-			<PopupHeader scope={scope()} setScope={setScope} />
+		<div class="aspect-2/3 w-100 p-4">
+			<PopupContext.Provider value={[context, setContext]}>
+				<div class="grid size-full grid-rows-[3rem_1fr_1.15fr_50%_3.5rem] gap-3">
+					<PopupHeaderScopeButtons />
 
-			<PopupStatistics scope={scope()} tabUrl={activeTabUrl()} />
+					<div class="flex items-center justify-around">
+						<PopupModeToggleButton />
 
-			<PopupToggles scope={scope()} tabUrl={activeTabUrl()} />
+						<h1 class="max-w-36 text-center font-semibold text-base text-primary">
+							Bandwidth Saver & Monitor
+						</h1>
+					</div>
 
-			<Show when={areSiteSpecificRulesEnabled() || scope() === "default"}>
-				<PopupSettings scope={scope()} tabUrl={activeTabUrl()} />
-			</Show>
+					<PopupStatisticsSummary />
 
-			<PopupFooter />
+					<PopupSettingsTabsContent />
+
+					<PopupFooterContent />
+				</div>
+			</PopupContext.Provider>
 		</div>
 	);
 }

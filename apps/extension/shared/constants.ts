@@ -9,6 +9,7 @@ export enum ExtensionData {
 
 export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 
+/** TODO: rename this cus it may return the origin or full url */
 export const getActiveTabUrl = async () => {
 	try {
 		return (await getActiveTabOrigin()) ?? DUMMY_TAB_URL;

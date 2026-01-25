@@ -1,0 +1,29 @@
+import type { UrlSchema } from "@bandwidth-saver/shared";
+import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import { DUMMY_TAB_URL } from "@/shared/constants";
+import { defaultGeneralSettingsStorageItem } from "@/shared/storage";
+
+type PopupContextProps = {
+	scope: "default" | "site";
+
+	/** Tab origin for the active tab, only used for site specifc settings */
+	tabOrigin: UrlSchema;
+
+	generalSettings: {
+		item: typeof defaultGeneralSettingsStorageItem;
+		val: typeof DEFAULT_GENERAL_SETTINGS;
+	};
+};
+
+const DEFAULT_POPUP_CONTEXT_PROPS = {
+	generalSettings: {
+		item: defaultGeneralSettingsStorageItem,
+		val: DEFAULT_GENERAL_SETTINGS,
+	},
+	scope: "site",
+	tabOrigin: DUMMY_TAB_URL,
+} as const satisfies PopupContextProps;
+
+export const PopupContext = createContext(
+	createStore<PopupContextProps>(DEFAULT_POPUP_CONTEXT_PROPS),
+);

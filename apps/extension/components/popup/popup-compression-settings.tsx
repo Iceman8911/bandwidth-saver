@@ -1,27 +1,18 @@
 import {
 	deduplicateArrayElements,
 	ImageCompressorEndpoint,
-	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import { For, Match, Switch } from "solid-js";
+import { isEqual } from "@ver0/deep-equal";
+import { Save } from "lucide-solid";
 import type { SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
-import { createStore } from "#imports";
-import type { SettingsScope } from "@/models/context";
-import {
-	DEFAULT_COMPRESSION_SETTINGS,
-	DEFAULT_GENERAL_SETTINGS,
-	STORAGE_SCHEMA,
-} from "@/models/storage";
+import { DEFAULT_COMPRESSION_SETTINGS, STORAGE_SCHEMA } from "@/models/storage";
 import { CompressionMode, StorageKey } from "@/shared/constants";
 import {
 	defaultCompressionSettingsStorageItem,
-	defaultGeneralSettingsStorageItem,
 	getSiteSpecificCompressionSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
-import { InformativeTooltip } from "../tooltip";
+import { PopupContext } from "./context";
 
 const COMPRESSION_SCHEMA =
 	STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_COMPRESSION];
@@ -41,10 +32,14 @@ type TempCompressionSettingsProps = {
 
 function CompressionFormatSelect(props: TempCompressionSettingsProps) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Image Format</legend>
+		<>
+			<label class="flex items-center" for="compress-format">
+				Compressed Image Format:
+			</label>
+
 			<select
 				class="select"
+				id="compress-format"
 				onInput={(e) =>
 					props.set(
 						"format",
@@ -60,7 +55,7 @@ function CompressionFormatSelect(props: TempCompressionSettingsProps) {
 					)}
 				</For>
 			</select>
-		</fieldset>
+		</>
 	);
 }
 
@@ -99,21 +94,23 @@ function CompressionModeTooltip(props: { mode: CompressionMode }) {
 
 function CompressionModeSelect(props: TempCompressionSettingsProps) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">
-				<span>Compression Mode</span>
+		<>
+			<label class="flex items-center justify-between" for="compress-mode">
+				<span>Compression Mode:</span>
 
 				<InformativeTooltip
-					dir="left"
+					dir="top"
 					tip={
 						<div class="w-3xs space-y-2 text-xs">
 							<CompressionModeTooltip mode={props.store.mode} />
 						</div>
 					}
 				/>
-			</legend>
+			</label>
+
 			<select
 				class="select"
+				id="compress-mode"
 				onInput={(e) =>
 					props.set(
 						"mode",
@@ -135,16 +132,20 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 					)}
 				</For>
 			</select>
-		</fieldset>
+		</>
 	);
 }
 
 function PreferredEndpointSelect(props: TempCompressionSettingsProps) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Preferred Endpoint</legend>
+		<>
+			<label class="flex items-center" for="compress-preferred-endpoint">
+				Preferred Compression Endpoint:
+			</label>
+
 			<select
 				class="select"
+				id="compress-preferred-endpoint"
 				onInput={(e) =>
 					props.set(
 						"preferredEndpoint",
@@ -170,166 +171,138 @@ function PreferredEndpointSelect(props: TempCompressionSettingsProps) {
 					)}
 				</For>
 			</select>
-		</fieldset>
+		</>
 	);
 }
 
 function CompressionQualityInput(props: TempCompressionSettingsProps) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Compression Quality</legend>
+		<>
+			<label class="flex items-center" for="compress-quality">
+				Compression Quality:
+			</label>
+
 			<input
 				class="input"
+				id="compress-quality"
 				max={100}
 				min={0}
 				onInput={(e) => props.set("quality", Number(e.target.value))}
 				type="number"
 				value={props.store.quality}
 			/>
-		</fieldset>
+		</>
 	);
 }
 
 function PreserveAnimationToggle(props: TempCompressionSettingsProps) {
 	return (
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend">Preserve Animation</legend>
+		<>
+			<label class="flex items-center gap-2" for="compress-preserve-animation">
+				Preserve Animation:
+			</label>
+
 			<input
 				checked={props.store.preserveAnim}
 				class="toggle"
+				id="compress-preserve-animation"
 				onInput={(e) => props.set("preserveAnim", e.target.checked)}
 				type="checkbox"
 			/>
-		</fieldset>
+		</>
 	);
 }
 
 function CompressionEnabledToggle(props: {
 	enabled: boolean;
-	scope: SettingsScope;
 	onInput: (enabled: boolean) => void;
 }) {
+	const [context] = useContext(PopupContext);
+
 	return (
-		<label class="flex gap-2">
-			<span class="label">Enabled?</span>
+		<>
+			<label class="flex gap-2" for="compress-enabled">
+				Enable Compression:
+			</label>
+
 			<input
 				checked={props.enabled}
-				class={`toggle toggle-sm ${props.scope === "default" ? "toggle-primary" : "toggle-secondary"}`}
+				class={`toggle ${context.scope === "default" ? "toggle-primary" : "toggle-secondary"}`}
+				id="compress-enabled"
 				onInput={(e) => props.onInput(e.target.checked)}
 				type="checkbox"
 			/>
-		</label>
+		</>
 	);
 }
 
-export function PopupCompressionSettings(props: {
-	scope: SettingsScope;
-	tabUrl: UrlSchema;
-	/** Accordion name */
-	name: string;
-}) {
-	const siteSpecificGeneralSettingsStorageItem = () =>
-		getSiteSpecificGeneralSettingsStorageItem(props.tabUrl);
-	const siteSpecificCompressionSettingsStorageItem = () =>
-		getSiteSpecificCompressionSettingsStorageItem(props.tabUrl);
+export default function PopupCompressionSettings() {
+	const [context] = useContext(PopupContext);
 
-	const siteSpecificGeneralSettingsSignal = convertStorageItemToReactiveSignal(
-		siteSpecificGeneralSettingsStorageItem,
-		DEFAULT_GENERAL_SETTINGS,
-	);
+	const generalSettings = () => context.generalSettings;
 
-	const siteSpecificCompressionToggle = () =>
-		siteSpecificGeneralSettingsSignal().compression;
+	const compressionSettingsStorageItem = createMemo(() => {
+		if (context.scope === "default")
+			return defaultCompressionSettingsStorageItem;
 
-	const defaultGeneralSettingsSignal = convertStorageItemToReactiveSignal(
-		() => defaultGeneralSettingsStorageItem,
-		DEFAULT_GENERAL_SETTINGS,
-	);
+		return getSiteSpecificCompressionSettingsStorageItem(context.tabOrigin);
+	});
 
-	const defaultCompressionSettings = convertStorageItemToReactiveSignal(
-		() => defaultCompressionSettingsStorageItem,
+	const compressionSettings = convertStorageItemToReactiveSignal(
+		compressionSettingsStorageItem,
 		DEFAULT_COMPRESSION_SETTINGS,
 	);
-
-	const siteSpecificCompressionSettings = convertStorageItemToReactiveSignal(
-		siteSpecificCompressionSettingsStorageItem,
-		DEFAULT_COMPRESSION_SETTINGS,
-	);
-
-	const compressionToggle = () =>
-		props.scope === "default"
-			? defaultGeneralSettingsSignal().compression
-			: siteSpecificCompressionToggle();
-
-	const compressionSettings = () =>
-		props.scope === "default"
-			? defaultCompressionSettings()
-			: siteSpecificCompressionSettings();
 
 	const [tempCompressionSettings, setTempCompressionSettings] = createStore(
 		compressionSettings(),
 	);
 
 	// Sync external changes
-	createEffect(
-		on(compressionSettings, (settings) => setTempCompressionSettings(settings)),
-	);
+	createEffect(() => setTempCompressionSettings(compressionSettings()));
 
-	// // Sync whenever the scope is changed
-	// createEffect(
-	// 	on(
-	// 		compressionSettings,
-	// 		(compressionSettings) =>
-	// 			compressionSettings && setTempCompressionSettings(compressionSettings),
-	// 	),
-	// );
+	const isTempCompressionSettingsUnchanged = createMemo(() =>
+		isEqual(tempCompressionSettings, compressionSettings()),
+	);
 
 	const handleUpdateCompressionSettings = (e: SubmitEvent) => {
 		e.preventDefault();
 
-		if (props.scope === "default")
-			defaultCompressionSettingsStorageItem.setValue(tempCompressionSettings);
-		else
-			siteSpecificCompressionSettingsStorageItem().setValue(
-				tempCompressionSettings,
-			);
-	};
-
-	const handleUpdateCompressionToggle = () => {
-		if (props.scope === "default") {
-			const store = defaultGeneralSettingsSignal();
-			defaultGeneralSettingsStorageItem.setValue({
-				...store,
-				compression: !store.compression,
-			});
-		} else {
-			const store = siteSpecificGeneralSettingsSignal();
-			siteSpecificGeneralSettingsStorageItem().setValue({
-				...store,
-				compression: !store.compression,
-			});
-		}
+		compressionSettingsStorageItem().setValue(tempCompressionSettings);
 	};
 
 	return (
-		<details
-			class="collapse-arrow join-item collapse border border-base-300 bg-base-100"
-			name={props.name}
+		<Show
+			fallback={
+				<div class="grid size-full place-items-center text-base">
+					{context.scope === "default"
+						? "Default settings are disabled."
+						: "Site-scoped settings are disabled."}
+					{generalSettings().val.enabled
+						? " (Using the default settings instead.)"
+						: ""}
+				</div>
+			}
+			when={
+				context.scope === "default"
+					? generalSettings().val.enabled
+					: generalSettings().val.ruleIdOffset != null
+			}
 		>
-			<summary class="collapse-title flex justify-between font-semibold">
-				<span>Compression Settings</span>
-
+			<form
+				class="grid auto-rows-auto grid-cols-[1.75fr_1fr] gap-4 text-sm"
+				onSubmit={handleUpdateCompressionSettings}
+			>
 				<CompressionEnabledToggle
-					enabled={compressionToggle()}
-					onInput={handleUpdateCompressionToggle}
-					scope={props.scope}
+					enabled={generalSettings().val.compression}
+					onInput={(isEnabled) =>
+						generalSettings().item.setValue({
+							...generalSettings().val,
+							compression: isEnabled,
+						})
+					}
 				/>
-			</summary>
-			<div class="collapse-content text-sm">
-				<form
-					class="grid grid-cols-2 gap-4"
-					onSubmit={handleUpdateCompressionSettings}
-				>
+
+				<Show when={generalSettings().val.compression}>
 					<CompressionFormatSelect
 						set={setTempCompressionSettings}
 						store={tempCompressionSettings}
@@ -351,11 +324,15 @@ export function PopupCompressionSettings(props: {
 						store={tempCompressionSettings}
 					/>
 
-					<BaseButton class="btn-primary" type="submit">
-						💾 Save Changes
+					<BaseButton
+						class="btn-primary col-span-2 mt-4"
+						disabled={isTempCompressionSettingsUnchanged()}
+						type="submit"
+					>
+						<Save /> Save Changes
 					</BaseButton>
-				</form>
-			</div>
-		</details>
+				</Show>
+			</form>
+		</Show>
 	);
 }
