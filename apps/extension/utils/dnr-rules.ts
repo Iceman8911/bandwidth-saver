@@ -19,18 +19,10 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 	};
 
 	for (const url of getSiteUrlOrigins()) {
-		const {
-			addRules: parsedRulesToAdd = [],
-			removeRuleIds: parsedRuleIdsToRemove = [],
-		} = await ruleCb(url);
+		const { addRules = [], removeRuleIds = [] } = await ruleCb(url);
 
-		for (const ruleToAdd of parsedRulesToAdd) {
-			ruleUpdatesToApply.addRules?.push(ruleToAdd);
-		}
-
-		for (const ruleIdToRemove of parsedRuleIdsToRemove) {
-			ruleUpdatesToApply.removeRuleIds?.push(ruleIdToRemove);
-		}
+		ruleUpdatesToApply.addRules?.push(...addRules);
+		ruleUpdatesToApply.removeRuleIds?.push(...removeRuleIds);
 	}
 
 	await browser.declarativeNetRequest.updateSessionRules(ruleUpdatesToApply);
