@@ -58,13 +58,13 @@ export default function PopupModeToggleButton() {
 	});
 
 	const handleSettingsToggle = async () => {
-		const val = context.generalSettings.val;
+		const oldSettings = context.generalSettings.val;
 
-		const setValue = (val: typeof DEFAULT_GENERAL_SETTINGS) =>
-			context.generalSettings.item.setValue(val);
+		const setValue = (settings: typeof DEFAULT_GENERAL_SETTINGS) =>
+			context.generalSettings.item.setValue(settings);
 
 		if (context.scope === "default") {
-			await setValue({ ...val, enabled: !val.enabled });
+			await setValue({ ...oldSettings, enabled: !oldSettings.enabled });
 		} else {
 			// Toggle from "default" to "site" to "off"
 
@@ -72,16 +72,20 @@ export default function PopupModeToggleButton() {
 			switch (mode()) {
 				case "default":
 					await setValue({
-						...val,
+						...oldSettings,
 						enabled: true,
 						ruleIdOffset: await getAvailableSiteRuleIdOffset(),
 					});
 					break;
 				case "site":
-					await setValue({ ...val, enabled: false, ruleIdOffset: null });
+					await setValue({
+						...oldSettings,
+						enabled: false,
+						ruleIdOffset: null,
+					});
 					break;
 				case "off":
-					await setValue({ ...val, enabled: true, ruleIdOffset: null });
+					await setValue({ ...oldSettings, enabled: true, ruleIdOffset: null });
 					break;
 			}
 		}
