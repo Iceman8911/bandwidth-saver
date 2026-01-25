@@ -5,6 +5,7 @@ import {
 	ImageCompressorEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
+import * as immer from "immer";
 import {
 	DEFAULT_COMBINED_ASSET_STATISTICS,
 	DEFAULT_SINGLE_ASSET_STATISTICS,
@@ -81,34 +82,32 @@ function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
 }): typeof DEFAULT_COMBINED_ASSET_STATISTICS {
 	const { valueToAdd, combinedStats: oldCombinedStats, day, type } = arg;
 
-	/** Clone since it's readonly */
-	const newCombinedStats = clone(oldCombinedStats);
+	const newCombinedStats = immer.produce(
+		oldCombinedStats,
+		(combinedStatsDraft) => {
+			const { dailyStats } = combinedStatsDraft;
 
-	const dailyStats = {
-		...newCombinedStats.dailyStats,
-		[day]: {
-			...DEFAULT_SINGLE_ASSET_STATISTICS,
-			...newCombinedStats.dailyStats[day],
-			[type]: (newCombinedStats.dailyStats[day]?.[type] ?? 0) + valueToAdd,
+			if (!dailyStats[day])
+				dailyStats[day] = clone(DEFAULT_SINGLE_ASSET_STATISTICS);
+
+			dailyStats[day][type] += valueToAdd;
+
+			// Prevent overloads
+			for (const overloadKey of getOverloadDailyStatsKeys(dailyStats)) {
+				const overloadStats =
+					dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
+
+				let key: keyof typeof overloadStats;
+
+				for (key in overloadStats) {
+					combinedStatsDraft.aggregate[key] += overloadStats[key];
+				}
+
+				// I think this will tank perf, but until wxt supports custom transforms, this'll have to do
+				delete dailyStats[overloadKey];
+			}
 		},
-	};
-
-	// Prevent overloads
-	for (const overloadKey of getOverloadDailyStatsKeys(dailyStats)) {
-		const overloadStats =
-			dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
-
-		let key: keyof typeof overloadStats;
-
-		for (key in overloadStats) {
-			newCombinedStats.aggregate[key] += overloadStats[key];
-		}
-
-		// I think this will tank perf, but until wxt supports custom transforms, this'll have to do
-		delete dailyStats[overloadKey];
-	}
-
-	newCombinedStats.dailyStats = dailyStats;
+	);
 
 	return newCombinedStats;
 }
