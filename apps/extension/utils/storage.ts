@@ -22,9 +22,20 @@ const storageArea = v.parse(
 );
 
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
-	const possibleUrl = key.split(EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX)[1];
+	// Since site scoped entry keys are `${prefix}-${url}`
+	const possibleUrl = key.split("-")[1];
 
-	return possibleUrl ? v.parse(UrlSchema, possibleUrl) : null;
+	try {
+		return v.parse(UrlSchema, possibleUrl);
+	} catch (e) {
+		console.warn(
+			"Key",
+			key,
+			"did not have a valid url.\n\nReturning `null` instead...",
+		);
+
+		return null;
+	}
 }
 
 export async function* getSiteUrlOriginsFromStorage(): AsyncGenerator<UrlSchema> {
