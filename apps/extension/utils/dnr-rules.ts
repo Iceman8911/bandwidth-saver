@@ -13,15 +13,12 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 		url: UrlSchema,
 	) => Promise<Browser.declarativeNetRequest.UpdateRuleOptions>,
 ): Promise<void> {
-	// Get all stored site origins and use a deterministic order
-	const urls = await getSiteUrlOriginsFromStorage();
-
 	const ruleUpdatesToApply: Browser.declarativeNetRequest.UpdateRuleOptions = {
 		addRules: [],
 		removeRuleIds: [],
 	};
 
-	for (const url of urls) {
+	for await (const url of getSiteUrlOriginsFromStorage()) {
 		const {
 			addRules: parsedRulesToAdd = [],
 			removeRuleIds: parsedRuleIdsToRemove = [],
@@ -52,9 +49,7 @@ type RuleAllocationUsage = {
 export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocationUsage> {
 	let used = 0;
 
-	const urls = await getSiteUrlOriginsFromStorage();
-
-	for (const url of urls) {
+	for await (const url of getSiteUrlOriginsFromStorage()) {
 		const { ruleIdOffset } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -72,11 +67,9 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 	ReadonlyArray<string>
 > {
-	const urls = await getSiteUrlOriginsFromStorage();
-
 	const domains: string[] = [];
 
-	for (const url of urls) {
+	for await (const url of getSiteUrlOriginsFromStorage()) {
 		const { ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -90,19 +83,17 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 }
 
 export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
-	const urls = await getSiteUrlOriginsFromStorage();
+	const usedRuleIdOffsetPromises: Promise<number | null>[] = [];
 
-	const usedRuleIdOffsets = (
-		await Promise.all(
-			urls.map((url) =>
-				getSiteSpecificGeneralSettingsStorageItem(url)
-					.getValue()
-					.then((setting) => setting.ruleIdOffset),
-			),
-		)
-	).filter((offset) => offset != null);
+	for await (const url of getSiteUrlOriginsFromStorage()) {
+		usedRuleIdOffsetPromises.push(
+			getSiteSpecificGeneralSettingsStorageItem(url)
+				.getValue()
+				.then(({ ruleIdOffset }) => ruleIdOffset),
+		);
+	}
 
-	const excluded = new Set(usedRuleIdOffsets);
+	const excluded = new Set(await Promise.all(usedRuleIdOffsetPromises));
 	for (
 		let i = 0;
 		i < DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE;

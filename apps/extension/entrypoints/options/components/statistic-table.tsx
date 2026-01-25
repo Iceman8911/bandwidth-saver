@@ -1,4 +1,6 @@
+import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
+import type { DEFAULT_SITE_SPECIFIC_STATISTICS } from "@/models/storage";
 import { getSiteSpecificStatisticsStorageItem } from "@/shared/storage";
 import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import { convertBytesToAppropriateNotation } from "@/utils/size";
@@ -15,17 +17,19 @@ export function OptionsPageStatisticSummaryTable(
 ) {
 	const allStatistics = createAsync(
 		async () => {
-			const urls = await getSiteUrlOriginsFromStorage();
+			const statisticValuePromises: Promise<
+				[UrlSchema, typeof DEFAULT_SITE_SPECIFIC_STATISTICS]
+			>[] = [];
 
-			const statisticValues = await Promise.all(
-				urls.map((url) =>
+			for await (const url of getSiteUrlOriginsFromStorage()) {
+				statisticValuePromises.push(
 					getSiteSpecificStatisticsStorageItem(url)
 						.getValue()
 						.then((stats) => [url, stats] as const),
-				),
-			);
+				);
+			}
 
-			return statisticValues;
+			return Promise.all(statisticValuePromises);
 		},
 		{ initialValue: [] },
 	);

@@ -27,20 +27,14 @@ function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
 	return possibleUrl ? v.parse(UrlSchema, possibleUrl) : null;
 }
 
-export async function getSiteUrlOriginsFromStorage(): Promise<
-	ReadonlyArray<UrlSchema>
-> {
+export async function* getSiteUrlOriginsFromStorage(): AsyncGenerator<UrlSchema> {
 	const storageKeys = await browser.storage[storageArea].getKeys();
 
-	return storageKeys.reduce<UrlSchema[]>((urls, key) => {
+	for (const key of storageKeys) {
 		const possibleUrl = extractPossibleUrlFromStorageKey(key);
 
-		if (possibleUrl) {
-			urls.push(possibleUrl);
-		}
-
-		return urls;
-	}, []);
+		if (possibleUrl) yield possibleUrl;
+	}
 }
 
 type StorageChange<TStorageValue> =
