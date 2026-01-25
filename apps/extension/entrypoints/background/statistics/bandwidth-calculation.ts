@@ -123,71 +123,52 @@ function applyBandwidthDataToStores(
 
 	const day = getDayStartInMillisecondsUTC();
 
-	globalStore.bytesUsed =
+	const applyToCombinedStats = (
+		combinedStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS>,
+		valueToAdd: number,
+	) =>
 		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-			combinedStats: globalStore.bytesUsed,
+			combinedStats,
 			day,
 			type,
-			valueToAdd: assetSize,
-		});
-
-	globalStore.requestsMade =
-		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-			combinedStats: globalStore.requestsMade,
-			day,
-			type,
-			valueToAdd: 1,
-		});
-
-	siteScopedStore.bytesUsed =
-		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-			combinedStats: siteScopedStore.bytesUsed,
-			day,
-			type,
-			valueToAdd: assetSize,
-		});
-
-	siteScopedStore.requestsMade =
-		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-			combinedStats: siteScopedStore.requestsMade,
-			day,
-			type,
-			valueToAdd: 1,
+			valueToAdd,
 		});
 
 	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
 
-	if (hostOrigin !== assetUrlOrigin) {
-		const crossOriginData =
-			siteScopedStore.crossOrigin[assetUrlOrigin] ??
-			DEFAULT_COMBINED_ASSET_STATISTICS;
+	immer.produce(globalStore, (draft) => {
+		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
+		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
-		siteScopedStore.crossOrigin[assetUrlOrigin] =
-			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-				combinedStats: crossOriginData,
-				day,
-				type,
-				valueToAdd: assetSize,
-			});
-	}
+		if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
+			draft.requestsCompressed = applyToCombinedStats(
+				draft.requestsCompressed,
+				1,
+			);
+		}
+	});
 
-	if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
-		globalStore.requestsCompressed =
-			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-				combinedStats: globalStore.requestsCompressed,
-				day,
-				type,
-				valueToAdd: 1,
-			});
+	immer.produce(siteScopedStore, (draft) => {
+		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
+		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
-		siteScopedStore.requestsCompressed =
-			processAggregateAndDailyStatsFromCombinedStatisticsForDay({
-				combinedStats: siteScopedStore.requestsCompressed,
-				day,
-				type,
-				valueToAdd: 1,
-			});
-	}
+		if (hostOrigin !== assetUrlOrigin) {
+			const existingCrossOrigin =
+				draft.crossOrigin[assetUrlOrigin] ?? DEFAULT_COMBINED_ASSET_STATISTICS;
+
+			draft.crossOrigin[assetUrlOrigin] = applyToCombinedStats(
+				existingCrossOrigin,
+				assetSize,
+			);
+		}
+
+		if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
+			draft.requestsCompressed = applyToCombinedStats(
+				draft.requestsCompressed,
+				1,
+			);
+		}
+	});
 }
 
 function createMergedPayload(
