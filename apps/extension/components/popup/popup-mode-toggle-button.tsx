@@ -87,24 +87,26 @@ export default function PopupModeToggleButton() {
 		}
 	};
 
+	const isMode = createSelector(mode);
+
 	return (
 		<BaseTooltip dir="bottom" tip={<TooltipTip mode={mode()} />}>
 			<BaseButton
-				class={`size-12 min-w-fit transition-all duration-200 ${mode() === "default" ? "btn-success" : mode() === "off" ? "btn-soft" : "btn-secondary"}`}
+				class={`size-12 min-w-fit transition-all duration-200 ${isMode("default") ? "btn-success" : isMode("off") ? "btn-soft" : "btn-secondary"}`}
 				onClick={(_) => handleSettingsToggle()}
 			>
 				<Switch>
-					<Match when={mode() === "default"}>
+					<Match when={isMode("default")}>
 						<Pause />
 						Using Defaults
 					</Match>
 
-					<Match when={mode() === "site"}>
+					<Match when={isMode("site")}>
 						<Pause />
 						Using Site Settings
 					</Match>
 
-					<Match when={mode() === "off"}>
+					<Match when={isMode("off")}>
 						<Play />
 						Off
 					</Match>
