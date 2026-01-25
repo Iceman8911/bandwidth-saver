@@ -1,3 +1,4 @@
+import * as immer from "immer";
 import { Pause, Play } from "lucide-solid";
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import { PopupContext } from "./context";
@@ -63,32 +64,34 @@ export default function PopupModeToggleButton() {
 		const setValue = (settings: typeof DEFAULT_GENERAL_SETTINGS) =>
 			context.generalSettings.item.setValue(settings);
 
-		if (context.scope === "default") {
-			await setValue({ ...oldSettings, enabled: !oldSettings.enabled });
-		} else {
-			// Toggle from "default" to "site" to "off"
+		const getPatchToApply = async (): Promise<
+			Partial<typeof DEFAULT_GENERAL_SETTINGS>
+		> => {
+			if (context.scope === "default") return { enabled: !oldSettings.enabled };
 
-			// Yes, I know there are some redundancies here but I feel this is more explicit
+			// Toggle from "default" to "site" to "off"
 			switch (mode()) {
 				case "default":
-					await setValue({
-						...oldSettings,
+					return {
 						enabled: true,
 						ruleIdOffset: await getAvailableSiteRuleIdOffset(),
-					});
-					break;
+					};
 				case "site":
-					await setValue({
-						...oldSettings,
-						enabled: false,
-						ruleIdOffset: null,
-					});
-					break;
+					return { enabled: false, ruleIdOffset: null };
 				case "off":
-					await setValue({ ...oldSettings, enabled: true, ruleIdOffset: null });
-					break;
+					return { enabled: true, ruleIdOffset: null };
+				default:
+					throw Error(`Didn't account for mode: ${mode()}`);
 			}
-		}
+		};
+
+		const patchToApply = await getPatchToApply();
+
+		const newSettings = immer.produce(oldSettings, (draft) =>
+			Object.assign(draft, patchToApply),
+		);
+
+		await setValue(newSettings);
 	};
 
 	const isMode = createSelector(mode);
