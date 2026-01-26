@@ -19,7 +19,7 @@ export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSite
 		removeRuleIds: [],
 	};
 
-	for (const url of getSiteUrlOrigins()) {
+	for (const url of await getSiteUrlOrigins()) {
 		const { addRules = [], removeRuleIds = [] } = await ruleCb(url);
 
 		ruleUpdatesToApply.addRules?.push(...addRules);
@@ -42,7 +42,7 @@ type RuleAllocationUsage = {
 export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocationUsage> {
 	let used = 0;
 
-	for (const url of getSiteUrlOrigins()) {
+	for (const url of await getSiteUrlOrigins()) {
 		const { ruleIdOffset } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -62,7 +62,7 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 > {
 	const domains: string[] = [];
 
-	for (const url of getSiteUrlOrigins()) {
+	for (const url of await getSiteUrlOrigins()) {
 		const { ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
@@ -78,7 +78,7 @@ export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
 export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
 	const usedRuleIdOffsetPromises: Promise<number | null>[] = [];
 
-	for (const url of getSiteUrlOrigins()) {
+	for (const url of await getSiteUrlOrigins()) {
 		usedRuleIdOffsetPromises.push(
 			getSiteSpecificGeneralSettingsStorageItem(url)
 				.getValue()

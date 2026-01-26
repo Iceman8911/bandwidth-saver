@@ -30,9 +30,24 @@ const onChanged = browser.storage[storageArea].onChanged;
  *
  * On load, it restores persisted data. Occasionally, it writes back the data to disk
  */
-const siteUrlOriginsMemorySet = new Set<UrlSchema>(
-	await getSiteUrlOriginsFromStorage(),
-);
+const _siteUrlOriginsMemorySet = new Set<UrlSchema>();
+
+/** A promise is used over a flag to ensure that only one initialization can happen if 2 or more callers call this at once  */
+let _siteUrlOriginsInitPromise: Promise<Set<UrlSchema>> | null = null;
+
+/** Workaround since top-level await is not allowed in service workers */
+async function getSiteUrlOriginsMemorySet(): Promise<Set<UrlSchema>> {
+	if (_siteUrlOriginsInitPromise) return _siteUrlOriginsInitPromise;
+
+	_siteUrlOriginsInitPromise = (async () => {
+		for (const origin of await getSiteUrlOriginsFromStorage()) {
+			_siteUrlOriginsMemorySet.add(origin);
+		}
+		return _siteUrlOriginsMemorySet;
+	})();
+
+	return _siteUrlOriginsInitPromise;
+}
 
 /** For storing urls encountered in the storage onChanged listener, and flushing them to disk at the end of each batch.
  *
@@ -44,11 +59,13 @@ const siteUrlOriginsBatchQueue = new BatchQueue<UrlSchema>({
 });
 
 siteUrlOriginsBatchQueue.addCallbacks(async (urls) => {
+	const set = await getSiteUrlOriginsMemorySet();
+
 	for (const url of urls) {
-		siteUrlOriginsMemorySet.add(url);
+		set.add(url);
 	}
 
-	await siteUrlOriginsStorageItem.setValue([...siteUrlOriginsMemorySet]);
+	await siteUrlOriginsStorageItem.setValue([...set]);
 });
 
 function extractPossibleUrlFromStorageKey(key: string): UrlSchema | null {
@@ -100,7 +117,6 @@ function recordPossibleSiteOriginsToEnqueue(changes: StorageChanges) {
 
 export function startRecordingPossibleSiteOriginsToEnqueue() {
 	onChanged.removeListener(recordPossibleSiteOriginsToEnqueue);
-
 	onChanged.addListener(recordPossibleSiteOriginsToEnqueue);
 }
 
@@ -108,8 +124,8 @@ export function startRecordingPossibleSiteOriginsToEnqueue() {
  *
  * By vistied, I mean any site that has scoped data changed.
  */
-export function getSiteUrlOrigins(): ReadonlySet<UrlSchema> {
-	return siteUrlOriginsMemorySet;
+export async function getSiteUrlOrigins(): Promise<ReadonlySet<UrlSchema>> {
+	return getSiteUrlOriginsMemorySet();
 }
 
 type StorageChange<TStorageValue> =

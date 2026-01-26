@@ -25,7 +25,7 @@ export function OptionsPageStatisticSummaryTable(
 				[UrlSchema, typeof DEFAULT_SITE_SPECIFIC_STATISTICS]
 			>[] = [];
 
-			for await (const url of getSiteUrlOrigins()) {
+			for (const url of await getSiteUrlOrigins()) {
 				statisticValuePromises.push(
 					getSiteSpecificStatisticsStorageItem(url)
 						.getValue()
