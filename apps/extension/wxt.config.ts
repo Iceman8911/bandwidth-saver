@@ -30,4 +30,8 @@ export default defineConfig({
 			process.env.NODE_ENV === "production" ? InlineEnum() : [],
 		],
 	}),
+	webExt: {
+		// Stop the created chromium instance from flagging bots
+		chromiumArgs: ["--disable-blink-features=AutomationControlled"],
+	},
 });
