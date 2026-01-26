@@ -3,6 +3,7 @@ import { clone } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
 import { storage, type WxtStorageItem } from "wxt/utils/storage";
 import { STORAGE_DEFAULTS } from "@/models/storage";
+import { addCacheSupportToStorageItem } from "@/utils/storage/storage-item-cache";
 import { getUrlSchemaOrigin } from "@/utils/url";
 import { StorageKey } from "./constants";
 

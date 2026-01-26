@@ -188,3 +188,9 @@ export function watchChangesToSiteSpecificGeneralSettings(
 
 	return () => onChanged.removeListener(listener);
 }
+
+// NOTE: The caching proxy helper was moved out of this module to break a circular
+// initialization between `shared/storage.ts` and this file.
+//
+// It now lives in `utils/storage/storage-item-cache.ts` and should be imported
+// from there by modules that define storage items.
