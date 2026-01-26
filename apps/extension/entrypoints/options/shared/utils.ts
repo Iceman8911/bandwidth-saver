@@ -1,4 +1,5 @@
 import type { DEFAULT_COMBINED_ASSET_STATISTICS } from "@/models/storage";
+import { getSumOfValuesInObject } from "@/utils/object";
 import type { OptionsPageUsageOverTimeProps } from "../components/statistic-charts";
 
 export function getDailyStatisticsForWeek(

@@ -1,6 +1,6 @@
 import { getRandomUUID } from "@bandwidth-saver/shared";
 import { FileArchive, Network, Settings } from "lucide-solid";
-import type { JSXElement } from "solid-js";
+import { createSelector, createSignal, type JSXElement } from "solid-js";
 import PopupCompressionSettings from "./popup-compression-settings";
 import PopupOtherSettings from "./popup-other-settings";
 import PopupProxySettings from "./popup-proxy-settings";

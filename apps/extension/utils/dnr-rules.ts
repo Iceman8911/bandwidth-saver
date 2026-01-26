@@ -1,4 +1,5 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { type Browser, browser } from "wxt/browser";
 import { DeclarativeNetRequestRuleIds } from "@/shared/constants";
 import { getSiteSpecificGeneralSettingsStorageItem } from "@/shared/storage";
 import { getSiteUrlOrigins } from "./storage";

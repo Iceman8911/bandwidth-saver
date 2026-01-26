@@ -1,6 +1,17 @@
 import * as immer from "immer";
 import { Pause, Play } from "lucide-solid";
+import {
+	createMemo,
+	createSelector,
+	Match,
+	Show,
+	Switch,
+	useContext,
+} from "solid-js";
 import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import { getAvailableSiteRuleIdOffset } from "@/utils/dnr-rules";
+import { BaseButton } from "../button";
+import { BaseTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 /**

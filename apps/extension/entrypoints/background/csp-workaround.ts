@@ -1,3 +1,4 @@
+import { type Browser, browser } from "wxt/browser";
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
@@ -6,7 +7,10 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
+import {
+	applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites,
+	getSiteDomainsToNotApplyDefaultRule,
+} from "@/utils/dnr-rules";
 import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
 
 const REMOVE_CSP_HEADER_RULES = {

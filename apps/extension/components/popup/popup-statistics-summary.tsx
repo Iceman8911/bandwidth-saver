@@ -1,9 +1,13 @@
 import { getDayStartInMillisecondsUTC } from "@bandwidth-saver/shared";
+import { createMemo, useContext } from "solid-js";
 import { DEFAULT_SITE_SPECIFIC_STATISTICS } from "@/models/storage";
 import {
 	getSiteSpecificStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
+import { getSumOfValuesInObject } from "@/utils/object";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
+import { convertBytesToAppropriateNotation } from "@/utils/size";
 import { PopupContext } from "./context";
 
 export default function PopupStatisticsSummary() {

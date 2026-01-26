@@ -5,6 +5,7 @@ import {
 	on,
 	onCleanup,
 } from "solid-js";
+import { storage, type WxtStorageItem } from "wxt/utils/storage";
 
 export function convertStorageItemToReactiveSignal<TValue>(
 	getStorageItem: Accessor<WxtStorageItem<TValue, Record<string, any>>>,

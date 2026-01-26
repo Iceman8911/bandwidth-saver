@@ -4,7 +4,16 @@ import {
 } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
-import type { SetStoreFunction } from "solid-js/store";
+import {
+	createEffect,
+	createMemo,
+	For,
+	Match,
+	Show,
+	Switch,
+	useContext,
+} from "solid-js";
+import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import { DEFAULT_COMPRESSION_SETTINGS, STORAGE_SCHEMA } from "@/models/storage";
 import { CompressionMode, StorageKey } from "@/shared/constants";
@@ -12,6 +21,9 @@ import {
 	defaultCompressionSettingsStorageItem,
 	getSiteSpecificCompressionSettingsStorageItem,
 } from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
+import { BaseButton } from "../button";
+import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 const COMPRESSION_SCHEMA =

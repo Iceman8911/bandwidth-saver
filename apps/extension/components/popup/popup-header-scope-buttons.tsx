@@ -1,5 +1,7 @@
 import { Globe, Target } from "lucide-solid";
-import type { JSXElement } from "solid-js";
+import { createSelector, type JSXElement, useContext } from "solid-js";
+import { BaseButton } from "../button";
+import { BaseTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type HeaderButtonProps = {

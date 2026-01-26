@@ -1,3 +1,4 @@
+import { BaseButton } from "@/components/button";
 import { ExtensionData } from "@/shared/constants";
 
 function ExtensionLogoAndName() {

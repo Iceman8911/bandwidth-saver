@@ -1,3 +1,4 @@
+import { defineBackground } from "wxt/utils/define-background";
 import { startRecordingPossibleSiteOriginsToEnqueue } from "@/utils/storage";
 import { compressionToggleWatcher } from "./compression";
 import { registerStaticRules } from "./compression/static-rules";

@@ -1,6 +1,6 @@
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
-import { createMemo } from "solid-js";
+import { createEffect, createMemo, Show, useContext } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore } from "solid-js/store";
 import * as v from "valibot";
@@ -11,6 +11,7 @@ import {
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
+import { BaseButton } from "../button";
 import { PopupContext } from "./context";
 
 const PROXY_SCHEMA = STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_PROXY];

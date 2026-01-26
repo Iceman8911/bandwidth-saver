@@ -4,6 +4,7 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
+import { type Browser, browser } from "wxt/browser";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
@@ -15,6 +16,7 @@ import {
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/dnr-rules";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;

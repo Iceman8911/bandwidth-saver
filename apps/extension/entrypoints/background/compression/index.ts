@@ -1,8 +1,10 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { type Browser, browser } from "wxt/browser";
 import {
 	defaultCompressionSettingsStorageItem,
 	defaultGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
 import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
 import {
 	getDefaultProxyCompressionRules,

@@ -3,7 +3,7 @@ import type { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/nativ
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendMessage } from "@/shared/messaging";
-import { detectAssetTypeFromUrl } from "@/utils/url";
+import { detectAssetTypeFromUrl, getUrlSchemaOrigin } from "@/utils/url";
 
 type PerformanceResourceTimingPayload = {
 	initiatorType: string;

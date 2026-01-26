@@ -1,3 +1,4 @@
+import { browser } from "wxt/browser";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 
 export async function getActiveTabUrl(): Promise<URL> {

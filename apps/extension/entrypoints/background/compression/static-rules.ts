@@ -2,6 +2,7 @@ import {
 	ImageCompressorEndpoint,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 } from "@bandwidth-saver/shared";
+import { type Browser, browser } from "wxt/browser";
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,

@@ -2,6 +2,7 @@ import {
 	customProxyUrlConstructor,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
+import { type Browser, browser } from "wxt/browser";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
@@ -15,6 +16,7 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
+import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/dnr-rules";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;

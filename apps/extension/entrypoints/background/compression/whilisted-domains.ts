@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { browser } from "wxt/browser";
 import DEFAULT_COMPRESSION_WHITELISTED_DOMAIN_JSON from "@/data/compression-whilelisted-domains.json";
 import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
 import { UPDATE_INTERVAL_IN_MINUTES } from "@/shared/constants";

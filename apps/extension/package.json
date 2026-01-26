@@ -41,7 +41,6 @@
 		"dev:firefox": "wxt -b firefox",
 		"format": "biome format ./ --write",
 		"lint": "biome lint ./ --write",
-		"postinstall": "wxt prepare",
 		"start": "echo 'No start command for extension'",
 		"test": "vitest"
 	},

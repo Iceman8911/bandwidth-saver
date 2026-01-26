@@ -1,13 +1,15 @@
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
-import { createMemo } from "solid-js";
-import type { SetStoreFunction } from "solid-js/store";
+import { createEffect, createMemo, Show, useContext } from "solid-js";
+import { createStore, type SetStoreFunction } from "solid-js/store";
 import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
+import { BaseButton } from "../button";
+import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type GENERAL_SCHEMA = typeof DEFAULT_GENERAL_SETTINGS;

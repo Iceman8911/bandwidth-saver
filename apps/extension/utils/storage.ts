@@ -1,5 +1,6 @@
 import { BatchQueue, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
+import { type Browser, browser } from "wxt/browser";
 import { type STORAGE_DEFAULTS, StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import { siteUrlOriginsStorageItem } from "@/shared/storage";

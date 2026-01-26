@@ -9,9 +9,11 @@ import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import "chartist/dist/index.css";
 import "./bandwidth-usage.css";
 import { capitalizeString } from "@bandwidth-saver/shared";
-import type { JSXElement } from "solid-js";
-import { convertBytesToMB } from "#imports";
-import { convertBytesToAppropriateNotation } from "@/utils/size";
+import { createEffect, createMemo, type JSXElement } from "solid-js";
+import {
+	convertBytesToAppropriateNotation,
+	convertBytesToMB,
+} from "@/utils/size";
 
 function extractMonthAndDayOfMonthFromDate(date: Date): string {
 	// TODO: deal with locale issues

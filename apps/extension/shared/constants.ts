@@ -1,6 +1,8 @@
 /** biome-ignore-all lint/style/useLiteralEnumMembers: <I like it:p> */
 import { type ObjectToEnum, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
+import type { Browser } from "wxt/browser";
+import type { StorageItemKey } from "wxt/utils/storage";
 
 export enum ExtensionData {
 	NAME = "Bandwidth Saver and Monitor",

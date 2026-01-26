@@ -1,6 +1,6 @@
 import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
-
+import { defineContentScript } from "wxt/utils/define-content-script";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,

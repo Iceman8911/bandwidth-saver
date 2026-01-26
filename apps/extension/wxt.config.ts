@@ -5,6 +5,8 @@ import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+	/** Sometimes, *magical* stuff happens so these may not work  */
+	imports: false,
 	manifest: {
 		author: { email: "wuchijss3@gmail.com" },
 		description:

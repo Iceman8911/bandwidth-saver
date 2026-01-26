@@ -1,5 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
+import { createEffect, createMemo } from "solid-js";
+import { produce } from "solid-js/store";
 import { PopupContext } from "@/components/popup/context";
 import PopupFooterContent from "@/components/popup/popup-footer-content";
 import PopupHeaderScopeButtons from "@/components/popup/popup-header-scope-buttons";
@@ -12,6 +14,7 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
+import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { getActiveTabUrl } from "@/utils/tabs";
 
 export default function App() {
