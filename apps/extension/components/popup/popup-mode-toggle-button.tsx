@@ -110,7 +110,7 @@ export default function PopupModeToggleButton() {
 	return (
 		<BaseTooltip dir="bottom" tip={<TooltipTip mode={mode()} />}>
 			<BaseButton
-				class={`size-12 min-w-fit transition-all duration-200 ${isMode("default") ? "btn-success" : isMode("off") ? "btn-soft" : "btn-secondary"}`}
+				class={`btn-soft size-12 min-w-fit transition-all duration-200 ${isMode("default") ? "btn-success" : isMode("off") ? "" : "btn-secondary"}`}
 				onClick={(_) => handleSettingsToggle()}
 			>
 				<Switch>

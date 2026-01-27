@@ -61,7 +61,7 @@ export default function App() {
 					<div class="flex items-center justify-around">
 						<PopupModeToggleButton />
 
-						<h1 class="max-w-36 text-center font-semibold text-base text-primary">
+						<h1 class="max-w-36 text-center font-semibold text-base">
 							Bandwidth Saver & Monitor
 						</h1>
 					</div>

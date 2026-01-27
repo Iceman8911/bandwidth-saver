@@ -42,7 +42,7 @@ export default function PopupStatisticsSummary() {
 	});
 
 	return (
-		<div class="grid size-full grid-cols-2 grid-rows-2 place-items-center gap-2 rounded-box bg-base-200 p-2 text-info">
+		<div class="grid size-full grid-cols-2 grid-rows-2 place-items-center gap-2 rounded-box bg-base-200 p-2">
 			<div>
 				Requests Made:{" "}
 				<span class="font-semibold">

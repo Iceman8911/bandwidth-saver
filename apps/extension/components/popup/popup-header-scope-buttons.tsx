@@ -31,7 +31,7 @@ export default function PopupHeaderScopeButtons() {
 	return (
 		<header class="flex size-full">
 			<HeaderButton
-				class={`btn-primary w-1/2 rounded-r-none ${isScopeSelected("default") ? "" : "btn-soft"}`}
+				class={`w-1/2 rounded-r-none ${isScopeSelected("default") ? "btn-primary" : "btn-soft"}`}
 				onClick={() => setScope("default")}
 				tip={
 					<>
@@ -44,7 +44,7 @@ export default function PopupHeaderScopeButtons() {
 			</HeaderButton>
 
 			<HeaderButton
-				class={`btn-secondary w-1/2 rounded-l-none ${isScopeSelected("site") ? "" : "btn-soft"}`}
+				class={`w-1/2 rounded-l-none ${isScopeSelected("site") ? "btn-primary" : "btn-soft"}`}
 				onClick={() => setScope("site")}
 				tip={
 					<>

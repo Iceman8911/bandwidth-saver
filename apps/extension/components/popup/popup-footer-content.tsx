@@ -7,7 +7,7 @@ export default function PopupFooterContent() {
 			<span>Made with love :3</span>
 
 			<BaseButton
-				class="btn-primary btn-soft"
+				class="btn-soft"
 				onClick={() => void browser.runtime.openOptionsPage()}
 			>
 				Options
