@@ -1,8 +1,8 @@
 import * as v from "valibot";
-import { browser } from "wxt/browser";
+import { type Browser, browser } from "wxt/browser";
 import DEFAULT_COMPRESSION_WHITELISTED_DOMAIN_JSON from "@/data/compression-whilelisted-domains.json";
 import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
-import { UPDATE_INTERVAL_IN_MINUTES } from "@/shared/constants";
+import { ALARM_NAME, UPDATE_INTERVAL_IN_MINUTES } from "@/shared/constants";
 
 const REMOTE_COMPRESSION_WHITELISTED_DOMAIN_URL =
 	"https://raw.githubusercontent.com/iceman8911/bandwidth-saver/main/packages/extension/data/compression-whilelisted-domains.json";
@@ -29,12 +29,20 @@ async function getUpToDateWhitelistedDomains(): Promise<ReadonlyArray<string>> {
 	}
 }
 
-browser.alarms.create(
-	{ periodInMinutes: UPDATE_INTERVAL_IN_MINUTES },
-	async () => {
-		whitelistedDomains = await getUpToDateWhitelistedDomains();
-	},
-);
+const alarms = browser.alarms;
+
+alarms.create(ALARM_NAME.WHITELISTED_DOMAIN_SYNC, {
+	periodInMinutes: UPDATE_INTERVAL_IN_MINUTES,
+});
+
+async function whitelistedDomainsSyncListener(alarm: Browser.alarms.Alarm) {
+	if (alarm.name !== ALARM_NAME.WHITELISTED_DOMAIN_SYNC) return;
+
+	whitelistedDomains = await getUpToDateWhitelistedDomains();
+}
+
+alarms.onAlarm.removeListener(whitelistedDomainsSyncListener);
+alarms.onAlarm.addListener(whitelistedDomainsSyncListener);
 
 export function getWhitelistedDomains(): ReadonlyArray<string> {
 	return whitelistedDomains;
