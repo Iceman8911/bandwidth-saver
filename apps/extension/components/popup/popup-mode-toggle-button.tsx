@@ -8,7 +8,7 @@ import {
 	Switch,
 	useContext,
 } from "solid-js";
-import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { GeneralSettingsSchema } from "@/models/storage";
 import { getAvailableSiteRuleIdOffset } from "@/utils/dnr-rules";
 import { BaseButton } from "../button";
 import { BaseTooltip } from "../tooltip";
@@ -72,11 +72,11 @@ export default function PopupModeToggleButton() {
 	const handleSettingsToggle = async () => {
 		const oldSettings = context.generalSettings.val;
 
-		const setValue = (settings: typeof DEFAULT_GENERAL_SETTINGS) =>
+		const setValue = (settings: GeneralSettingsSchema) =>
 			context.generalSettings.item.setValue(settings);
 
 		const getPatchToApply = async (): Promise<
-			Partial<typeof DEFAULT_GENERAL_SETTINGS>
+			Partial<GeneralSettingsSchema>
 		> => {
 			if (context.scope === "default") return { enabled: !oldSettings.enabled };
 

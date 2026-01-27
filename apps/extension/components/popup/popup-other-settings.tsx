@@ -2,7 +2,10 @@ import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
 import { createEffect, createMemo, Show, useContext } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
-import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import {
+	DEFAULT_GENERAL_SETTINGS,
+	type GeneralSettingsSchema,
+} from "@/models/storage";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
@@ -12,11 +15,9 @@ import { BaseButton } from "../button";
 import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
-type GENERAL_SCHEMA = typeof DEFAULT_GENERAL_SETTINGS;
-
 type TempGeneralSettingsProps = {
-	store: GENERAL_SCHEMA;
-	set: SetStoreFunction<GENERAL_SCHEMA>;
+	store: GeneralSettingsSchema;
+	set: SetStoreFunction<GeneralSettingsSchema>;
 };
 
 function CspBypassTooltip() {

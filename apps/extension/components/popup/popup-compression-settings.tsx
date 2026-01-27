@@ -15,8 +15,11 @@ import {
 } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
-import { DEFAULT_COMPRESSION_SETTINGS, STORAGE_SCHEMA } from "@/models/storage";
-import { CompressionMode, StorageKey } from "@/shared/constants";
+import {
+	CompressionSettingsSchema,
+	DEFAULT_COMPRESSION_SETTINGS,
+} from "@/models/storage";
+import { CompressionMode } from "@/shared/constants";
 import {
 	defaultCompressionSettingsStorageItem,
 	getSiteSpecificCompressionSettingsStorageItem,
@@ -26,20 +29,16 @@ import { BaseButton } from "../button";
 import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
-const COMPRESSION_SCHEMA =
-	STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_COMPRESSION];
-type COMPRESSION_SCHEMA = v.InferOutput<typeof COMPRESSION_SCHEMA>;
-
 const COMPRESSION_FORMATS = [
 	"auto",
 	"avif",
 	"jpg",
 	"webp",
-] as const satisfies COMPRESSION_SCHEMA["format"][];
+] as const satisfies CompressionSettingsSchema["format"][];
 
 type TempCompressionSettingsProps = {
-	store: COMPRESSION_SCHEMA;
-	set: SetStoreFunction<COMPRESSION_SCHEMA>;
+	store: CompressionSettingsSchema;
+	set: SetStoreFunction<CompressionSettingsSchema>;
 };
 
 function CompressionFormatSelect(props: TempCompressionSettingsProps) {
@@ -55,7 +54,7 @@ function CompressionFormatSelect(props: TempCompressionSettingsProps) {
 				onInput={(e) =>
 					props.set(
 						"format",
-						v.parse(COMPRESSION_SCHEMA.entries.format, e.target.value),
+						v.parse(CompressionSettingsSchema.entries.format, e.target.value),
 					)
 				}
 			>
@@ -126,7 +125,7 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 				onInput={(e) =>
 					props.set(
 						"mode",
-						v.parse(COMPRESSION_SCHEMA.entries.mode, e.target.value),
+						v.parse(CompressionSettingsSchema.entries.mode, e.target.value),
 					)
 				}
 			>
@@ -162,7 +161,7 @@ function PreferredEndpointSelect(props: TempCompressionSettingsProps) {
 					props.set(
 						"preferredEndpoint",
 						v.parse(
-							COMPRESSION_SCHEMA.entries.preferredEndpoint,
+							CompressionSettingsSchema.entries.preferredEndpoint,
 							e.target.value,
 						),
 					)

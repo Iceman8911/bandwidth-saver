@@ -2,7 +2,21 @@ import type { UrlSchema } from "@bandwidth-saver/shared";
 import { clone } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
 import { storage, type WxtStorageItem } from "wxt/utils/storage";
-import { STORAGE_DEFAULTS } from "@/models/storage";
+import {
+	type CompressionSettingsSchema,
+	DEFAULT_COMPRESSION_SETTINGS,
+	DEFAULT_GENERAL_SETTINGS,
+	DEFAULT_PROXY_SETTINGS,
+	DEFAULT_SCHEMA_VERSION,
+	DEFAULT_SITE_SPECIFIC_STATISTICS,
+	DEFAULT_SITE_URL_ORIGINS,
+	DEFAULT_STATISTICS,
+	type DetailedStatisticsSchema,
+	type GeneralSettingsSchema,
+	type ProxySettingsSchema,
+	type SiteUrlOriginsSchema,
+	type StatisticsSchema,
+} from "@/models/storage";
 import { addCacheSupportToStorageItem } from "@/utils/storage/storage-item-cache";
 import { getUrlSchemaOrigin } from "@/utils/url";
 import { StorageKey } from "./constants";
@@ -22,80 +36,69 @@ const {
 
 export const schemaVersionStorageItem = addCacheSupportToStorageItem(
 	storage.defineItem(SCHEMA_VERSION, {
-		fallback: clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
-		init: () => clone(STORAGE_DEFAULTS[SCHEMA_VERSION]),
+		fallback: clone(DEFAULT_SCHEMA_VERSION),
+		init: () => clone(DEFAULT_SCHEMA_VERSION),
 	}),
 );
 
 export const siteUrlOriginsStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem(SITE_URL_ORIGINS, {
-		fallback: clone(STORAGE_DEFAULTS[SITE_URL_ORIGINS]),
-		init: () => clone(STORAGE_DEFAULTS[SITE_URL_ORIGINS]),
+	storage.defineItem<SiteUrlOriginsSchema>(SITE_URL_ORIGINS, {
+		fallback: clone(DEFAULT_SITE_URL_ORIGINS),
+		init: () => clone(DEFAULT_SITE_URL_ORIGINS),
 	}),
 );
 
 export const defaultGeneralSettingsStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem(DEFAULT_SETTINGS_GENERAL, {
-		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
-		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
+	storage.defineItem<GeneralSettingsSchema>(DEFAULT_SETTINGS_GENERAL, {
+		fallback: clone(DEFAULT_GENERAL_SETTINGS),
+		init: () => clone(DEFAULT_GENERAL_SETTINGS),
 	}),
 );
 
 export const defaultCompressionSettingsStorageItem =
 	addCacheSupportToStorageItem(
-		storage.defineItem(DEFAULT_SETTINGS_COMPRESSION, {
-			fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
-			init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
-		}),
+		storage.defineItem<CompressionSettingsSchema>(
+			DEFAULT_SETTINGS_COMPRESSION,
+			{
+				fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
+				init: () => clone(DEFAULT_COMPRESSION_SETTINGS),
+			},
+		),
 	);
 
 export const defaultProxySettingsStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem(DEFAULT_SETTINGS_PROXY, {
-		fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
-		init: () => clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
+	storage.defineItem<ProxySettingsSchema>(DEFAULT_SETTINGS_PROXY, {
+		fallback: clone(DEFAULT_PROXY_SETTINGS),
+		init: () => clone(DEFAULT_PROXY_SETTINGS),
 	}),
 );
 
 export const statisticsStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem(STATISTICS, {
-		fallback: clone(STORAGE_DEFAULTS[STATISTICS]),
-		init: () => clone(STORAGE_DEFAULTS[STATISTICS]),
+	storage.defineItem<StatisticsSchema>(STATISTICS, {
+		fallback: clone(DEFAULT_STATISTICS),
+		init: () => clone(DEFAULT_STATISTICS),
 	}),
 );
 
 const CACHE_SIZE = 100;
 
 const siteSpecificStatisticsStorageItemCache =
-	lru<
-		WxtStorageItem<
-			(typeof STORAGE_DEFAULTS)[typeof SITE_SPECIFIC_STATISTICS_PREFIX],
-			Record<string, unknown>
-		>
-	>(CACHE_SIZE);
+	lru<WxtStorageItem<DetailedStatisticsSchema, Record<string, unknown>>>(
+		CACHE_SIZE,
+	);
 
 const siteSpecificGeneralSettingsStorageItemCache =
-	lru<
-		WxtStorageItem<
-			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_GENERAL],
-			Record<string, unknown>
-		>
-	>(CACHE_SIZE);
+	lru<WxtStorageItem<GeneralSettingsSchema, Record<string, unknown>>>(
+		CACHE_SIZE,
+	);
 
 const siteSpecificCompressionSettingsStorageItemCache =
-	lru<
-		WxtStorageItem<
-			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_COMPRESSION],
-			Record<string, unknown>
-		>
-	>(CACHE_SIZE);
+	lru<WxtStorageItem<CompressionSettingsSchema, Record<string, unknown>>>(
+		CACHE_SIZE,
+	);
 
 const siteSpecificProxySettingsStorageItemCache =
-	lru<
-		WxtStorageItem<
-			(typeof STORAGE_DEFAULTS)[typeof DEFAULT_SETTINGS_PROXY],
-			Record<string, unknown>
-		>
-	>(CACHE_SIZE);
+	lru<WxtStorageItem<ProxySettingsSchema, Record<string, unknown>>>(CACHE_SIZE);
 
 export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	const key =
@@ -107,9 +110,9 @@ export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem(key, {
-			fallback: clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
-			init: () => clone(STORAGE_DEFAULTS[SITE_SPECIFIC_STATISTICS_PREFIX]),
+		storage.defineItem<DetailedStatisticsSchema>(key, {
+			fallback: clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
+			init: () => clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
 		}),
 	);
 
@@ -128,8 +131,8 @@ export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem(key, {
-			fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_GENERAL]),
+		storage.defineItem<GeneralSettingsSchema>(key, {
+			fallback: clone(DEFAULT_GENERAL_SETTINGS),
 			init: defaultGeneralSettingsStorageItem.getValue,
 		}),
 	);
@@ -151,8 +154,8 @@ export const getSiteSpecificCompressionSettingsStorageItem = (
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem(key, {
-			fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_COMPRESSION]),
+		storage.defineItem<CompressionSettingsSchema>(key, {
+			fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
 			init: defaultCompressionSettingsStorageItem.getValue,
 		}),
 	);
@@ -172,8 +175,8 @@ export const getSiteSpecificProxySettingsStorageItem = (url: UrlSchema) => {
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
 	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem(key, {
-			fallback: clone(STORAGE_DEFAULTS[DEFAULT_SETTINGS_PROXY]),
+		storage.defineItem<ProxySettingsSchema>(key, {
+			fallback: clone(DEFAULT_PROXY_SETTINGS),
 			init: defaultProxySettingsStorageItem.getValue,
 		}),
 	);

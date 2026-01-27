@@ -4,8 +4,7 @@ import { createEffect, createMemo, Show, useContext } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore } from "solid-js/store";
 import * as v from "valibot";
-import { DEFAULT_PROXY_SETTINGS, STORAGE_SCHEMA } from "@/models/storage";
-import { StorageKey } from "@/shared/constants";
+import { DEFAULT_PROXY_SETTINGS, ProxySettingsSchema } from "@/models/storage";
 import {
 	defaultProxySettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
@@ -14,12 +13,9 @@ import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { BaseButton } from "../button";
 import { PopupContext } from "./context";
 
-const PROXY_SCHEMA = STORAGE_SCHEMA[StorageKey.DEFAULT_SETTINGS_PROXY];
-type PROXY_SCHEMA = v.InferOutput<typeof PROXY_SCHEMA>;
-
 type TempProxySettingsProps = {
-	store: PROXY_SCHEMA;
-	set: SetStoreFunction<PROXY_SCHEMA>;
+	store: ProxySettingsSchema;
+	set: SetStoreFunction<ProxySettingsSchema>;
 };
 
 function ProxyHostInput(props: TempProxySettingsProps) {
@@ -92,7 +88,7 @@ export default function PopupProxySettings() {
 	const handleUpdateProxySettings = (e: SubmitEvent) => {
 		e.preventDefault();
 
-		const parsedProxySettings = v.parse(PROXY_SCHEMA, tempProxySettings);
+		const parsedProxySettings = v.parse(ProxySettingsSchema, tempProxySettings);
 
 		proxySettingsStorageItem().setValue(parsedProxySettings);
 	};

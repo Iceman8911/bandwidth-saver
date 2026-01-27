@@ -1,6 +1,4 @@
 import {
-	type AnyValibotSchema,
-	clone,
 	getExtensionEnv,
 	ImageCompressorEndpoint,
 	ImageFormatSchema,
@@ -8,7 +6,7 @@ import {
 	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import { CompressionMode, ExtensionData, StorageKey } from "@/shared/constants";
+import { CompressionMode, ExtensionData } from "@/shared/constants";
 
 export const StorageAreaSchema = v.picklist([
 	"local",
@@ -18,7 +16,7 @@ export const StorageAreaSchema = v.picklist([
 ]);
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
-const GeneralSettingsSchema = v.object({
+export const GeneralSettingsSchema = v.object({
 	/** If  disabled, all blocking rules are effectively disabled */
 	block: v.boolean(),
 
@@ -49,8 +47,9 @@ const GeneralSettingsSchema = v.object({
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 });
+export type GeneralSettingsSchema = v.InferOutput<typeof GeneralSettingsSchema>;
 
-const CompressionSettingsSchema = v.object({
+export const CompressionSettingsSchema = v.object({
 	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
 	format: ImageFormatSchema,
 	mode: v.enum(CompressionMode),
@@ -60,11 +59,15 @@ const CompressionSettingsSchema = v.object({
 	preserveAnim: v.boolean(),
 	quality: NumberBetween1and100Inclusively,
 });
+export type CompressionSettingsSchema = v.InferOutput<
+	typeof CompressionSettingsSchema
+>;
 
-const ProxySettingsSchema = v.object({
+export const ProxySettingsSchema = v.object({
 	host: v.pipe(v.string(), v.minLength(1), v.trim()),
 	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
 });
+export type ProxySettingsSchema = v.InferOutput<typeof ProxySettingsSchema>;
 
 const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.number(),
@@ -100,7 +103,7 @@ export type CombinedAssetStatisticsSchema = v.InferOutput<
 	typeof CombinedAssetStatisticsSchema
 >;
 
-const StatisticsSchema = v.object({
+export const StatisticsSchema = v.object({
 	// Maybe I can monitor the original requests for their (content-length) before the redirect? But this is be pretty inaccurate anyway since some sites just don't include it.
 	bytesSaved: CombinedAssetStatisticsSchema,
 
@@ -115,8 +118,9 @@ const StatisticsSchema = v.object({
 	/** Amount of non-cached requests made by site(s) in total */
 	requestsMade: CombinedAssetStatisticsSchema,
 });
+export type StatisticsSchema = v.InferOutput<typeof StatisticsSchema>;
 
-const DetailedStatisticsSchema = v.object({
+export const DetailedStatisticsSchema = v.object({
 	...StatisticsSchema.entries,
 
 	/** Requests from external sources that should technically be counted under the host's origin and not their standalone entries since they were created there.
@@ -125,44 +129,36 @@ const DetailedStatisticsSchema = v.object({
 	 */
 	crossOrigin: v.record(UrlSchema, CombinedAssetStatisticsSchema),
 });
+export type DetailedStatisticsSchema = v.InferOutput<
+	typeof DetailedStatisticsSchema
+>;
 
-const SchemaVersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
+export const SchemaVersionSchema = v.pipe(
+	v.number(),
+	v.integer(),
+	v.minValue(1),
+);
+export type SchemaVersionSchema = v.InferOutput<typeof SchemaVersionSchema>;
 
-const SiteUrlOriginsSchema = v.array(UrlSchema);
-
-export const STORAGE_SCHEMA = {
-	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: CompressionSettingsSchema,
-	[StorageKey.DEFAULT_SETTINGS_PROXY]: ProxySettingsSchema,
-	[StorageKey.DEFAULT_SETTINGS_GENERAL]: GeneralSettingsSchema,
-
-	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]:
-		CompressionSettingsSchema,
-	[StorageKey.SITE_SPECIFIC_SETTINGS_PROXY_PREFIX]: ProxySettingsSchema,
-	[StorageKey.SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX]: GeneralSettingsSchema,
-
-	[StorageKey.STATISTICS]: StatisticsSchema,
-	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: DetailedStatisticsSchema,
-
-	[StorageKey.SCHEMA_VERSION]: SchemaVersionSchema,
-	[StorageKey.SITE_URL_ORIGINS]: SiteUrlOriginsSchema,
-} as const satisfies Record<StorageKey, AnyValibotSchema>;
+export const SiteUrlOriginsSchema = v.array(UrlSchema);
+export type SiteUrlOriginsSchema = v.InferOutput<typeof SiteUrlOriginsSchema>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
-export const DEFAULT_COMPRESSION_SETTINGS = v.parse(CompressionSettingsSchema, {
+export const DEFAULT_COMPRESSION_SETTINGS = {
 	format: "webp",
 	mode: CompressionMode.SIMPLE,
 	preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
 	preserveAnim: false,
 	quality: 60,
-} as const satisfies v.InferOutput<typeof CompressionSettingsSchema>);
+} as const satisfies CompressionSettingsSchema;
 
-export const DEFAULT_PROXY_SETTINGS = v.parse(ProxySettingsSchema, {
+export const DEFAULT_PROXY_SETTINGS = {
 	host: VITE_SERVER_HOST,
 	port: VITE_SERVER_PORT,
-} as const satisfies v.InferOutput<typeof ProxySettingsSchema>);
+} as const satisfies ProxySettingsSchema;
 
-export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
+export const DEFAULT_GENERAL_SETTINGS = {
 	block: true,
 	bypassCsp: false,
 	compression: true,
@@ -171,78 +167,38 @@ export const DEFAULT_GENERAL_SETTINGS = v.parse(GeneralSettingsSchema, {
 	noAutoplay: true,
 	ruleIdOffset: null,
 	saveData: true,
-} as const satisfies v.InferOutput<typeof GeneralSettingsSchema>);
+} as const satisfies GeneralSettingsSchema;
 
-export const DEFAULT_SINGLE_ASSET_STATISTICS = v.parse(
-	SingleAssetStatisticsSchema,
-	{
-		audio: 0,
-		font: 0,
-		html: 0,
-		image: 0,
-		other: 0,
-		script: 0,
-		style: 0,
-		video: 0,
-	} as const satisfies SingleAssetStatisticsSchema,
-);
+export const DEFAULT_SINGLE_ASSET_STATISTICS = {
+	audio: 0,
+	font: 0,
+	html: 0,
+	image: 0,
+	other: 0,
+	script: 0,
+	style: 0,
+	video: 0,
+} as const satisfies SingleAssetStatisticsSchema;
 
-export const DEFAULT_COMBINED_ASSET_STATISTICS = v.parse(
-	CombinedAssetStatisticsSchema,
-	{
-		aggregate: { ...DEFAULT_SINGLE_ASSET_STATISTICS },
-		dailyStats: [],
-	} as const satisfies CombinedAssetStatisticsSchema,
-);
+export const DEFAULT_COMBINED_ASSET_STATISTICS = {
+	aggregate: DEFAULT_SINGLE_ASSET_STATISTICS,
+	dailyStats: [],
+} as const satisfies CombinedAssetStatisticsSchema;
 
-export const DEFAULT_STATISTICS = v.parse(StatisticsSchema, {
+export const DEFAULT_STATISTICS = {
 	bytesSaved: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	bytesUsed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsCompressed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsMade: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
-} as const satisfies v.InferOutput<typeof StatisticsSchema>);
+} as const satisfies StatisticsSchema;
 
-export const DEFAULT_SITE_SPECIFIC_STATISTICS = v.parse(
-	DetailedStatisticsSchema,
-	{ ...DEFAULT_STATISTICS, crossOrigin: {} } as const satisfies v.InferOutput<
-		typeof DetailedStatisticsSchema
-	>,
-);
+export const DEFAULT_SITE_SPECIFIC_STATISTICS = {
+	...DEFAULT_STATISTICS,
+	crossOrigin: {},
+} as const satisfies DetailedStatisticsSchema;
 
-const DEFAULT_SCHEMA_VERSION = v.parse(
-	SchemaVersionSchema,
-	ExtensionData.VERSION,
-);
+export const DEFAULT_SCHEMA_VERSION =
+	ExtensionData.VERSION as const satisfies SchemaVersionSchema;
 
-export const STORAGE_DEFAULTS = {
-	[StorageKey.DEFAULT_SETTINGS_COMPRESSION]: clone(
-		DEFAULT_COMPRESSION_SETTINGS,
-	),
-	[StorageKey.DEFAULT_SETTINGS_PROXY]: clone(DEFAULT_PROXY_SETTINGS),
-	[StorageKey.DEFAULT_SETTINGS_GENERAL]: clone(DEFAULT_GENERAL_SETTINGS),
-
-	[StorageKey.SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX]: clone(
-		DEFAULT_COMPRESSION_SETTINGS,
-	),
-	[StorageKey.SITE_SPECIFIC_SETTINGS_PROXY_PREFIX]: clone(
-		DEFAULT_PROXY_SETTINGS,
-	),
-	[StorageKey.SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX]: clone(
-		DEFAULT_GENERAL_SETTINGS,
-	),
-
-	[StorageKey.STATISTICS]: clone(DEFAULT_STATISTICS),
-	[StorageKey.SITE_SPECIFIC_STATISTICS_PREFIX]: clone(
-		DEFAULT_SITE_SPECIFIC_STATISTICS,
-	),
-
-	[StorageKey.SCHEMA_VERSION]: DEFAULT_SCHEMA_VERSION,
-
-	[StorageKey.SITE_URL_ORIGINS]: [] as v.InferOutput<
-		typeof SiteUrlOriginsSchema
-	>,
-} as const satisfies {
-	[STORAGE_KEY in keyof typeof STORAGE_SCHEMA]: v.InferOutput<
-		(typeof STORAGE_SCHEMA)[STORAGE_KEY]
-	>;
-};
+export const DEFAULT_SITE_URL_ORIGINS =
+	[] as const satisfies SiteUrlOriginsSchema;
