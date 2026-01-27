@@ -7,8 +7,12 @@ import {
 } from "@bandwidth-saver/shared";
 import * as immer from "immer";
 import {
+	type CombinedAssetStatisticsSchema,
 	DEFAULT_COMBINED_ASSET_STATISTICS,
 	DEFAULT_SINGLE_ASSET_STATISTICS,
+	type DetailedStatisticsSchema,
+	type SingleAssetStatisticsSchema,
+	type StatisticsSchema,
 } from "@/models/storage";
 import {
 	DUMMY_TAB_URL,
@@ -37,15 +41,6 @@ type BandwidthRawDataPayload = {
 	lastUpdatedAtMs: number;
 };
 
-type CombinedStatsStoreValue = Awaited<
-	ReturnType<typeof statisticsStorageItem.getValue>
->;
-type SiteStatsStoreValue = Awaited<
-	ReturnType<
-		Awaited<ReturnType<typeof getSiteSpecificStatisticsStorageItem>>["getValue"]
-	>
->;
-
 const pendingBandwidthMeasurementsByUrl = new Map<
 	UrlSchema,
 	BandwidthRawDataPayload
@@ -54,7 +49,7 @@ const dirtyAssetUrls = new Set<UrlSchema>();
 
 /** Returns the overload of keys that don't fit within the limit */
 function getOverloadDailyStatsKeys(
-	dailyStats: typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats,
+	dailyStats: CombinedAssetStatisticsSchema["dailyStats"],
 ): number[] {
 	const rawDays: ReadonlyArray<string> = Object.keys(dailyStats);
 
@@ -71,11 +66,11 @@ function getOverloadDailyStatsKeys(
 }
 
 function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
-	combinedStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS>;
+	combinedStats: CombinedAssetStatisticsSchema;
 	day: number;
-	type: keyof typeof DEFAULT_SINGLE_ASSET_STATISTICS;
+	type: keyof SingleAssetStatisticsSchema;
 	valueToAdd: number;
-}): typeof DEFAULT_COMBINED_ASSET_STATISTICS {
+}): CombinedAssetStatisticsSchema {
 	const { valueToAdd, combinedStats: oldCombinedStats, day, type } = arg;
 
 	const newCombinedStats = immer.produce(
@@ -110,11 +105,11 @@ function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
 
 function applyBandwidthDataToStores(
 	data: BandwidthMonitoringMessagePayload,
-	globalStore: CombinedStatsStoreValue,
-	siteScopedStore: SiteStatsStoreValue,
+	globalStore: StatisticsSchema,
+	siteScopedStore: DetailedStatisticsSchema,
 ): {
-	globalStore: CombinedStatsStoreValue;
-	siteScopedStore: SiteStatsStoreValue;
+	globalStore: StatisticsSchema;
+	siteScopedStore: DetailedStatisticsSchema;
 } {
 	const { bytes: assetSize, type, assetUrl, hostOrigin } = data;
 
@@ -123,7 +118,7 @@ function applyBandwidthDataToStores(
 	const day = getDayStartInMillisecondsUTC();
 
 	const applyToCombinedStats = (
-		combinedStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS>,
+		combinedStats: CombinedAssetStatisticsSchema,
 		valueToAdd: number,
 	) =>
 		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
@@ -318,7 +313,7 @@ pendingFlushUrlBatchQueue.addCallbacks(async (urls) => {
 			UrlSchema,
 			{
 				storageItem: ReturnType<typeof getSiteSpecificStatisticsStorageItem>;
-				value: SiteStatsStoreValue;
+				value: DetailedStatisticsSchema;
 			}
 		>();
 
