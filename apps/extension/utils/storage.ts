@@ -109,7 +109,8 @@ function recordPossibleSiteOriginsToEnqueue(changes: StorageChanges) {
 	for (const storageKey in changes) {
 		const url = extractPossibleUrlFromStorageKey(storageKey);
 
-		if (!url) continue;
+		// Only queue valid, non-extension urls
+		if (!url || url.includes("extension://")) continue;
 
 		siteUrlOriginsBatchQueue.enqueue(url);
 	}
