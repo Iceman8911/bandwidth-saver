@@ -498,14 +498,16 @@ async function oldDailyStatsAggregatorListener(alarm: Browser.alarms.Alarm) {
 	await storage.setItems(storageKeysAndUpdatedValuesArray);
 }
 
+const alarms = browser.alarms;
+
 export function createDailyAlarmForAggregatingOldDailyStats() {
-	browser.alarms.create(
+	alarms.create(
 		ALARM_NAME.AGGREGATE_OLD_DAILY_STATS,
 		// 1 day
 		{ periodInMinutes: 60 * 24 },
 	);
 
-	browser.alarms.onAlarm.removeListener(oldDailyStatsAggregatorListener);
+	alarms.onAlarm.removeListener(oldDailyStatsAggregatorListener);
 
-	browser.alarms.onAlarm.addListener(oldDailyStatsAggregatorListener);
+	alarms.onAlarm.addListener(oldDailyStatsAggregatorListener);
 }
