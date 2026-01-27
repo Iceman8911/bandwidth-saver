@@ -46,6 +46,9 @@ export enum ImageCompressorEndpoint {
 	/** Second most reliable */
 	BACKUP = SERVE_PROXY,
 }
+export const IMAGE_COMPRESSOR_ENDPOINT_SET: ReadonlySet<string> = new Set(
+	Object.values(ImageCompressorEndpoint),
+);
 // TODO: Add bandwidth hero service and maybe a custom selfhost one
 
 export enum ServerAPIEndpoint {

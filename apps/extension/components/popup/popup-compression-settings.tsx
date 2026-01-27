@@ -1,5 +1,6 @@
 import {
 	deduplicateArrayElements,
+	IMAGE_COMPRESSOR_ENDPOINT_SET,
 	ImageCompressorEndpoint,
 } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
@@ -167,11 +168,7 @@ function PreferredEndpointSelect(props: TempCompressionSettingsProps) {
 					)
 				}
 			>
-				<For
-					each={deduplicateArrayElements(
-						Object.values(ImageCompressorEndpoint),
-					)}
-				>
+				<For each={[...IMAGE_COMPRESSOR_ENDPOINT_SET]}>
 					{(endpoint) => (
 						<option
 							selected={props.store.preferredEndpoint === endpoint}

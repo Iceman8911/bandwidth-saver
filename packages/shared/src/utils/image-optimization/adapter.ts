@@ -1,4 +1,5 @@
 import {
+	IMAGE_COMPRESSOR_ENDPOINT_SET,
 	ImageCompressorEndpoint,
 	ServerAPIEndpoint,
 } from "@bandwidth-saver/shared";
@@ -14,7 +15,7 @@ import { checkIfUrlReturnsValidImage } from "../fetch";
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
 ): boolean => {
-	for (const endpoint of Object.values(ImageCompressorEndpoint)) {
+	for (const endpoint of IMAGE_COMPRESSOR_ENDPOINT_SET) {
 		if (`${url}`.startsWith(endpoint)) return true;
 	}
 

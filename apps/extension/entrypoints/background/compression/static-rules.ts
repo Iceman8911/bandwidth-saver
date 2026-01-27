@@ -1,5 +1,5 @@
 import {
-	ImageCompressorEndpoint,
+	IMAGE_COMPRESSOR_ENDPOINT_SET,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 } from "@bandwidth-saver/shared";
 import { type Browser, browser } from "wxt/browser";
@@ -8,6 +8,11 @@ import {
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
 import { getWhitelistedDomains } from "./whilisted-domains";
+
+const IMAGE_COMPRESSOR_ENDPOINT_HOSTS = Array.from(
+	IMAGE_COMPRESSOR_ENDPOINT_SET,
+	(endpoint) => new URL(endpoint).host,
+);
 
 /** These rules are basically to prevent useless redirects / redirect looping */
 function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] {
@@ -87,14 +92,7 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 						type: "allow",
 					},
 					condition: {
-						// Deduplicate domains since ImageCompressorEndpoint.DEFAULT equals WSRV_NL
-						requestDomains: [
-							...new Set(
-								Object.values(ImageCompressorEndpoint).map(
-									(endpoint) => new URL(endpoint).host,
-								),
-							),
-						],
+						requestDomains: IMAGE_COMPRESSOR_ENDPOINT_HOSTS,
 					},
 					id: DeclarativeNetRequestRuleIds.EXEMPT_COMPRESSION_ENDPOINTS_FROM_COMPRESSION,
 					priority: DeclarativeNetRequestPriority.HIGHEST,

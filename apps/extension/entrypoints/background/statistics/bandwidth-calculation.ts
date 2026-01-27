@@ -2,7 +2,7 @@ import {
 	BatchQueue,
 	clone,
 	getDayStartInMillisecondsUTC,
-	ImageCompressorEndpoint,
+	IMAGE_COMPRESSOR_ENDPOINT_SET,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as immer from "immer";
@@ -28,10 +28,6 @@ const URL_ENTRY_MAX_AGE_MS = 3000;
 
 const FLUSH_BATCH_SIZE = 50;
 const FLUSH_INTERVAL_MS = 1000;
-
-const IMAGE_COMPRESSOR_ENDPOINTS: ReadonlyArray<string> = Object.values(
-	ImageCompressorEndpoint,
-);
 
 type BandwidthRawDataPayload = {
 	perfApi: Readonly<BandwidthMonitoringMessagePayload | null>;
@@ -143,7 +139,7 @@ function applyBandwidthDataToStores(
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
-		if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
+		if (IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin)) {
 			draft.requestsCompressed = applyToCombinedStats(
 				draft.requestsCompressed,
 				1,
@@ -165,7 +161,7 @@ function applyBandwidthDataToStores(
 			);
 		}
 
-		if (IMAGE_COMPRESSOR_ENDPOINTS.includes(assetUrlOrigin)) {
+		if (IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin)) {
 			draft.requestsCompressed = applyToCombinedStats(
 				draft.requestsCompressed,
 				1,
