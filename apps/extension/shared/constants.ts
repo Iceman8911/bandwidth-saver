@@ -141,3 +141,7 @@ export const NOOP_RULE_CONDITION = {
 } as const satisfies Browser.declarativeNetRequest.RuleCondition;
 
 export const MAX_DAYS_OF_DAILY_STATISTICS = 90;
+
+export enum ALARM_NAME {
+	AGGREGATE_OLD_DAILY_STATS = "1",
+}

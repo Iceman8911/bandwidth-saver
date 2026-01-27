@@ -21,6 +21,7 @@ import {
 	type StatisticsSchema,
 } from "@/models/storage";
 import {
+	ALARM_NAME,
 	DUMMY_TAB_URL,
 	MAX_DAYS_OF_DAILY_STATISTICS,
 	MessageType,
@@ -452,11 +453,9 @@ function aggregateOldDailyStatsInDetailedStatsObject({
 	return converted;
 }
 
-const OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME = "aggregate-old-daily-stats";
-
 /** I could make this run *faster* by parallelizing the promises but since it's maintainance stuff, I think I can afford to take my time and keep cpu usage + memory as low as I can */
 async function oldDailyStatsAggregatorListener(alarm: Browser.alarms.Alarm) {
-	if (alarm.name !== OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME) return;
+	if (alarm.name !== ALARM_NAME.AGGREGATE_OLD_DAILY_STATS) return;
 
 	let globalStats = await statisticsStorageItem.getValue();
 
@@ -501,7 +500,7 @@ async function oldDailyStatsAggregatorListener(alarm: Browser.alarms.Alarm) {
 
 export function createDailyAlarmForAggregatingOldDailyStats() {
 	browser.alarms.create(
-		OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME,
+		ALARM_NAME.AGGREGATE_OLD_DAILY_STATS,
 		// 1 day
 		{ periodInMinutes: 60 * 24 },
 	);
