@@ -25,6 +25,7 @@
 - [ ] Compress / reduce resolution of assets like:
   - [x] Images
     - [ ] Allow individual extensions to be compressed
+    - [ ] In simple mode, patch globals so that failed requests get retired with other endpoints. 
   - [x] Gifs
   - [ ] Videos
     - Perhaps we can just focus on popular sites like Youtube, Vimeo, Reddit?, Facebook, etc.
