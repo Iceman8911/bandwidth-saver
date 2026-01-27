@@ -116,10 +116,13 @@ function applyBandwidthDataToStores(
 	data: BandwidthMonitoringMessagePayload,
 	globalStore: CombinedStatsStoreValue,
 	siteScopedStore: SiteStatsStoreValue,
-) {
+): {
+	globalStore: CombinedStatsStoreValue;
+	siteScopedStore: SiteStatsStoreValue;
+} {
 	const { bytes: assetSize, type, assetUrl, hostOrigin } = data;
 
-	if (!assetSize) return;
+	if (!assetSize) return { globalStore, siteScopedStore };
 
 	const day = getDayStartInMillisecondsUTC();
 
@@ -136,7 +139,7 @@ function applyBandwidthDataToStores(
 
 	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
 
-	immer.produce(globalStore, (draft) => {
+	const updatedGlobalStore = immer.produce(globalStore, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
@@ -148,7 +151,7 @@ function applyBandwidthDataToStores(
 		}
 	});
 
-	immer.produce(siteScopedStore, (draft) => {
+	const updatedSiteScopedStore = immer.produce(siteScopedStore, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
@@ -169,6 +172,11 @@ function applyBandwidthDataToStores(
 			);
 		}
 	});
+
+	return {
+		globalStore: updatedGlobalStore,
+		siteScopedStore: updatedSiteScopedStore,
+	};
 }
 
 function createMergedPayload(
@@ -308,7 +316,7 @@ pendingFlushUrlBatchQueue.addCallbacks(async (urls) => {
 			dirtyAssetUrls.delete(url);
 		}
 
-		const globalStore = await statisticsStorageItem.getValue();
+		let globalStore = await statisticsStorageItem.getValue();
 
 		const siteStoresByOrigin = new Map<
 			UrlSchema,
@@ -338,7 +346,13 @@ pendingFlushUrlBatchQueue.addCallbacks(async (urls) => {
 				siteStoresByOrigin.set(siteOrigin, siteStore);
 			}
 
-			applyBandwidthDataToStores(data, globalStore, siteStore.value);
+			const updated = applyBandwidthDataToStores(
+				data,
+				globalStore,
+				siteStore.value,
+			);
+			globalStore = updated.globalStore;
+			siteStore.value = updated.siteScopedStore;
 
 			pendingBandwidthMeasurementsByUrl.delete(urlEntry);
 		}
