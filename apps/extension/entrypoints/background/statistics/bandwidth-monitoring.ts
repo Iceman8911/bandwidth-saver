@@ -71,10 +71,13 @@ function webRequestOnCompletedListener({
 		const headerName = header.name.toLowerCase();
 		const headerValue = header.value;
 
-		if (headerName === "content-length") {
-			contentLength = Number(headerValue);
-		} else if (headerName === "content-type") {
-			contentType = (headerValue ?? contentType).toLowerCase();
+		switch (headerName) {
+			case "content-length":
+				contentLength = Number(headerValue);
+				break;
+			case "content-type":
+				contentType = (headerValue ?? contentType).toLowerCase();
+				break;
 		}
 	}
 
