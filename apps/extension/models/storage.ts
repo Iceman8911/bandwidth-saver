@@ -96,7 +96,7 @@ export const CombinedAssetStatisticsSchema = v.object({
 	/** Indexed with the day in milliseconds */
 	dailyStats: v.record(
 		v.pipe(v.string(), v.transform(Number), v.number()),
-		SingleAssetStatisticsSchema,
+		v.optional(SingleAssetStatisticsSchema),
 	),
 });
 export type CombinedAssetStatisticsSchema = v.InferOutput<

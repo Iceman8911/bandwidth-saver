@@ -4,7 +4,10 @@ import { compressionToggleWatcher } from "./compression";
 import { registerStaticRules } from "./compression/static-rules";
 import { cspBypassToggleWatcher } from "./csp-workaround";
 import { saveDataToggleWatcher } from "./save-data";
-import { cacheBandwidthDataFromPerformanceApi } from "./statistics/bandwidth-calculation";
+import {
+	createDailyAlarmForAggregatingOldDailyStats,
+	startCachingBandwidthDataFromPerformanceApi,
+} from "./statistics/bandwidth-calculation";
 import { monitorBandwidthUsageViaBackground } from "./statistics/bandwidth-monitoring";
 
 export default defineBackground({
@@ -14,7 +17,8 @@ export default defineBackground({
 		startRecordingPossibleSiteOriginsToEnqueue();
 
 		monitorBandwidthUsageViaBackground();
-		cacheBandwidthDataFromPerformanceApi();
+		startCachingBandwidthDataFromPerformanceApi();
+		createDailyAlarmForAggregatingOldDailyStats();
 
 		saveDataToggleWatcher();
 		compressionToggleWatcher();

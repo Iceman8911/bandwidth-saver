@@ -6,6 +6,12 @@ import {
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as immer from "immer";
+import { type Browser, browser } from "wxt/browser";
+import {
+	storage,
+	type WxtStorage,
+	type WxtStorageItem,
+} from "wxt/utils/storage";
 import {
 	type CombinedAssetStatisticsSchema,
 	DEFAULT_COMBINED_ASSET_STATISTICS,
@@ -25,112 +31,241 @@ import {
 	statisticsStorageItem,
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
+import { getSiteUrlOrigins } from "@/utils/storage";
 import { getUrlSchemaOrigin } from "@/utils/url";
 
-const URL_ENTRY_SETTLE_MS = 900;
-const URL_ENTRY_MAX_AGE_MS = 3000;
+const RAW_ENTRY_SETTLE_MS = 900;
+const RAW_ENTRY_MAX_AGE_MS = 3000;
 
-const FLUSH_BATCH_SIZE = 50;
+const FLUSH_BATCH_SIZE = 100;
 const FLUSH_INTERVAL_MS = 1000;
 
-type BandwidthRawDataPayload = {
-	perfApi: Readonly<BandwidthMonitoringMessagePayload | null>;
-	webRequest: Readonly<BandwidthMonitoringMessagePayload | null>;
+type StorageSetItemsArrayParam = Parameters<WxtStorage["setItems"]>[0];
 
+type RawDataPayloadSource = "perfApi" | "webRequest";
+
+/** Bandwidth data from mutiple sources that needs coalescing */
+type BandwidthMonitioringRawDataPayload = {
 	firstSeenAtMs: number;
 	lastUpdatedAtMs: number;
+} & Record<
+	RawDataPayloadSource,
+	Readonly<BandwidthMonitoringMessagePayload | null>
+>;
+
+type PendingBandwidthMeasurementMapClassOptions = {
+	/** How long each individual timeout should be when triggered by `set` */
+	timeoutMs: number;
+
+	/** BatchQueue to push filled or overdue payloads into. */
+	batchQueue: BatchQueue<BandwidthMonitoringMessagePayload>;
+
+	/** If `Date.now()` - `lastUpdatedAtMs` > this, the entry is expired */
+	settleAgeMs: number;
+
+	/** If `Date.now()` - `firstSeenAtMs` > this, the entry is expired */
+	maxAgeMs: number;
 };
 
-const pendingBandwidthMeasurementsByUrl = new Map<
-	UrlSchema,
-	BandwidthRawDataPayload
->();
-const dirtyAssetUrls = new Set<UrlSchema>();
+class PendingBandwidthMeasurementMap {
+	private _map = new Map<UrlSchema, BandwidthMonitioringRawDataPayload>();
+	private _timers = new Map<UrlSchema, ReturnType<typeof setTimeout>>();
 
-/** Returns the overload of keys that don't fit within the limit */
-function getOverloadDailyStatsKeys(
-	dailyStats: CombinedAssetStatisticsSchema["dailyStats"],
-): number[] {
-	const rawDays: ReadonlyArray<string> = Object.keys(dailyStats);
+	constructor(private _options: PendingBandwidthMeasurementMapClassOptions) {}
 
-	if (rawDays.length <= MAX_DAYS_OF_DAILY_STATISTICS) return [];
+	private _isPayloadFilled(
+		payload: BandwidthMonitioringRawDataPayload,
+	): boolean {
+		return !!(payload.perfApi && payload.webRequest);
+	}
 
-	/** Ascending order is used so the oldest entries are at the beginning and can be easily sliced */
-	const sortedDays: ReadonlyArray<number> = rawDays
-		.map(Number)
-		.sort((a, b) => a - b);
+	private _isPayloadOverdue(
+		payload: BandwidthMonitioringRawDataPayload,
+	): boolean {
+		const now = Date.now();
 
-	const overloadDayCount = rawDays.length - MAX_DAYS_OF_DAILY_STATISTICS;
+		return (
+			now - payload.firstSeenAtMs > this._options.maxAgeMs ||
+			now - payload.lastUpdatedAtMs > this._options.settleAgeMs
+		);
+	}
 
-	return sortedDays.slice(0, overloadDayCount);
+	private _clearTimer(url: UrlSchema): void {
+		const t = this._timers.get(url);
+		if (!t) return;
+		clearTimeout(t);
+		this._timers.delete(url);
+	}
+
+	private _schedule(url: UrlSchema): void {
+		// If there is already a scheduled check, don’t stack another.
+		if (this._timers.has(url)) return;
+
+		const t = setTimeout(() => {
+			// Timer has fired; remove handle first so we can reschedule if needed.
+			this._timers.delete(url);
+			this._tryToEnqueuePayload(url);
+		}, this._options.timeoutMs);
+
+		this._timers.set(url, t);
+	}
+
+	private _tryToEnqueuePayload(url: UrlSchema): void {
+		const payload = this._map.get(url);
+
+		// Entry may have been flushed/deleted already.
+		if (!payload) {
+			this._clearTimer(url);
+			return;
+		}
+
+		if (this._isPayloadFilled(payload) || this._isPayloadOverdue(payload)) {
+			// We’re done with this URL; ensure no further checks can fire.
+			this._map.delete(url);
+			this._clearTimer(url);
+
+			const { perfApi, webRequest } = payload;
+
+			if (perfApi || webRequest) {
+				/** NOTE: The lasts defaults shouldn't ever happen :p */
+				const merged: BandwidthMonitoringMessagePayload = {
+					assetUrl: url,
+					bytes: perfApi?.bytes || webRequest?.bytes || 0,
+					hostOrigin:
+						webRequest?.hostOrigin || perfApi?.hostOrigin || DUMMY_TAB_URL,
+					type: webRequest?.type || perfApi?.type || "other",
+				};
+
+				this._options.batchQueue.enqueue(merged);
+			}
+
+			return;
+		}
+
+		// Not filled/overdue yet, so schedule exactly one future check.
+		this._schedule(url);
+	}
+
+	get(url: UrlSchema): BandwidthMonitioringRawDataPayload | undefined {
+		return this._map.get(url);
+	}
+
+	set(url: UrlSchema, payload: BandwidthMonitioringRawDataPayload): void {
+		this._map.set(url, payload);
+
+		// Ensure there will be a check, but don’t create duplicates.
+		this._schedule(url);
+	}
 }
 
-function processAggregateAndDailyStatsFromCombinedStatisticsForDay(arg: {
+const pendingMergedBandwidthMeasurementBatchQueue =
+	new BatchQueue<BandwidthMonitoringMessagePayload>({
+		batchSize: FLUSH_BATCH_SIZE,
+		intervalMs: FLUSH_INTERVAL_MS,
+	});
+
+const pendingRawBandwidthMeasurementsToCoalesce =
+	new PendingBandwidthMeasurementMap({
+		batchQueue: pendingMergedBandwidthMeasurementBatchQueue,
+		maxAgeMs: RAW_ENTRY_MAX_AGE_MS,
+		settleAgeMs: RAW_ENTRY_SETTLE_MS,
+		timeoutMs: RAW_ENTRY_MAX_AGE_MS / 3,
+	});
+
+function createNewBandwidthRawDataPayload(
+	nowMs: number,
+): BandwidthMonitioringRawDataPayload {
+	return {
+		firstSeenAtMs: nowMs,
+		lastUpdatedAtMs: nowMs,
+		perfApi: null,
+		webRequest: null,
+	};
+}
+
+function cacheBandwidthDataFromSource(
+	data: BandwidthMonitoringMessagePayload,
+	src: RawDataPayloadSource,
+) {
+	const { assetUrl } = data;
+
+	const nowMs = Date.now();
+
+	let updatedEntry: BandwidthMonitioringRawDataPayload;
+
+	const previousEntry = pendingRawBandwidthMeasurementsToCoalesce.get(assetUrl);
+
+	if (previousEntry) {
+		updatedEntry = previousEntry;
+	} else {
+		updatedEntry = createNewBandwidthRawDataPayload(nowMs);
+	}
+
+	updatedEntry.lastUpdatedAtMs = nowMs;
+	updatedEntry[src] = data;
+
+	pendingRawBandwidthMeasurementsToCoalesce.set(assetUrl, updatedEntry);
+}
+
+export function startCachingBandwidthDataFromPerformanceApi() {
+	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) =>
+		cacheBandwidthDataFromSource(data, "perfApi"),
+	);
+}
+
+export function cacheBandwidthDataFromWebRequest(
+	data: BandwidthMonitoringMessagePayload,
+) {
+	cacheBandwidthDataFromSource(data, "webRequest");
+}
+
+/** Mutates and returns the same given `combinedStats` */
+function updateDailyStatsInCombinedStats(arg: {
 	combinedStats: CombinedAssetStatisticsSchema;
 	day: number;
 	type: keyof SingleAssetStatisticsSchema;
 	valueToAdd: number;
 }): CombinedAssetStatisticsSchema {
-	const { valueToAdd, combinedStats: oldCombinedStats, day, type } = arg;
+	const { valueToAdd, combinedStats, day, type } = arg;
 
-	const newCombinedStats = immer.produce(
-		oldCombinedStats,
-		(combinedStatsDraft) => {
-			const { dailyStats } = combinedStatsDraft;
+	const { dailyStats } = combinedStats;
 
-			if (!dailyStats[day])
-				dailyStats[day] = clone(DEFAULT_SINGLE_ASSET_STATISTICS);
+	if (!dailyStats[day])
+		dailyStats[day] = clone(DEFAULT_SINGLE_ASSET_STATISTICS);
 
-			dailyStats[day][type] += valueToAdd;
+	dailyStats[day][type] += valueToAdd;
 
-			// Prevent overloads
-			for (const overloadKey of getOverloadDailyStatsKeys(dailyStats)) {
-				const overloadStats =
-					dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
-
-				let key: keyof typeof overloadStats;
-
-				for (key in overloadStats) {
-					combinedStatsDraft.aggregate[key] += overloadStats[key];
-				}
-
-				// I think this will tank perf, but until wxt supports custom transforms, this'll have to do
-				delete dailyStats[overloadKey];
-			}
-		},
-	);
-
-	return newCombinedStats;
+	return combinedStats;
 }
 
-function applyBandwidthDataToStores(
+function applyBandwidthMeasurementsToStatistics(
 	data: BandwidthMonitoringMessagePayload,
-	globalStore: StatisticsSchema,
-	siteScopedStore: DetailedStatisticsSchema,
+	globalStats: StatisticsSchema,
+	siteScopedStats: DetailedStatisticsSchema,
 ): {
-	globalStore: StatisticsSchema;
-	siteScopedStore: DetailedStatisticsSchema;
+	globalStats: StatisticsSchema;
+	siteScopedStats: DetailedStatisticsSchema;
 } {
 	const { bytes: assetSize, type, assetUrl, hostOrigin } = data;
 
-	if (!assetSize) return { globalStore, siteScopedStore };
+	if (!assetSize) return { globalStats, siteScopedStats };
 
 	const day = getDayStartInMillisecondsUTC();
+
+	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
 
 	const applyToCombinedStats = (
 		combinedStats: CombinedAssetStatisticsSchema,
 		valueToAdd: number,
 	) =>
-		processAggregateAndDailyStatsFromCombinedStatisticsForDay({
+		updateDailyStatsInCombinedStats({
 			combinedStats,
 			day,
 			type,
 			valueToAdd,
 		});
 
-	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
-
-	const updatedGlobalStore = immer.produce(globalStore, (draft) => {
+	const updatedGlobalStats = immer.produce(globalStats, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
@@ -142,13 +277,14 @@ function applyBandwidthDataToStores(
 		}
 	});
 
-	const updatedSiteScopedStore = immer.produce(siteScopedStore, (draft) => {
+	const updatedSiteScopedStats = immer.produce(siteScopedStats, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
 		if (hostOrigin !== assetUrlOrigin) {
 			const existingCrossOrigin =
-				draft.crossOrigin[assetUrlOrigin] ?? DEFAULT_COMBINED_ASSET_STATISTICS;
+				draft.crossOrigin[assetUrlOrigin] ??
+				clone(DEFAULT_COMBINED_ASSET_STATISTICS);
 
 			draft.crossOrigin[assetUrlOrigin] = applyToCombinedStats(
 				existingCrossOrigin,
@@ -165,202 +301,212 @@ function applyBandwidthDataToStores(
 	});
 
 	return {
-		globalStore: updatedGlobalStore,
-		siteScopedStore: updatedSiteScopedStore,
+		globalStats: updatedGlobalStats,
+		siteScopedStats: updatedSiteScopedStats,
 	};
 }
 
-function createMergedPayload(
-	urlEntry: UrlSchema,
-	entry: BandwidthRawDataPayload,
-): BandwidthMonitoringMessagePayload | null {
-	const { perfApi, webRequest } = entry;
+pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
+	async (measurements) => {
+		let globalStats = await statisticsStorageItem.getValue();
 
-	if (!perfApi && !webRequest) return null;
+		/** String keys are used over the storage item instances so it'll be easy for updated stats with the same storage entry to override older ones */
+		const siteScopedStorageKeysAndUpdatedValuesMap = new Map<
+			WxtStorageItem<DetailedStatisticsSchema, Record<string, unknown>>["key"],
+			DetailedStatisticsSchema
+		>();
 
-	if (perfApi && webRequest) {
-		const { type } = webRequest;
+		for (const measurement of measurements) {
+			const siteScopedStatsStorageItem = getSiteSpecificStatisticsStorageItem(
+				measurement.hostOrigin,
+			);
 
-		return {
-			assetUrl: urlEntry,
-			bytes: perfApi.bytes ?? webRequest.bytes,
-			hostOrigin: webRequest.hostOrigin || perfApi.hostOrigin,
-			type,
-		};
+			let siteScopedStats =
+				siteScopedStorageKeysAndUpdatedValuesMap.get(
+					siteScopedStatsStorageItem.key,
+				) ?? (await siteScopedStatsStorageItem.getValue());
+
+			const updatedStats = applyBandwidthMeasurementsToStatistics(
+				measurement,
+				globalStats,
+				siteScopedStats,
+			);
+
+			globalStats = updatedStats.globalStats;
+			siteScopedStats = updatedStats.siteScopedStats;
+
+			siteScopedStorageKeysAndUpdatedValuesMap.set(
+				siteScopedStatsStorageItem.key,
+				siteScopedStats,
+			);
+		}
+
+		const storageKeysAndUpdatedValuesArray: StorageSetItemsArrayParam =
+			Array.from(siteScopedStorageKeysAndUpdatedValuesMap, ([key, value]) => ({
+				key,
+				value,
+			}));
+		storageKeysAndUpdatedValuesArray.push({
+			item: statisticsStorageItem,
+			value: globalStats,
+		});
+
+		await storage.setItems(storageKeysAndUpdatedValuesArray);
+	},
+);
+
+/** Returns the overload of keys that don't fit within the limit */
+function getOverloadDailyStatsKeys(
+	dailyStats: CombinedAssetStatisticsSchema["dailyStats"],
+): number[] {
+	const rawDays: string[] = [];
+
+	// Since some keys may temporarily be present, but have undefined values (they'll disappear during serialization anyway)
+	for (const key in dailyStats) {
+		if (dailyStats[key]) rawDays.push(key);
 	}
 
-	return (perfApi ?? webRequest) || null;
+	if (rawDays.length <= MAX_DAYS_OF_DAILY_STATISTICS) return [];
+
+	/** Ascending order is used so the oldest entries are at the beginning and can be easily sliced */
+	const sortedDays: ReadonlyArray<number> = rawDays
+		.map(Number)
+		.sort((a, b) => a - b);
+
+	const overloadDayCount = rawDays.length - MAX_DAYS_OF_DAILY_STATISTICS;
+
+	return sortedDays.slice(0, overloadDayCount);
 }
 
-function readUrlHostOrigin(entry: BandwidthRawDataPayload): UrlSchema {
-	const hostOrigin =
-		(entry.webRequest?.hostOrigin || entry.perfApi?.hostOrigin) ??
-		DUMMY_TAB_URL;
+/** If applicable, it trims down older daily stat entries and accumulates them in the aggregate object.
+ *
+ * Can be rather expensive
+ */
+function aggregateOldDailyStats(
+	combinedStats: CombinedAssetStatisticsSchema,
+): CombinedAssetStatisticsSchema {
+	return immer.produce(combinedStats, (draft) => {
+		for (const overloadKey of getOverloadDailyStatsKeys(draft.dailyStats)) {
+			const overloadStats =
+				draft.dailyStats[overloadKey] ?? DEFAULT_SINGLE_ASSET_STATISTICS;
 
-	return getUrlSchemaOrigin(hostOrigin) as UrlSchema;
-}
+			let key: keyof typeof overloadStats;
 
-function shouldFlushUrlEntry(
-	entry: BandwidthRawDataPayload,
-	nowMs: number,
-): boolean {
-	if (!entry.perfApi && !entry.webRequest) return false;
+			for (key in overloadStats) {
+				draft.aggregate[key] += overloadStats[key];
+			}
 
-	const ageMs = nowMs - entry.firstSeenAtMs;
-	const quietMs = nowMs - entry.lastUpdatedAtMs;
-
-	if (ageMs >= URL_ENTRY_MAX_AGE_MS) return true;
-	if (quietMs >= URL_ENTRY_SETTLE_MS) return true;
-
-	return false;
-}
-
-function createNewBandwidthRawDataPayload(
-	nowMs: number,
-): BandwidthRawDataPayload {
-	return {
-		firstSeenAtMs: nowMs,
-		lastUpdatedAtMs: nowMs,
-		perfApi: null,
-		webRequest: null,
-	};
-}
-
-const pendingFlushUrlBatchQueue = new BatchQueue<UrlSchema>({
-	batchSize: FLUSH_BATCH_SIZE,
-	intervalMs: FLUSH_INTERVAL_MS,
-});
-
-function scheduleFlushForUrl(url: UrlSchema) {
-	// Dedupe: only enqueue the URL once until it’s actually flushed.
-	if (dirtyAssetUrls.has(url)) return;
-	dirtyAssetUrls.add(url);
-	pendingFlushUrlBatchQueue.enqueue(url);
-}
-
-export function cacheBandwidthDataFromPerformanceApi() {
-	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) => {
-		const { assetUrl } = data;
-
-		const nowMs = Date.now();
-		const previousEntry =
-			pendingBandwidthMeasurementsByUrl.get(assetUrl) ??
-			createNewBandwidthRawDataPayload(nowMs);
-
-		const updatedEntry: BandwidthRawDataPayload = {
-			...previousEntry,
-			lastUpdatedAtMs: nowMs,
-			perfApi: data,
-		};
-
-		pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
-		scheduleFlushForUrl(assetUrl);
+			// Since this will get JSON serialized later, `undefined` keys get dropped so manually `delete`-ing isn't required, and won't tank perf.
+			draft.dailyStats[overloadKey] = undefined;
+		}
 	});
 }
 
-/** Since background can't message background, we'll export this and call it elsewhere */
-export function cacheBandwidthDataFromWebRequest(
-	data: BandwidthMonitoringMessagePayload,
-) {
-	const { assetUrl } = data;
-
-	const nowMs = Date.now();
-	const previousEntry =
-		pendingBandwidthMeasurementsByUrl.get(assetUrl) ??
-		createNewBandwidthRawDataPayload(nowMs);
-
-	const updatedEntry: BandwidthRawDataPayload = {
-		...previousEntry,
-		lastUpdatedAtMs: nowMs,
-		webRequest: data,
+function aggregateOldDailyStatsInStatsObject({
+	bytesSaved,
+	bytesUsed,
+	requestsCompressed,
+	requestsMade,
+	lastReset,
+}: StatisticsSchema): StatisticsSchema {
+	const converted: StatisticsSchema = {
+		bytesSaved: aggregateOldDailyStats(bytesSaved),
+		bytesUsed: aggregateOldDailyStats(bytesUsed),
+		lastReset,
+		requestsCompressed: aggregateOldDailyStats(requestsCompressed),
+		requestsMade: aggregateOldDailyStats(requestsMade),
 	};
 
-	pendingBandwidthMeasurementsByUrl.set(assetUrl, updatedEntry);
-	scheduleFlushForUrl(assetUrl);
+	return converted;
 }
 
-pendingFlushUrlBatchQueue.addCallbacks(async (urls) => {
-	const nowMs = Date.now();
+function aggregateOldDailyStatsInDetailedStatsObject({
+	bytesSaved,
+	bytesUsed,
+	requestsCompressed,
+	requestsMade,
+	lastReset,
+	crossOrigin,
+}: DetailedStatisticsSchema): DetailedStatisticsSchema {
+	const convertedCrossOrigin: Record<UrlSchema, CombinedAssetStatisticsSchema> =
+		{};
 
-	const flushableUrls: UrlSchema[] = [];
-	const retryUrls: UrlSchema[] = [];
+	let key: UrlSchema;
+	for (key in crossOrigin) {
+		const val = crossOrigin[key];
 
-	for (const url of urls) {
-		const entry = pendingBandwidthMeasurementsByUrl.get(url);
+		if (!val) continue;
 
-		// Stale queue item; clear dirty state.
-		if (!entry) {
-			dirtyAssetUrls.delete(url);
-			continue;
-		}
-
-		if (shouldFlushUrlEntry(entry, nowMs)) {
-			flushableUrls.push(url);
-		} else {
-			retryUrls.push(url);
-		}
+		convertedCrossOrigin[key] = aggregateOldDailyStats(val);
 	}
 
-	if (flushableUrls.length > 0) {
-		// We’re going to process these now; remove from dirty set.
-		for (const url of flushableUrls) {
-			dirtyAssetUrls.delete(url);
-		}
+	const converted: DetailedStatisticsSchema = {
+		bytesSaved: aggregateOldDailyStats(bytesSaved),
+		bytesUsed: aggregateOldDailyStats(bytesUsed),
+		crossOrigin: convertedCrossOrigin,
+		lastReset,
+		requestsCompressed: aggregateOldDailyStats(requestsCompressed),
+		requestsMade: aggregateOldDailyStats(requestsMade),
+	};
 
-		let globalStore = await statisticsStorageItem.getValue();
+	return converted;
+}
 
-		const siteStoresByOrigin = new Map<
-			UrlSchema,
-			{
-				storageItem: ReturnType<typeof getSiteSpecificStatisticsStorageItem>;
-				value: DetailedStatisticsSchema;
-			}
-		>();
+const OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME = "aggregate-old-daily-stats";
 
-		for (const urlEntry of flushableUrls) {
-			const entry = pendingBandwidthMeasurementsByUrl.get(urlEntry);
-			if (!entry) continue;
+/** I could make this run *faster* by parallelizing the promises but since it's maintainance stuff, I think I can afford to take my time and keep cpu usage + memory as low as I can */
+async function oldDailyStatsAggregatorListener(alarm: Browser.alarms.Alarm) {
+	if (alarm.name !== OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME) return;
 
-			const data = createMergedPayload(urlEntry, entry);
-			if (!data) {
-				pendingBandwidthMeasurementsByUrl.delete(urlEntry);
-				continue;
-			}
+	let globalStats = await statisticsStorageItem.getValue();
 
-			const siteOrigin = readUrlHostOrigin(entry);
+	globalStats = aggregateOldDailyStatsInStatsObject(globalStats);
 
-			let siteStore = siteStoresByOrigin.get(siteOrigin);
-			if (!siteStore) {
-				const storageItem = getSiteSpecificStatisticsStorageItem(siteOrigin);
-				const value = await storageItem.getValue();
-				siteStore = { storageItem, value };
-				siteStoresByOrigin.set(siteOrigin, siteStore);
-			}
+	/** String keys are used over the storage item instances so it'll be easy for updated stats with the same storage entry to override older ones */
+	const siteScopedStorageKeysAndUpdatedValuesMap = new Map<
+		WxtStorageItem<DetailedStatisticsSchema, Record<string, unknown>>["key"],
+		DetailedStatisticsSchema
+	>();
 
-			const updated = applyBandwidthDataToStores(
-				data,
-				globalStore,
-				siteStore.value,
-			);
-			globalStore = updated.globalStore;
-			siteStore.value = updated.siteScopedStore;
+	for (const siteScopedOrigin of await getSiteUrlOrigins()) {
+		const siteScopedStatsStorageItem =
+			getSiteSpecificStatisticsStorageItem(siteScopedOrigin);
 
-			pendingBandwidthMeasurementsByUrl.delete(urlEntry);
-		}
+		let siteScopedStats =
+			siteScopedStorageKeysAndUpdatedValuesMap.get(
+				siteScopedStatsStorageItem.key,
+			) ?? (await siteScopedStatsStorageItem.getValue());
 
-		const savePromises: Array<Promise<unknown>> = [
-			statisticsStorageItem.setValue(globalStore),
-		];
+		siteScopedStats =
+			aggregateOldDailyStatsInDetailedStatsObject(siteScopedStats);
 
-		for (const { storageItem, value } of siteStoresByOrigin.values()) {
-			savePromises.push(storageItem.setValue(value));
-		}
-
-		await Promise.all(savePromises);
+		siteScopedStorageKeysAndUpdatedValuesMap.set(
+			siteScopedStatsStorageItem.key,
+			siteScopedStats,
+		);
 	}
 
-	// Re-queue URLs that haven't settled yet. They remain dirty.
-	for (const url of retryUrls) {
-		pendingFlushUrlBatchQueue.enqueue(url);
-	}
-});
+	const storageKeysAndUpdatedValuesArray: StorageSetItemsArrayParam =
+		Array.from(siteScopedStorageKeysAndUpdatedValuesMap, ([key, value]) => ({
+			key,
+			value,
+		}));
+	storageKeysAndUpdatedValuesArray.push({
+		item: statisticsStorageItem,
+		value: globalStats,
+	});
+
+	await storage.setItems(storageKeysAndUpdatedValuesArray);
+}
+
+export function createDailyAlarmForAggregatingOldDailyStats() {
+	browser.alarms.create(
+		OLD_DAILY_STATS_AGGREGATOR_ALARM_NAME,
+		// 1 day
+		{ periodInMinutes: 60 * 24 },
+	);
+
+	browser.alarms.onAlarm.removeListener(oldDailyStatsAggregatorListener);
+
+	browser.alarms.onAlarm.addListener(oldDailyStatsAggregatorListener);
+}
