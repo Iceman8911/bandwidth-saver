@@ -1,4 +1,4 @@
-import type { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import type { GeneralSettingsSchema } from "@/models/storage";
 import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Autoplay is not restored when the toggle is reversed. A page reload will be needed
@@ -20,8 +20,8 @@ function disableAutoplay(element: HTMLMediaElement) {
 }
 
 export function shouldDisableAutoplayForSite(
-	defaultSettings: typeof DEFAULT_GENERAL_SETTINGS,
-	siteSettings: typeof DEFAULT_GENERAL_SETTINGS,
+	defaultSettings: GeneralSettingsSchema,
+	siteSettings: GeneralSettingsSchema,
 ): boolean {
 	if (siteSettings.ruleIdOffset != null) {
 		return siteSettings.enabled && siteSettings.noAutoplay;
