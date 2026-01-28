@@ -10,6 +10,8 @@ import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { convertBytesToAppropriateNotation } from "@/utils/size";
 import { PopupContext } from "./context";
 
+const LOADING_TEXT = "N/A...";
+
 export default function PopupStatisticsSummary() {
 	const day = getDayStartInMillisecondsUTC();
 
@@ -41,36 +43,46 @@ export default function PopupStatisticsSummary() {
 		return ratio * 100;
 	});
 
+	const requestsMade = createMemo(() =>
+		getSumOfValuesInObject(statistics()?.requestsMade.dailyStats[day] ?? {}),
+	);
+
+	const requestsCompressed = createMemo(() =>
+		getSumOfValuesInObject(
+			statistics()?.requestsCompressed.dailyStats[day] ?? {},
+		),
+	);
+
 	return (
 		<div class="grid size-full grid-cols-2 grid-rows-2 place-items-center gap-2 rounded-box bg-base-200 p-2">
 			<div>
 				Requests Made:{" "}
-				<span class="font-semibold">
-					{getSumOfValuesInObject(
-						statistics()?.requestsMade.dailyStats[day] ?? {},
-					)}
-				</span>
+				<span class="font-semibold">{requestsMade() || LOADING_TEXT}</span>
 			</div>
 
 			<div>
 				Requests Compressed:{" "}
 				<span class="font-semibold">
-					{getSumOfValuesInObject(
-						statistics()?.requestsCompressed.dailyStats[day] ?? {},
-					)}
+					{requestsCompressed() || LOADING_TEXT}
 				</span>
 			</div>
 
 			<div>
 				Data Consumed:{" "}
 				<span class="font-semibold">
-					{convertBytesToAppropriateNotation(bytesUsed()).join(" ")}{" "}
+					{bytesUsed()
+						? convertBytesToAppropriateNotation(bytesUsed()).join(" ")
+						: LOADING_TEXT}{" "}
 				</span>
 			</div>
 
 			<div>
 				Data Saved:{" "}
-				<span class="font-semibold">{percentageOfBytesSaved()}%</span>{" "}
+				<span class="font-semibold">
+					{percentageOfBytesSaved()
+						? `${percentageOfBytesSaved()}%`
+						: LOADING_TEXT}
+				</span>{" "}
 			</div>
 		</div>
 	);
