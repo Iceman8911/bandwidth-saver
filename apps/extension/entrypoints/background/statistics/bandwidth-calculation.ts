@@ -35,8 +35,8 @@ import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getSiteUrlOrigins } from "@/utils/storage";
 import { getUrlSchemaOrigin } from "@/utils/url";
 
-const RAW_ENTRY_SETTLE_MS = 900;
-const RAW_ENTRY_MAX_AGE_MS = 3000;
+const RAW_ENTRY_SETTLE_MS = 750;
+const RAW_ENTRY_MAX_AGE_MS = 2500;
 
 const FLUSH_BATCH_SIZE = 100;
 const FLUSH_INTERVAL_MS = 1000;
