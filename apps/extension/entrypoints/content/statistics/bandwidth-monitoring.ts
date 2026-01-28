@@ -105,14 +105,9 @@ const observer = new PerformanceObserver((list) => {
 });
 
 export function monitorBandwidthUsageViaContentScript() {
-	observer.observe({ buffered: true, type: "resource" });
+	try {
+		observer.disconnect();
+	} catch {}
 
-	// cleanup when the page is unloaded or navigated away from
-	const cleanup = () => {
-		try {
-			observer.disconnect();
-		} catch {}
-		window.removeEventListener("pagehide", cleanup, true);
-	};
-	window.addEventListener("pagehide", cleanup, true);
+	observer.observe({ buffered: true, type: "resource" });
 }
