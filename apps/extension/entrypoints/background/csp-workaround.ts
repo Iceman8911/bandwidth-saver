@@ -9,7 +9,7 @@ import {
 } from "@/shared/storage";
 import {
 	applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites,
-	getSiteDomainsToNotApplyDefaultRule,
+	getSiteDomainsWithPriorityRules,
 } from "@/utils/dnr-rules";
 import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
@@ -42,7 +42,9 @@ async function applyAllCspRules(enabled: boolean): Promise<void> {
 }
 
 async function applyDefaultCspRules(enabled: boolean): Promise<void> {
-	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+	const excludedDomains = Object.values(
+		await getSiteDomainsWithPriorityRules(),
+	).flat();
 
 	await browser.declarativeNetRequest.updateSessionRules({
 		addRules: enabled

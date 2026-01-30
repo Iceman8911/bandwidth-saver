@@ -16,7 +16,7 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
-import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/dnr-rules";
+import { getSiteDomainsWithPriorityRules } from "@/utils/dnr-rules";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
@@ -56,8 +56,9 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 
 	const proxyDomain = proxySettings.host.replace(/^https?:\/\//, "");
 
-	// Get domains that have custom settings (useDefaultRules=false)
-	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+	const excludedDomains = Object.values(
+		await getSiteDomainsWithPriorityRules(),
+	).flat();
 
 	return {
 		addRules: [

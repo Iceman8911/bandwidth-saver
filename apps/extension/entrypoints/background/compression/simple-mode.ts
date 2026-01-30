@@ -16,7 +16,7 @@ import {
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { getSiteDomainsToNotApplyDefaultRule } from "@/utils/dnr-rules";
+import { getSiteDomainsWithPriorityRules } from "@/utils/dnr-rules";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
@@ -82,7 +82,9 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 		};
 	}
 
-	const excludedDomains = [...(await getSiteDomainsToNotApplyDefaultRule())];
+	const excludedDomains = Object.values(
+		await getSiteDomainsWithPriorityRules(),
+	).flat();
 
 	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 	const fallbackEndpoint = getFallbackEndpoint(preferredEndpoint);

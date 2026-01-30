@@ -51,3 +51,13 @@ const PROTOCOL_REGEX = /^.*\/\//;
 export function getHostnameForDeclarativeNetRequest(url: string): string {
 	return url.replace(PROTOCOL_REGEX, "");
 }
+
+const URL_SCHEMA_HOST_MATCHER = /^(?:[\w-]+:\/\/)?([\w.-]+)/;
+
+export function getUrlSchemaHost(url: UrlSchema): string {
+	const possibleHost = url.match(URL_SCHEMA_HOST_MATCHER)?.[1];
+
+	if (!possibleHost) throw Error(`Could not extract host from "url": ${url}`);
+
+	return possibleHost;
+}

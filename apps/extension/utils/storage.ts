@@ -1,12 +1,7 @@
 import { BatchQueue, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
-import {
-	type CompressionSettingsSchema,
-	type GeneralSettingsSchema,
-	type ProxySettingsSchema,
-	StorageAreaSchema,
-} from "@/models/storage";
+import { StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import { siteUrlOriginsStorageItem } from "@/shared/storage";
 
@@ -123,29 +118,6 @@ export function startRecordingPossibleSiteOriginsToEnqueue() {
 export async function getSiteUrlOrigins(): Promise<ReadonlySet<UrlSchema>> {
 	return getSiteUrlOriginsMemorySet();
 }
-
-type StorageChange<TStorageValue> =
-	| {
-			oldValue?: undefined;
-			/** item was added */
-			newValue: TStorageValue;
-	  }
-	| {
-			/** item was deleted */
-			oldValue: TStorageValue;
-			newValue?: undefined;
-	  }
-	| {
-			oldValue: TStorageValue;
-			newValue: TStorageValue;
-	  };
-
-type SiteSpecificStorageChange = {
-	change: StorageChange<
-		GeneralSettingsSchema | CompressionSettingsSchema | ProxySettingsSchema
-	>;
-	url: UrlSchema;
-};
 
 type StorageChanges = Record<string, Browser.storage.StorageChange>;
 
