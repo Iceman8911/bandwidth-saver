@@ -138,8 +138,8 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 	];
 }
 
-export function registerStaticRules() {
+export async function registerStaticRules() {
 	for (const rule of createStaticRules()) {
-		browser.declarativeNetRequest.updateSessionRules(rule);
+		await browser.declarativeNetRequest.updateSessionRules(rule);
 	}
 }
