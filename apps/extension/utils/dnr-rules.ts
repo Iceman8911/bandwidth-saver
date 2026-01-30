@@ -223,6 +223,11 @@ async function onChangedListener(
 export function runDnrRuleModifiersOnStorageChange(
 	...cbs: ReadonlyArray<DnrCallback>
 ) {
+	const listener = (changes: Record<string, Browser.storage.StorageChange>) =>
+		onChangedListener(changes, ...cbs);
+
 	// `local` since no relevant settings are synced or session-scoped
-	localOnChanged.addListener((changes) => onChangedListener(changes, ...cbs));
+	localOnChanged.addListener(listener);
+
+	return () => localOnChanged.removeListener(listener);
 }
