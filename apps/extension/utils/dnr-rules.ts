@@ -57,9 +57,7 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 	};
 }
 
-export async function getSiteDomainsToNotApplyDefaultRule(): Promise<
-	ReadonlyArray<string>
-> {
+export async function getSiteDomainsToNotApplyDefaultRule(): Promise<string[]> {
 	const domains: string[] = [];
 
 	for (const url of await getSiteUrlOrigins()) {

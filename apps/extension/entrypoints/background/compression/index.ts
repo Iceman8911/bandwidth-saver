@@ -5,7 +5,7 @@ import {
 	defaultGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites } from "@/utils/dnr-rules";
-import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
+import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 import {
 	getDefaultProxyCompressionRules,
 	getSiteProxyCompressionRules,
@@ -77,5 +77,5 @@ export async function compressionToggleWatcher() {
 		applyDefaultCompressionRules(),
 	);
 
-	watchChangesToSiteSpecificGeneralSettings(() => applyAllCompressionRules());
+	watchChangesToSiteSpecificSettings(() => applyAllCompressionRules());
 }

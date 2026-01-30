@@ -11,7 +11,7 @@ import {
 	applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites,
 	getSiteDomainsToNotApplyDefaultRule,
 } from "@/utils/dnr-rules";
-import { watchChangesToSiteSpecificGeneralSettings } from "@/utils/storage";
+import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -106,7 +106,7 @@ async function applySiteCspRules() {
 							resourceTypes: RESOURCE_TYPES,
 						},
 						id: ruleIdWithOffset,
-						initiatorDomain: [initiatorDomain],
+						initiatorDomains: [initiatorDomain],
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				],
@@ -136,7 +136,7 @@ export async function cspBypassToggleWatcher() {
 
 	// Reapply BOTH default and site rules when site settings change
 	// This fixes stale excludedInitiatorDomains when useDefaultRules changes
-	watchChangesToSiteSpecificGeneralSettings(async () => {
+	watchChangesToSiteSpecificSettings(async () => {
 		await applyAllCspRules(cachedEnabled);
 	});
 }

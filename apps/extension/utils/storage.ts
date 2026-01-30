@@ -1,25 +1,18 @@
 import { BatchQueue, UrlSchema } from "@bandwidth-saver/shared";
-import { lru } from "tiny-lru";
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
-import type { WxtStorageItem } from "wxt/utils/storage";
-import { type STORAGE_DEFAULTS, StorageAreaSchema } from "@/models/storage";
+import {
+	type CompressionSettingsSchema,
+	type GeneralSettingsSchema,
+	type ProxySettingsSchema,
+	StorageAreaSchema,
+} from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import { siteUrlOriginsStorageItem } from "@/shared/storage";
-
-function removeStorageAreaIdentifier<TKey extends string>(
-	key: `${StorageAreaSchema}:${TKey}`,
-): TKey {
-	//@ts-expect-error As long as the types are strict, this can't fail
-	return key.split(":")[1];
-}
 
 const { SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX: SITE_SPECIFIC_SETTINGS_PREFIX } =
 	StorageKey;
 
-const EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX = removeStorageAreaIdentifier(
-	SITE_SPECIFIC_SETTINGS_PREFIX,
-);
 const storageArea = v.parse(
 	StorageAreaSchema,
 	SITE_SPECIFIC_SETTINGS_PREFIX.split(":")[0],
@@ -149,7 +142,7 @@ type StorageChange<TStorageValue> =
 
 type SiteSpecificStorageChange = {
 	change: StorageChange<
-		(typeof STORAGE_DEFAULTS)[typeof SITE_SPECIFIC_SETTINGS_PREFIX]
+		GeneralSettingsSchema | CompressionSettingsSchema | ProxySettingsSchema
 	>;
 	url: UrlSchema;
 };
@@ -162,28 +155,24 @@ type StorageChanges = Record<string, Browser.storage.StorageChange>;
  *
  * @returns a callback to remove the listener
  */
-export function watchChangesToSiteSpecificGeneralSettings(
-	callback: (changes: SiteSpecificStorageChange[]) => void,
-) {
+export function watchChangesToSiteSpecificSettings(callback: () => void) {
 	const listener = (changes: StorageChanges) => {
-		const siteSpecificChanges: SiteSpecificStorageChange[] = [];
+		let areThereRelevantChanges = false;
 
 		for (const key in changes) {
 			const url = extractPossibleUrlFromStorageKey(key);
 
-			const change = changes[key];
+			if (!url) continue;
 
-			if (!url || !change) continue;
-
-			if (key.startsWith(EXTRACTED_SITE_SPECIFIC_SETTINGS_PREFIX)) {
-				siteSpecificChanges.push({
-					change,
-					url,
-				});
+			// e.g siteScopeGeneral-https://foo.bar
+			if (v.is(UrlSchema, key.split("-")[1])) {
+				areThereRelevantChanges = true;
 			}
 		}
 
-		callback(siteSpecificChanges);
+		if (areThereRelevantChanges) {
+			callback();
+		}
 	};
 
 	onChanged.addListener(listener);
