@@ -11,7 +11,9 @@ import {
 	defaultCompressionSettingsStorageItem,
 	defaultGeneralSettingsStorageItem,
 	defaultProxySettingsStorageItem,
+	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
+	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
 import { getSiteUrlOrigins } from "./storage";
 import { getUrlSchemaHost } from "./url";
@@ -118,15 +120,17 @@ export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
 	return null;
 }
 
+interface DnrSettingsDataPayload {
+	general: GeneralSettingsSchema;
+	compression: CompressionSettingsSchema;
+	proxy: ProxySettingsSchema;
+}
+
 interface DnrCallbackPayload {
-	default: {
-		general: GeneralSettingsSchema;
-		compression: CompressionSettingsSchema;
-		proxy: ProxySettingsSchema;
-	};
+	default: DnrSettingsDataPayload;
 	site: {
-		/** all the available site origins */
-		origins: UrlSchema[];
+		/** all the available site origins and their data */
+		originData: Map<UrlSchema, DnrSettingsDataPayload>;
 
 		/** Solely for default dnr functions to exclude sites */
 		priorityDomains: SiteDomainsWithPriorityRules;
@@ -162,15 +166,42 @@ async function onChangedListener(
 		defaultGeneralSettings,
 		defaultCompressionSettings,
 		defaultProxySettings,
-		siteOrigins,
+		siteOriginSettingsArray,
 		sitePriorityDomains,
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultProxySettingsStorageItem.getValue(),
-		getSiteUrlOrigins(),
+		getSiteUrlOrigins()
+			.then((origins) =>
+				origins
+					.keys()
+					.map(async (origin) => {
+						const [generalSettings, compressionSettings, proxySettings] =
+							await Promise.all([
+								getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
+								getSiteSpecificCompressionSettingsStorageItem(
+									origin,
+								).getValue(),
+								getSiteSpecificProxySettingsStorageItem(origin).getValue(),
+							]);
+
+						const payload: DnrSettingsDataPayload = {
+							compression: compressionSettings,
+							general: generalSettings,
+							proxy: proxySettings,
+						};
+
+						return [origin, payload] as const;
+					})
+					.toArray(),
+			)
+			.then((arrayOfPromises) => Promise.all(arrayOfPromises)),
 		getSiteDomainsWithPriorityRules(),
 	]);
+
+	const siteOriginSettingsMap: DnrCallbackPayload["site"]["originData"] =
+		new Map(siteOriginSettingsArray);
 
 	const payload: DnrCallbackPayload = {
 		default: {
@@ -178,7 +209,10 @@ async function onChangedListener(
 			general: defaultGeneralSettings,
 			proxy: defaultProxySettings,
 		},
-		site: { origins: [...siteOrigins], priorityDomains: sitePriorityDomains },
+		site: {
+			originData: siteOriginSettingsMap,
+			priorityDomains: sitePriorityDomains,
+		},
 	};
 
 	for (const cb of cbs) {
