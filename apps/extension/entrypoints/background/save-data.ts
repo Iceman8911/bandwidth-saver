@@ -3,10 +3,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import {
-	type DnrRuleModifierCallbackPayload,
-	runDnrRuleModifiersOnStorageChange,
-} from "@/utils/dnr-rules";
+import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
@@ -24,17 +21,6 @@ const SAVE_DATA_RULE_ACTION: Browser.declarativeNetRequest.RuleAction = {
 	],
 	type: "modifyHeaders",
 };
-
-/**
- * Applies both default and site-specific Save-Data rules.
- * This ensures excludedInitiatorDomains stays in sync when site settings change.
- */
-async function applyAllSaveDataRules(
-	payload: DnrRuleModifierCallbackPayload,
-): Promise<void> {
-	await applyDefaultSaveDataRules(payload);
-	await applySiteSaveDataRules(payload);
-}
 
 async function applyDefaultSaveDataRules(
 	payload: DnrRuleModifierCallbackPayload,
@@ -109,21 +95,9 @@ async function applySiteSaveDataRules({
 	await Promise.all(promises);
 }
 
-async function toggleSaveDataOnStartup(
+export async function refreshSaveDataDnrRules(
 	payload: DnrRuleModifierCallbackPayload,
 ) {
-	await applyAllSaveDataRules(payload);
-}
-
-let hasRunOnStartup = false;
-
-export async function saveDataToggleWatcher(
-	payload: DnrRuleModifierCallbackPayload,
-) {
-	if (!hasRunOnStartup) {
-		await toggleSaveDataOnStartup(payload);
-		hasRunOnStartup = true;
-	}
-
-	await applyAllSaveDataRules(payload);
+	await applyDefaultSaveDataRules(payload);
+	await applySiteSaveDataRules(payload);
 }

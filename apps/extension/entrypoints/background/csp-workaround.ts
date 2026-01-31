@@ -3,10 +3,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import {
-	type DnrRuleModifierCallbackPayload,
-	runDnrRuleModifiersOnStorageChange,
-} from "@/utils/dnr-rules";
+import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -26,17 +23,6 @@ const RESOURCE_TYPES = [
 	"main_frame",
 	"sub_frame",
 ] as const satisfies Browser.declarativeNetRequest.RuleCondition["resourceTypes"];
-
-/**
- * Applies both default and site-specific CSP bypass rules.
- * This ensures excludedInitiatorDomains stays in sync when site settings change.
- */
-async function applyAllCspRules(
-	payload: DnrRuleModifierCallbackPayload,
-): Promise<void> {
-	await applyDefaultCspRules(payload);
-	await applySiteCspRules(payload);
-}
 
 async function applyDefaultCspRules(
 	payload: DnrRuleModifierCallbackPayload,
@@ -111,21 +97,9 @@ async function applySiteCspRules({
 	await Promise.all(promises);
 }
 
-async function toggleCspBlockingOnStartup(
+export async function refreshCspBlockingDnrRules(
 	payload: DnrRuleModifierCallbackPayload,
 ) {
-	await applyAllCspRules(payload);
-}
-
-let hasRunOnStartup = false;
-
-export async function cspBypassToggleWatcher(
-	payload: DnrRuleModifierCallbackPayload,
-) {
-	if (!hasRunOnStartup) {
-		await toggleCspBlockingOnStartup(payload);
-		hasRunOnStartup = true;
-	}
-
-	await applyAllCspRules(payload);
+	await applyDefaultCspRules(payload);
+	await applySiteCspRules(payload);
 }

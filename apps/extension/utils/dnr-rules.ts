@@ -108,7 +108,7 @@ export type DnrRuleModifierCallbackPayload = ReadonlyDeep<{
 type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
 
 /** Gets all the data needed for running the dnr rule modifier functions */
-async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
+export async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
 	// Get the values
 	const [
 		defaultGeneralSettings,
