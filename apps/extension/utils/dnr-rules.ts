@@ -16,7 +16,11 @@ import {
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
 import { getSiteUrlOrigins } from "./storage";
-import { getUrlSchemaHost } from "./url";
+import {
+	type DnrSiteScopeUrlIdPayload,
+	getUrlIdsFromOrigin,
+	getUrlSchemaHost,
+} from "./url";
 
 /**
  * Applies site-specific declarative net request rules to all sites with custom settings.
@@ -129,8 +133,11 @@ interface DnrSettingsDataPayload {
 interface DnrCallbackPayload {
 	default: DnrSettingsDataPayload;
 	site: {
-		/** all the available site origins and their data */
-		originData: Map<UrlSchema, DnrSettingsDataPayload>;
+		/** all the available site origins and their data and dnr ids */
+		originData: Map<
+			UrlSchema,
+			{ data: DnrSettingsDataPayload; ids: DnrSiteScopeUrlIdPayload }
+		>;
 
 		/** Solely for default dnr functions to exclude sites */
 		priorityDomains: SiteDomainsWithPriorityRules;
@@ -192,7 +199,10 @@ async function onChangedListener(
 							proxy: proxySettings,
 						};
 
-						return [origin, payload] as const;
+						return [
+							origin,
+							{ data: payload, ids: getUrlIdsFromOrigin(origin) },
+						] as const;
 					})
 					.toArray(),
 			)
