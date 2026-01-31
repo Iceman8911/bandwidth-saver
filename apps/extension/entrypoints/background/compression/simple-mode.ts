@@ -4,19 +4,14 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import { type Browser, browser } from "wxt/browser";
+import { browser } from "wxt/browser";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import {
-	defaultCompressionSettingsStorageItem,
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificCompressionSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
-import { getSiteDomainsWithPriorityRules } from "@/utils/dnr-rules";
+import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
+import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
@@ -63,154 +58,170 @@ function getUrlToRedirectToForChosenEndpoint(
 	}
 }
 
-export async function getDefaultSimpleCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const [
-		{ format, preferredEndpoint, preserveAnim, quality, mode },
-		{ compression, enabled },
-	] = await Promise.all([
-		defaultCompressionSettingsStorageItem.getValue(),
-		defaultGeneralSettingsStorageItem.getValue(),
-	]);
+async function applyDefaultSimpleCompressionRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	const {
+		default: {
+			compression: { format, preferredEndpoint, preserveAnim, quality, mode },
+			general: { compression, enabled },
+		},
+		site: {
+			priorityDomains: { all },
+		},
+	} = payload;
 
-	const isEnabled = compression && mode === SIMPLE_MODE && enabled;
+	const isEnabled = enabled && compression && mode === SIMPLE_MODE;
 
-	if (!isEnabled) {
-		return {
-			removeRuleIds: [
-				DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
-			],
-		};
-	}
+	await browser.declarativeNetRequest.updateSessionRules({
+		addRules: isEnabled
+			? [
+					{
+						action: {
+							redirect: {
+								regexSubstitution: (() => {
+									const urlConstructor =
+										IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
 
-	const excludedDomains = Object.values(
-		await getSiteDomainsWithPriorityRules(),
-	).flat();
+									const fallbackEndpoint =
+										getFallbackEndpoint(preferredEndpoint);
+									const fallbackUrlConstructor =
+										IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
 
-	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
-	const fallbackEndpoint = getFallbackEndpoint(preferredEndpoint);
-	const fallbackUrlConstructor =
-		IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
+									return urlConstructor({
+										default_bwsvr8911: fallbackUrlConstructor({
+											default_bwsvr8911: BASE_URL_WITH_FLAG,
+											format_bwsvr8911: format,
+											preserveAnim_bwsvr8911: preserveAnim,
+											quality_bwsvr8911: quality,
+											url_bwsvr8911:
+												getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
+										}),
+										format_bwsvr8911: format,
+										preserveAnim_bwsvr8911: preserveAnim,
+										quality_bwsvr8911: quality,
+										url_bwsvr8911:
+											getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
+									});
+								})(),
+							},
+							type: "redirect",
+						},
+						condition: (() => {
+							const excludedDomains = [...all];
+							const preferredEndpointDomain =
+								getHostnameForDeclarativeNetRequest(preferredEndpoint);
 
-	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
-
-	return {
-		addRules: [
-			{
-				action: {
-					redirect: {
-						regexSubstitution: urlConstructor({
-							default_bwsvr8911: fallbackUrlConstructor({
-								default_bwsvr8911: BASE_URL_WITH_FLAG,
-								format_bwsvr8911: format,
-								preserveAnim_bwsvr8911: preserveAnim,
-								quality_bwsvr8911: quality,
-								url_bwsvr8911:
-									getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
-							}),
-							format_bwsvr8911: format,
-							preserveAnim_bwsvr8911: preserveAnim,
-							quality_bwsvr8911: quality,
-							url_bwsvr8911:
-								getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
-						}),
+							return {
+								excludedInitiatorDomains: excludedDomains.concat(
+									preferredEndpointDomain,
+								),
+								excludedRequestDomains: [preferredEndpointDomain],
+								regexFilter: IMAGE_URL_REGEX,
+								resourceTypes: ["image"],
+							};
+						})(),
+						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
+						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
-					type: "redirect",
-				},
-				condition: {
-					excludedInitiatorDomains: excludedDomains.length
-						? [...excludedDomains, preferredEndpointDomain]
-						: [preferredEndpointDomain],
-					excludedRequestDomains: [preferredEndpointDomain],
-					regexFilter: IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
-				id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
-				priority: DeclarativeNetRequestPriority.LOWEST,
-			},
-		],
+				]
+			: undefined,
 		removeRuleIds: [
 			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
 		],
-	};
+	});
 }
 
-export async function getSiteSimpleCompressionRules(
-	url: UrlSchema,
-): PuseSiteRule: ruleIdOffseter.declarativeNetRequest.UpdateRuleOptions> {
-	const [
-		{ ruleIdOffset, compression, enabled },
-		{ format, preserveAnim, quality, mode, preferredEndpoint },
-	] = await Promise.all([
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-		getSiteSpecificCompressionSettingsStorageItem(url).getValue(),
-	]);
-
-	const isEnabled =
-		compression && mode === SIMPLE_MODE && ruleIdOffset != null && enabled;
-
-	const initiatorDomain = new URL(url).host;
-
-	if (!isEnabled) {
-		// Search for the old rule since it only has a single intiator domain, and the appropriate unique image regex
-		const possibleRuleToRemove = (
-			await browser.declarativeNetRequest.getSessionRules()
-		).find(
-			({ condition: { regexFilter, initiatorDomains } }) =>
-				regexFilter === IMAGE_URL_REGEX &&
-				initiatorDomains?.[0] === initiatorDomain,
-		);
-
-		return {
-			removeRuleIds: possibleRuleToRemove
-				? [possibleRuleToRemove.id]
-				: undefined,
-		};
-	}
-
-	const ruleIdWithOffset =
-		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_SIMPLE +
-		(ruleIdOffset ?? 0);
-
-	const preferredEndpointDomain = preferredEndpoint.replace(/^https?:\/\//, "");
-
-	const urlConstructor = IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
-	const fallbackEndpoint = getFallbackEndpoint(preferredEndpoint);
-	const fallbackUrlConstructor =
-		IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
-
-	return {
-		addRules: [
+async function applySiteSimpleCompressionRules({
+	site: { originData },
+}: DnrRuleModifierCallbackPayload): Promise<void> {
+	const promises = originData.entries().map(
+		async ([
+			host,
 			{
-				action: {
-					redirect: {
-						regexSubstitution: urlConstructor({
-							default_bwsvr8911: fallbackUrlConstructor({
-								default_bwsvr8911: BASE_URL_WITH_FLAG,
-								format_bwsvr8911: format,
-								preserveAnim_bwsvr8911: preserveAnim,
-								quality_bwsvr8911: quality,
-								url_bwsvr8911:
-									getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
-							}),
-							format_bwsvr8911: format,
-							preserveAnim_bwsvr8911: preserveAnim,
-							quality_bwsvr8911: quality,
-							url_bwsvr8911:
-								getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
-						}),
+				data: {
+					compression: {
+						format,
+						preferredEndpoint,
+						preserveAnim,
+						quality,
+						mode,
 					},
-					type: "redirect",
+					general: { compression, enabled, useSiteRule },
 				},
-				condition: {
-					excludedRequestDomains: [preferredEndpointDomain],
-					initiatorDomains: [initiatorDomain],
-					regexFilter: IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
+				ids: {
+					compression: { simple: simpleCompressionId },
 				},
-				id: ruleIdWithOffset,
-				priority: DeclarativeNetRequestPriority.LOWEST,
 			},
-		],
-		removeRuleIds: [ruleIdWithOffset],
-	};
+		]) => {
+			const isEnabled =
+				enabled && compression && useSiteRule && mode === SIMPLE_MODE;
+
+			await browser.declarativeNetRequest.updateSessionRules({
+				addRules: isEnabled
+					? [
+							{
+								action: {
+									redirect: {
+										regexSubstitution: (() => {
+											const urlConstructor =
+												IMAGE_COMPRESSION_URL_CONSTRUCTORS[preferredEndpoint];
+
+											const fallbackEndpoint =
+												getFallbackEndpoint(preferredEndpoint);
+											const fallbackUrlConstructor =
+												IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
+
+											return urlConstructor({
+												default_bwsvr8911: fallbackUrlConstructor({
+													default_bwsvr8911: BASE_URL_WITH_FLAG,
+													format_bwsvr8911: format,
+													preserveAnim_bwsvr8911: preserveAnim,
+													quality_bwsvr8911: quality,
+													url_bwsvr8911:
+														getUrlToRedirectToForChosenEndpoint(
+															fallbackEndpoint,
+														),
+												}),
+												format_bwsvr8911: format,
+												preserveAnim_bwsvr8911: preserveAnim,
+												quality_bwsvr8911: quality,
+												url_bwsvr8911:
+													getUrlToRedirectToForChosenEndpoint(
+														preferredEndpoint,
+													),
+											});
+										})(),
+									},
+									type: "redirect",
+								},
+								condition: (() => {
+									const preferredEndpointDomain =
+										getHostnameForDeclarativeNetRequest(preferredEndpoint);
+
+									return {
+										excludedRequestDomains: [preferredEndpointDomain],
+										initiatorDomains: [host],
+										regexFilter: IMAGE_URL_REGEX,
+										resourceTypes: ["image"],
+									};
+								})(),
+								id: simpleCompressionId,
+								priority: DeclarativeNetRequestPriority.LOWEST,
+							},
+						]
+					: undefined,
+				removeRuleIds: [simpleCompressionId],
+			});
+		},
+	);
+
+	await Promise.all(promises);
+}
+
+export async function refreshSimpleCompressionDnrRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	await applyDefaultSimpleCompressionRules(payload);
+	await applySiteSimpleCompressionRules(payload);
 }

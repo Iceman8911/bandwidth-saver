@@ -2,46 +2,42 @@ import {
 	customProxyUrlConstructor,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
-import { type Browser, browser } from "wxt/browser";
+import { browser } from "wxt/browser";
 import {
 	CompressionMode,
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import {
-	defaultCompressionSettingsStorageItem,
-	defaultGeneralSettingsStorageItem,
-	defaultProxySettingsStorageItem,
-	getSiteSpecificCompressionSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-	getSiteSpecificProxySettingsStorageItem,
-} from "@/shared/storage";
-import { getSiteDomainsWithPriorityRules } from "@/utils/dnr-rules";
+import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
+import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
 const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://.+)`;
 
-export async function getDefaultProxyCompressionRules(): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const [
-		{ format, preserveAnim, quality, mode },
-		proxySettings,
-		{ compression, enabled },
-	] = await Promise.all([
-		defaultCompressionSettingsStorageItem.getValue(),
-		defaultProxySettingsStorageItem.getValue(),
-		defaultGeneralSettingsStorageItem.getValue(),
-	]);
+export async function applyDefaultProxyCompressionRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	const {
+		default: {
+			compression: { format, preserveAnim, mode, quality },
+			general: { compression, enabled },
+			proxy: proxySettings,
+		},
+		site: {
+			priorityDomains: { all: excludedDomains },
+		},
+	} = payload;
 
-	const isEnabled = compression && mode === PROXY_MODE && enabled;
+	const isEnabled = enabled && compression && mode === PROXY_MODE;
 
 	if (!isEnabled) {
-		return {
+		return browser.declarativeNetRequest.updateSessionRules({
 			removeRuleIds: [
 				DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
 			],
-		};
+		});
 	}
 
 	const proxyUrl = customProxyUrlConstructor(
@@ -54,13 +50,9 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 		proxySettings,
 	);
 
-	const proxyDomain = proxySettings.host.replace(/^https?:\/\//, "");
+	const proxyDomain = getHostnameForDeclarativeNetRequest(proxySettings.host);
 
-	const excludedDomains = Object.values(
-		await getSiteDomainsWithPriorityRules(),
-	).flat();
-
-	return {
+	return browser.declarativeNetRequest.updateSessionRules({
 		addRules: [
 			{
 				action: {
@@ -70,10 +62,7 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 					type: "redirect",
 				},
 				condition: {
-					excludedInitiatorDomains: [
-						proxyDomain,
-						...(excludedDomains.length ? excludedDomains : []),
-					],
+					excludedInitiatorDomains: excludedDomains.concat(proxyDomain),
 					excludedRequestDomains: [proxyDomain],
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
@@ -84,80 +73,80 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 			},
 		],
 		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY],
-	};
+	});
 }
 
-export async function getSiteProxyCompressionRules(
-	url: UrlSchema,
-): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	conuseSiteRule: ruleIdOffset
-		{ ruleIdOffset, compression, enabled },
-		{ format, preserveAnim, quality, mode },
-		proxySettings,
-	] = await Promise.all([
-		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
-		getSiteSpecificCompressionSettingsStorageItem(url).getValue(),
-		getSiteSpecificProxySettingsStorageItem(url).getValue(),
-	]);
+export async function applySiteProxyCompressionRules({
+	site: { originData },
+}: DnrRuleModifierCallbackPayload): Promise<void> {
+	const promises = originData.entries().map(
+		async ([
+			host,
+			{
+				data: {
+					compression: { format, preserveAnim, quality, mode },
+					general: { compression, enabled, useSiteRule },
+					proxy: proxySettings,
+				},
+				ids: {
+					compression: { proxy: proxyCompressionId },
+				},
+			},
+		]) => {
+			const isEnabled =
+				enabled && compression && useSiteRule && mode === PROXY_MODE;
 
-	const isEnabled =
-		compression && ruleIdOffset != null && mode === PROXY_MODE && enabled;
+			if (!isEnabled) {
+				return browser.declarativeNetRequest.updateSessionRules({
+					removeRuleIds: [proxyCompressionId],
+				});
+			}
 
-	const ruleIdWithOffset =
-		DeclarativeNetRequestRuleIds.SITE_COMPRESSION_MODE_PROXY +
-		(ruleIdOffset ?? 0);
+			const proxyUrl = customProxyUrlConstructor(
+				{
+					format_bwsvr8911: format,
+					preserveAnim_bwsvr8911: preserveAnim,
+					quality_bwsvr8911: quality,
+					url_bwsvr8911: "\\0" as UrlSchema,
+				},
+				proxySettings,
+			);
 
-	const initiatorDomain = new URL(url).host;
+			const proxyDomain = getHostnameForDeclarativeNetRequest(
+				proxySettings.host,
+			);
 
-	if (!isEnabled) {
-		// Search for the old rule since it only has a single intiator domain, and the appropriate unique image regex
-		const possibleRuleToRemove = (
-			await browser.declarativeNetRequest.getSessionRules()
-		).find(
-			({ condition: { regexFilter, initiatorDomains } }) =>
-				regexFilter === IMAGE_URL_REGEX &&
-				initiatorDomains?.[0] === initiatorDomain,
-		);
-
-		return {
-			removeRuleIds: possibleRuleToRemove
-				? [possibleRuleToRemove.id]
-				: undefined,
-		};
-	}
-
-	const proxyUrl = customProxyUrlConstructor(
-		{
-			format_bwsvr8911: format,
-			preserveAnim_bwsvr8911: preserveAnim,
-			quality_bwsvr8911: quality,
-			url_bwsvr8911: "\\0" as UrlSchema,
+			return browser.declarativeNetRequest.updateSessionRules({
+				addRules: [
+					{
+						action: {
+							redirect: {
+								regexSubstitution: proxyUrl,
+							},
+							type: "redirect",
+						},
+						condition: {
+							excludedRequestDomains: [proxyDomain],
+							initiatorDomains: [host],
+							regexFilter: IMAGE_URL_REGEX,
+							resourceTypes: ["image"],
+						},
+						id: proxyCompressionId,
+						// Set to high to override some static rules
+						priority: DeclarativeNetRequestPriority.HIGH,
+					},
+				],
+				removeRuleIds: [proxyCompressionId],
+			});
 		},
-		proxySettings,
 	);
 
-	const proxyDomain = proxySettings.host.replace(/^https?:\/\//, "");
+	await Promise.all(promises);
+}
 
-	return {
-		addRules: [
-			{
-				action: {
-					redirect: {
-						regexSubstitution: proxyUrl,
-					},
-					type: "redirect",
-				},
-				condition: {
-					excludedRequestDomains: [proxyDomain],
-					initiatorDomains: [initiatorDomain],
-					regexFilter: IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
-				id: ruleIdWithOffset,
-				// Set to high to override some static rules
-				priority: DeclarativeNetRequestPriority.HIGH,
-			},
-		],
-		removeRuleIds: [ruleIdWithOffset],
-	};
+export async function refreshProxyCompressionDnrRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	await applyDefaultProxyCompressionRules(payload);
+	await applySiteProxyCompressionRules(payload);
 }

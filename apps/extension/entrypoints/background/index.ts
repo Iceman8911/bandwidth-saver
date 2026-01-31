@@ -4,7 +4,8 @@ import {
 	runDnrRuleModifiersOnStorageChange,
 } from "@/utils/dnr-rules";
 import { startRecordingPossibleSiteOriginsToEnqueue } from "@/utils/storage";
-import { compressionToggleWatcher } from "./compression";
+import { refreshProxyCompressionDnrRules } from "./compression/proxy-mode";
+import { refreshSimpleCompressionDnrRules } from "./compression/simple-mode";
 import { refreshCspBlockingDnrRules } from "./csp-workaround";
 import { refreshSaveDataDnrRules } from "./save-data";
 import { registerStaticRules } from "./static-rules";
@@ -29,13 +30,16 @@ export default defineBackground({
 			await Promise.all([
 				refreshSaveDataDnrRules(payload),
 				refreshCspBlockingDnrRules(payload),
+				refreshSimpleCompressionDnrRules(payload),
+				refreshProxyCompressionDnrRules(payload),
 			]);
 
 			// Refresh the rules anythime the storage changes
 			runDnrRuleModifiersOnStorageChange(
 				refreshSaveDataDnrRules,
-				compressionToggleWatcher,
 				refreshCspBlockingDnrRules,
+				refreshSimpleCompressionDnrRules,
+				refreshProxyCompressionDnrRules,
 			);
 		});
 	},
