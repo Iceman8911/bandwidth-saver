@@ -72,43 +72,41 @@ async function applyDefaultCspRules(
 	});
 }
 
-async function applySiteCspRules(payload: DnrRuleModifierCallbackPayload) {
-	const {
-		site: { originData },
-	} = payload;
-
-	for (const [
-		host,
-		{
-			data: {
-				general: { bypassCsp, enabled, useSiteRule },
+async function applySiteCspRules({
+	site: { originData },
+}: DnrRuleModifierCallbackPayload) {
+	const promises = originData.entries().map(
+		async ([
+			host,
+			{
+				data: {
+					general: { bypassCsp, enabled, useSiteRule },
+				},
+				ids: { cspBlock: cspBlockRuleId },
 			},
-			ids: { cspBlock: cspBlockRuleId },
-		},
-	] of originData) {
-		const isEnabled = enabled && useSiteRule && bypassCsp;
+		]) => {
+			const isEnabled = enabled && useSiteRule && bypassCsp;
 
-		if (isEnabled) {
 			await browser.declarativeNetRequest.updateSessionRules({
+				addRules: isEnabled
+					? [
+							{
+								action: REMOVE_CSP_HEADER_RULES,
+								condition: {
+									initiatorDomains: [host],
+									resourceTypes: RESOURCE_TYPES,
+								},
+								id: cspBlockRuleId,
+								priority: DeclarativeNetRequestPriority.LOWEST,
+							},
+						]
+					: undefined,
 				removeRuleIds: [cspBlockRuleId],
 			});
-		} else {
-			await browser.declarativeNetRequest.updateSessionRules({
-				addRules: [
-					{
-						action: REMOVE_CSP_HEADER_RULES,
-						condition: {
-							initiatorDomains: [host],
-							resourceTypes: RESOURCE_TYPES,
-						},
-						id: cspBlockRuleId,
-						priority: DeclarativeNetRequestPriority.LOWEST,
-					},
-				],
-				removeRuleIds: [cspBlockRuleId],
-			});
-		}
-	}
+		},
+	);
+
+	await Promise.all(promises);
 }
 
 async function toggleCspBlockingOnStartup(
