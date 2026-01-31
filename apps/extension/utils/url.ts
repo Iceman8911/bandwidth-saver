@@ -1,5 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
+import { lru } from "tiny-lru";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import { generateDeterministicNumericIdsFromString } from "./id";
 
 const IMAGE_EXTS = [
 	"png",
@@ -60,4 +62,39 @@ export function getUrlSchemaHost(url: UrlSchema): string {
 	if (!possibleHost) throw Error(`Could not extract host from "url": ${url}`);
 
 	return possibleHost;
+}
+
+export type DnrSiteScopeUrlIdPayload = Readonly<{
+	compression: Readonly<{
+		simple: number;
+		proxy: number;
+	}>;
+	saveData: number;
+	cspBlock: number;
+}>;
+
+const urlIdCache = lru<DnrSiteScopeUrlIdPayload>(200);
+
+export function getUrlIdsFromOrigin(
+	origin: UrlSchema,
+): DnrSiteScopeUrlIdPayload {
+	const cachedIds = urlIdCache.get(origin);
+
+	if (cachedIds) return cachedIds;
+
+	const [simpleCompressionId, proxyCompressionId, saveDataId, cspBlockId] =
+		generateDeterministicNumericIdsFromString(origin, 4);
+
+	const ids: DnrSiteScopeUrlIdPayload = {
+		compression: {
+			proxy: proxyCompressionId,
+			simple: simpleCompressionId,
+		},
+		cspBlock: cspBlockId,
+		saveData: saveDataId,
+	};
+
+	urlIdCache.set(origin, ids);
+
+	return ids;
 }
