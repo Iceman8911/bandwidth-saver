@@ -4,6 +4,7 @@ import { type Browser, browser } from "wxt/browser";
 import { StorageAreaSchema } from "@/models/storage";
 import { StorageKey } from "@/shared/constants";
 import { siteUrlOriginsStorageItem } from "@/shared/storage";
+import { isExtensionUrl } from "./url";
 
 const { SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX: SITE_SPECIFIC_SETTINGS_PREFIX } =
 	StorageKey;
@@ -89,7 +90,7 @@ async function getSiteUrlOriginsFromStorage(): Promise<
 	return allStorageKeys.reduce<UrlSchema[]>((origins, key) => {
 		const origin = extractPossibleUrlFromStorageKey(key);
 
-		if (origin) origins.push(origin);
+		if (origin && !isExtensionUrl(origin)) origins.push(origin);
 
 		return origins;
 	}, []);
