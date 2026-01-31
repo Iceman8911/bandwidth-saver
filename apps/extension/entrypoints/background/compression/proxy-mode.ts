@@ -9,7 +9,7 @@ import {
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
 import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
-import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
+import { getUrlSchemaHost } from "@/utils/url";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
@@ -50,7 +50,7 @@ export async function applyDefaultProxyCompressionRules(
 		proxySettings,
 	);
 
-	const proxyDomain = getHostnameForDeclarativeNetRequest(proxySettings.host);
+	const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
 	return browser.declarativeNetRequest.updateSessionRules({
 		addRules: [
@@ -112,9 +112,7 @@ export async function applySiteProxyCompressionRules({
 				proxySettings,
 			);
 
-			const proxyDomain = getHostnameForDeclarativeNetRequest(
-				proxySettings.host,
-			);
+			const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
 			return browser.declarativeNetRequest.updateSessionRules({
 				addRules: [

@@ -51,16 +51,9 @@ export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
 	return match ? match[0] : url;
 }
 
-const PROTOCOL_REGEX = /^.*\/\//;
-
-/** So something like `https://api.datamuse.com` and `api.datamuse.com` both result in `api.datamuse.com` */
-export function getHostnameForDeclarativeNetRequest(url: string): string {
-	return url.replace(PROTOCOL_REGEX, "");
-}
-
 const URL_SCHEMA_HOST_MATCHER = /^(?:[\w-]+:\/\/)?([\w.-]+)/;
 
-export function getUrlSchemaHost(url: UrlSchema): string {
+export function getUrlSchemaHost(url: string): string {
 	const possibleHost = url.match(URL_SCHEMA_HOST_MATCHER)?.[1];
 
 	if (!possibleHost) throw Error(`Could not extract host from "url": ${url}`);

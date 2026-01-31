@@ -11,7 +11,7 @@ import {
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
 import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
-import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
+import { getUrlSchemaHost } from "@/utils/url";
 import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
@@ -110,7 +110,7 @@ async function applyDefaultSimpleCompressionRules(
 						condition: (() => {
 							const excludedDomains = [...all];
 							const preferredEndpointDomain =
-								getHostnameForDeclarativeNetRequest(preferredEndpoint);
+								getUrlSchemaHost(preferredEndpoint);
 
 							return {
 								excludedInitiatorDomains: excludedDomains.concat(
@@ -197,7 +197,7 @@ async function applySiteSimpleCompressionRules({
 								},
 								condition: (() => {
 									const preferredEndpointDomain =
-										getHostnameForDeclarativeNetRequest(preferredEndpoint);
+										getUrlSchemaHost(preferredEndpoint);
 
 									return {
 										excludedRequestDomains: [preferredEndpointDomain],

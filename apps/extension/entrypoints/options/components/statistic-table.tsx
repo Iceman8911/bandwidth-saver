@@ -7,7 +7,7 @@ import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import { getSumOfValuesInObject } from "@/utils/object";
 import { convertBytesToAppropriateNotation } from "@/utils/size";
 import { getSiteUrlOrigins } from "@/utils/storage";
-import { getHostnameForDeclarativeNetRequest } from "@/utils/url";
+import { getUrlSchemaHost } from "@/utils/url";
 import { getDailyStatisticsForWeek } from "../shared/utils";
 
 const convertBytesToAppropriateNotationString = (bytes: number) =>
@@ -72,7 +72,7 @@ export function OptionsPageStatisticSummaryTable(
 							return (
 								<tr>
 									<th class="max-w-40 overflow-auto text-primary">
-										{getHostnameForDeclarativeNetRequest(val[0])}
+										{getUrlSchemaHost(val[0])}
 									</th>
 									<th>
 										{convertBytesToAppropriateNotationString(
