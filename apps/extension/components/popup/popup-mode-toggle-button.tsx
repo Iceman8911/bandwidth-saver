@@ -9,7 +9,6 @@ import {
 	useContext,
 } from "solid-js";
 import type { GeneralSettingsSchema } from "@/models/storage";
-import { getAvailableSiteRuleIdOffset } from "@/utils/dnr-rules";
 import { BaseButton } from "../button";
 import { BaseTooltip } from "../tooltip";
 import { PopupContext } from "./context";
@@ -63,7 +62,7 @@ export default function PopupModeToggleButton() {
 	const mode = createMemo<ToggleMode>(() => {
 		const val = context.generalSettings.val;
 
-		if (context.scope === "default" || val.ruleIdOffset == null)
+		if (context.scope === "default" || !val.useSiteRule)
 			return val.enabled ? "default" : "off";
 
 		return "site";
@@ -85,12 +84,12 @@ export default function PopupModeToggleButton() {
 				case "default":
 					return {
 						enabled: true,
-						ruleIdOffset: await getAvailableSiteRuleIdOffset(),
+						useSiteRule: true
 					};
 				case "site":
-					return { enabled: false, ruleIdOffset: null };
+					return { enabled: false, useSiteRule: false };
 				case "off":
-					return { enabled: true, ruleIdOffset: null };
+					return { enabled: true, useSiteRule: false };
 				default:
 					throw Error(`Didn't account for mode: ${mode()}`);
 			}

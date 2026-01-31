@@ -1,7 +1,5 @@
 import {
-	deduplicateArrayElements,
 	IMAGE_COMPRESSOR_ENDPOINT_SET,
-	ImageCompressorEndpoint,
 } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
@@ -293,7 +291,7 @@ export default function PopupCompressionSettings() {
 			when={
 				context.scope === "default"
 					? generalSettings().val.enabled
-					: generalSettings().val.ruleIdOffset != null
+					: generalSettings().val.useSiteRule
 			}
 		>
 			<form

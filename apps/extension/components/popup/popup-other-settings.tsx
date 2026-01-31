@@ -161,7 +161,7 @@ export default function PopupOtherSettings() {
 			when={
 				context.scope === "default"
 					? generalSettings().val.enabled
-					: generalSettings().val.ruleIdOffset != null
+					: generalSettings().val.useSiteRule
 			}
 		>
 			<form

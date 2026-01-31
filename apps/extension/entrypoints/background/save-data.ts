@@ -65,7 +65,7 @@ async function applyDefaultSaveDataRules(enabled: boolean): Promise<void> {
 async function applySiteSaveDataRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { saveData, ruleIdOffset, enabled } =
+			const { saveData, useSiteRule: ruleIdOffset, enabled } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 			const applySaveData = saveData && ruleIdOffset != null && enabled;

@@ -136,7 +136,7 @@ export async function getDefaultSimpleCompressionRules(): Promise<Browser.declar
 
 export async function getSiteSimpleCompressionRules(
 	url: UrlSchema,
-): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
+): PuseSiteRule: ruleIdOffseter.declarativeNetRequest.UpdateRuleOptions> {
 	const [
 		{ ruleIdOffset, compression, enabled },
 		{ format, preserveAnim, quality, mode, preferredEndpoint },

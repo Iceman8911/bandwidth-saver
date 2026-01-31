@@ -23,7 +23,7 @@ export function shouldDisableAutoplayForSite(
 	defaultSettings: GeneralSettingsSchema,
 	siteSettings: GeneralSettingsSchema,
 ): boolean {
-	if (siteSettings.ruleIdOffset != null) {
+	if (siteSettings.useSiteRule != null) {
 		return siteSettings.enabled && siteSettings.noAutoplay;
 	}
 

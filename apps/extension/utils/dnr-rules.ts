@@ -22,31 +22,6 @@ import {
 	getUrlSchemaHost,
 } from "./url";
 
-/**
- * Applies site-specific declarative net request rules to all sites with custom settings.
- *
- * @param ruleCb - Function that generates the rule for a given site URL
- */
-export async function applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
-	ruleCb: (
-		url: UrlSchema,
-	) => Promise<Browser.declarativeNetRequest.UpdateRuleOptions>,
-): Promise<void> {
-	const ruleUpdatesToApply: Browser.declarativeNetRequest.UpdateRuleOptions = {
-		addRules: [],
-		removeRuleIds: [],
-	};
-
-	for (const url of await getSiteUrlOrigins()) {
-		const { addRules = [], removeRuleIds = [] } = await ruleCb(url);
-
-		ruleUpdatesToApply.addRules?.push(...addRules);
-		ruleUpdatesToApply.removeRuleIds?.push(...removeRuleIds);
-	}
-
-	await browser.declarativeNetRequest.updateSessionRules(ruleUpdatesToApply);
-}
-
 type RuleAllocationUsage = {
 	used: number;
 	/** The amount of free rules left */
@@ -61,7 +36,7 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 	let used = 0;
 
 	for (const url of await getSiteUrlOrigins()) {
-		const { ruleIdOffset } =
+		const { useSiteRule: ruleIdOffset } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 		if (ruleIdOffset != null) used++;
@@ -94,7 +69,7 @@ export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWith
 	};
 
 	for (const url of await getSiteUrlOrigins()) {
-		const { ruleIdOffset, enabled } =
+		const { useSiteRule: ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 		const host = getUrlSchemaHost(url);
@@ -108,31 +83,6 @@ export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWith
 	}
 
 	return domains;
-}
-
-export async function getAvailableSiteRuleIdOffset(): Promise<number | null> {
-	const usedRuleIdOffsetPromises: Promise<number | null>[] = [];
-
-	for (const url of await getSiteUrlOrigins()) {
-		usedRuleIdOffsetPromises.push(
-			getSiteSpecificGeneralSettingsStorageItem(url)
-				.getValue()
-				.then(({ ruleIdOffset }) => ruleIdOffset),
-		);
-	}
-
-	const excluded = new Set(await Promise.all(usedRuleIdOffsetPromises));
-	for (
-		let i = 0;
-		i < DeclarativeNetRequestRuleIds._DECLARATIVE_NET_REQUEST_RULE_ID_RANGE;
-		i++
-	) {
-		if (!excluded.has(i)) {
-			return i;
-		}
-	}
-
-	return null;
 }
 
 interface DnrSettingsDataPayload {

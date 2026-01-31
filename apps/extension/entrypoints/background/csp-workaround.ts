@@ -69,7 +69,7 @@ async function applyDefaultCspRules(enabled: boolean): Promise<void> {
 async function applySiteCspRules() {
 	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
 		async (url) => {
-			const { bypassCsp, ruleIdOffset, enabled } =
+			const { bypassCsp, useSiteRule: ruleIdOffset, enabled } =
 				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 			const isEnabled = bypassCsp && ruleIdOffset != null && enabled;

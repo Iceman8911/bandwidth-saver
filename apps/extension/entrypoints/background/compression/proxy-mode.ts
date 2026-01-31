@@ -90,7 +90,7 @@ export async function getDefaultProxyCompressionRules(): Promise<Browser.declara
 export async function getSiteProxyCompressionRules(
 	url: UrlSchema,
 ): Promise<Browser.declarativeNetRequest.UpdateRuleOptions> {
-	const [
+	conuseSiteRule: ruleIdOffset
 		{ ruleIdOffset, compression, enabled },
 		{ format, preserveAnim, quality, mode },
 		proxySettings,

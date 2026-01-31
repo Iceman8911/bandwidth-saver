@@ -22,7 +22,7 @@ async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
 	]);
 
-	if (siteSpecificSettings.ruleIdOffset != null)
+	if (siteSpecificSettings.useSiteRule != null)
 		return siteSpecificSettings.compression && siteSpecificSettings.enabled;
 
 	return defaultSettings.compression && defaultSettings.enabled;

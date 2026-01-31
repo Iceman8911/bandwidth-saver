@@ -108,7 +108,7 @@ export default function PopupProxySettings() {
 			when={
 				context.scope === "default"
 					? generalSettings().val.enabled
-					: generalSettings().val.ruleIdOffset != null
+					: generalSettings().val.useSiteRule
 			}
 		>
 			<form

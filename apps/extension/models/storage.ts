@@ -35,11 +35,13 @@ export const GeneralSettingsSchema = v.object({
 	/** If `true`, disables autoplaying of videos and audio  */
 	noAutoplay: v.boolean(),
 
-	/** The offset of the rule id to use for this site.
+	/** If `true`, the site will use it's own scoped rules over the default, else it fallback to the default.
 	 *
-	 * If `null`, the default rule is used
+		* If `enabled` is false, this has no effect
+		*
+		* If this object for the default settings, this value will always be `false`
 	 */
-	ruleIdOffset: v.union([v.number(), v.null()]),
+	useSiteRule: v.boolean(),
 
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
@@ -161,7 +163,7 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	enabled: true,
 	lazyLoad: true,
 	noAutoplay: true,
-	ruleIdOffset: null,
+	useSiteRule: false,
 	saveData: true,
 } as const satisfies GeneralSettingsSchema;
 

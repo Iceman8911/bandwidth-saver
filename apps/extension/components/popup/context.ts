@@ -1,7 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createContext } from "solid-js";
 import { createStore } from "solid-js/store";
-import { DEFAULT_GENERAL_SETTINGS } from "@/models/storage";
+import { DEFAULT_GENERAL_SETTINGS, GeneralSettingsSchema } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { defaultGeneralSettingsStorageItem } from "@/shared/storage";
 
@@ -13,7 +13,7 @@ type PopupContextProps = {
 
 	generalSettings: {
 		item: typeof defaultGeneralSettingsStorageItem;
-		val: typeof DEFAULT_GENERAL_SETTINGS;
+		val: GeneralSettingsSchema
 	};
 };
 
