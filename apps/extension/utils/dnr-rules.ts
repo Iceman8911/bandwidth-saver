@@ -130,7 +130,7 @@ interface DnrSettingsDataPayload {
 	proxy: ProxySettingsSchema;
 }
 
-interface DnrCallbackPayload {
+export interface DnrRuleModifierCallbackPayload {
 	default: DnrSettingsDataPayload;
 	site: {
 		/** all the available site origins and their data and dnr ids */
@@ -144,7 +144,7 @@ interface DnrCallbackPayload {
 	};
 }
 
-type DnrCallback = (payload: DnrCallbackPayload) => Promise<void>;
+type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
 
 const localOnChanged = browser.storage.local.onChanged;
 
@@ -210,10 +210,10 @@ async function onChangedListener(
 		getSiteDomainsWithPriorityRules(),
 	]);
 
-	const siteOriginSettingsMap: DnrCallbackPayload["site"]["originData"] =
+	const siteOriginSettingsMap: DnrRuleModifierCallbackPayload["site"]["originData"] =
 		new Map(siteOriginSettingsArray);
 
-	const payload: DnrCallbackPayload = {
+	const payload: DnrRuleModifierCallbackPayload = {
 		default: {
 			compression: defaultCompressionSettings,
 			general: defaultGeneralSettings,
