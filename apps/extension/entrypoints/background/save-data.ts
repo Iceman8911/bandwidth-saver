@@ -125,7 +125,5 @@ export async function saveDataToggleWatcher(
 		hasRunOnStartup = true;
 	}
 
-	runDnrRuleModifiersOnStorageChange(async (payload) => {
-		await applyAllSaveDataRules(payload);
-	});
+	await applyAllSaveDataRules(payload);
 }

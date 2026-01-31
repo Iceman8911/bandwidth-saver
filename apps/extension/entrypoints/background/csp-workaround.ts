@@ -127,7 +127,5 @@ export async function cspBypassToggleWatcher(
 		hasRunOnStartup = true;
 	}
 
-	runDnrRuleModifiersOnStorageChange(async (payload) => {
-		await applyAllCspRules(payload);
-	});
+	await applyAllCspRules(payload);
 }
