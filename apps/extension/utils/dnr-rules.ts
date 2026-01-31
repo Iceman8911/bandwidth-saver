@@ -1,3 +1,4 @@
+import type { ReadonlyDeep } from "type-fest";
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
 import {
@@ -90,7 +91,7 @@ interface DnrSettingsDataPayload {
 	proxy: ProxySettingsSchema;
 }
 
-export interface DnrRuleModifierCallbackPayload {
+export type DnrRuleModifierCallbackPayload = ReadonlyDeep<{
 	default: DnrSettingsDataPayload;
 	site: {
 		/** all the available site hosts and their data and dnr ids */
@@ -102,7 +103,7 @@ export interface DnrRuleModifierCallbackPayload {
 		/** Solely for default dnr functions to exclude sites */
 		priorityDomains: SiteDomainsWithPriorityRules;
 	};
-}
+}>;
 
 type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
 

@@ -46,9 +46,11 @@ async function applyDefaultCspRules(
 			general: { enabled, bypassCsp },
 		},
 		site: {
-			priorityDomains: { all: excludedDomains },
+			priorityDomains: { all },
 		},
 	} = payload;
+
+	const excludedDomains = [...all];
 
 	const isEnabled = enabled && bypassCsp;
 

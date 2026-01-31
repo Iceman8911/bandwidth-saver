@@ -44,9 +44,11 @@ async function applyDefaultSaveDataRules(
 			general: { enabled, saveData },
 		},
 		site: {
-			priorityDomains: { all: excludedDomains },
+			priorityDomains: { all },
 		},
 	} = payload;
+
+	const excludedDomains = [...all];
 
 	const isEnabled = enabled && saveData;
 
