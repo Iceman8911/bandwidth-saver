@@ -1,9 +1,9 @@
 import { defineBackground } from "wxt/utils/define-background";
 import { startRecordingPossibleSiteOriginsToEnqueue } from "@/utils/storage";
 import { compressionToggleWatcher } from "./compression";
-import { registerStaticRules } from "./compression/static-rules";
 import { cspBypassToggleWatcher } from "./csp-workaround";
 import { saveDataToggleWatcher } from "./save-data";
+import { registerStaticRules } from "./static-rules";
 import {
 	createDailyAlarmForAggregatingOldDailyStats,
 	startCachingBandwidthDataFromPerformanceApi,
