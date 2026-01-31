@@ -107,28 +107,8 @@ export interface DnrRuleModifierCallbackPayload {
 
 type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
 
-const localOnChanged = browser.storage.local.onChanged;
-
-// Using the changes, we'll see if we have to call the cbs with fresh values from storage
-async function onChangedListener(
-	changes: Record<string, Browser.storage.StorageChange>,
-	...cbs: ReadonlyArray<DnrCallback>
-): Promise<void> {
-	let shouldCallCbs = false;
-	for (const key in changes) {
-		const newChange = changes[key]?.newValue;
-
-		if (
-			v.is(GeneralSettingsSchema, newChange) ||
-			v.is(CompressionSettingsSchema, newChange) ||
-			v.is(ProxySettingsSchema, newChange)
-		) {
-			shouldCallCbs = true;
-		}
-	}
-
-	if (!shouldCallCbs) return;
-
+/** Gets all the daat needed for running the dnr rule modifier functions */
+export async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
 	// Get the values
 	const [
 		defaultGeneralSettings,
@@ -185,6 +165,33 @@ async function onChangedListener(
 			priorityDomains: sitePriorityDomains,
 		},
 	};
+
+	return payload;
+}
+
+const localOnChanged = browser.storage.local.onChanged;
+
+// Using the changes, we'll see if we have to call the cbs with fresh values from storage
+async function onChangedListener(
+	changes: Record<string, Browser.storage.StorageChange>,
+	...cbs: ReadonlyArray<DnrCallback>
+): Promise<void> {
+	let shouldCallCbs = false;
+	for (const key in changes) {
+		const newChange = changes[key]?.newValue;
+
+		if (
+			v.is(GeneralSettingsSchema, newChange) ||
+			v.is(CompressionSettingsSchema, newChange) ||
+			v.is(ProxySettingsSchema, newChange)
+		) {
+			shouldCallCbs = true;
+		}
+	}
+
+	if (!shouldCallCbs) return;
+
+	const payload = await getDnrRuleModifierCallbackPayload();
 
 	for (const cb of cbs) {
 		await cb(payload);
