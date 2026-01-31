@@ -139,7 +139,9 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 }
 
 export async function registerStaticRules() {
-	for (const rule of createStaticRules()) {
-		await browser.declarativeNetRequest.updateSessionRules(rule);
-	}
+	return Promise.all(
+		createStaticRules().map((rule) =>
+			browser.declarativeNetRequest.updateSessionRules(rule),
+		),
+	);
 }
