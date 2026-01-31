@@ -17,9 +17,6 @@ export const StorageAreaSchema = v.picklist([
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
 export const GeneralSettingsSchema = v.object({
-	/** If  disabled, all blocking rules are effectively disabled */
-	block: v.boolean(),
-
 	/** Whether the csp headers should be removed.
 	 *
 	 * NOT ADVISED unless you know what you're doing.
@@ -159,7 +156,6 @@ export const DEFAULT_PROXY_SETTINGS = {
 } as const satisfies ProxySettingsSchema;
 
 export const DEFAULT_GENERAL_SETTINGS = {
-	block: true,
 	bypassCsp: false,
 	compression: true,
 	enabled: true,
