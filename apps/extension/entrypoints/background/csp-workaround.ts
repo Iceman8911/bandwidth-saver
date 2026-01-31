@@ -4,14 +4,9 @@ import {
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
 import {
-	defaultGeneralSettingsStorageItem,
-	getSiteSpecificGeneralSettingsStorageItem,
-} from "@/shared/storage";
-import {
-	applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites,
-	getSiteDomainsWithPriorityRules,
+	type DnrRuleModifierCallbackPayload,
+	runDnrRuleModifiersOnStorageChange,
 } from "@/utils/dnr-rules";
-import { watchChangesToSiteSpecificSettings } from "@/utils/storage";
 
 const REMOVE_CSP_HEADER_RULES = {
 	responseHeaders: [
@@ -36,18 +31,29 @@ const RESOURCE_TYPES = [
  * Applies both default and site-specific CSP bypass rules.
  * This ensures excludedInitiatorDomains stays in sync when site settings change.
  */
-async function applyAllCspRules(enabled: boolean): Promise<void> {
-	await applyDefaultCspRules(enabled);
-	await applySiteCspRules();
+async function applyAllCspRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	await applyDefaultCspRules(payload);
+	await applySiteCspRules(payload);
 }
 
-async function applyDefaultCspRules(enabled: boolean): Promise<void> {
-	const excludedDomains = Object.values(
-		await getSiteDomainsWithPriorityRules(),
-	).flat();
+async function applyDefaultCspRules(
+	payload: DnrRuleModifierCallbackPayload,
+): Promise<void> {
+	const {
+		default: {
+			general: { enabled, bypassCsp },
+		},
+		site: {
+			priorityDomains: { all: excludedDomains },
+		},
+	} = payload;
+
+	const isEnabled = enabled && bypassCsp;
 
 	await browser.declarativeNetRequest.updateSessionRules({
-		addRules: enabled
+		addRules: isEnabled
 			? [
 					{
 						action: REMOVE_CSP_HEADER_RULES,
@@ -66,79 +72,57 @@ async function applyDefaultCspRules(enabled: boolean): Promise<void> {
 	});
 }
 
-async function applySiteCspRules() {
-	await applySiteSpecificDeclarativeNetRequestRuleToCompatibleSites(
-		async (url) => {
-			const { bypassCsp, useSiteRule: ruleIdOffset, enabled } =
-				await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
+async function applySiteCspRules(payload: DnrRuleModifierCallbackPayload) {
+	const {
+		site: { originData },
+	} = payload;
 
-			const isEnabled = bypassCsp && ruleIdOffset != null && enabled;
+	for (const [
+		host,
+		{
+			data: {
+				general: { bypassCsp, enabled, useSiteRule },
+			},
+			ids: { cspBlock: cspBlockRuleId },
+		},
+	] of originData) {
+		const isEnabled = enabled && useSiteRule && bypassCsp;
 
-			const initiatorDomain = new URL(url).host;
-
-			const ruleIdWithOffset =
-				DeclarativeNetRequestRuleIds.SITE_BYPASS_CSP_BLOCKING +
-				(ruleIdOffset ?? 0);
-
-			if (!isEnabled) {
-				const possibleRuleToRemove = (
-					await browser.declarativeNetRequest.getSessionRules()
-				).find(
-					({ condition: { initiatorDomains }, action: { responseHeaders } }) =>
-						initiatorDomains?.[0] === initiatorDomain &&
-						responseHeaders?.every(
-							({ header }) =>
-								header === REMOVE_CSP_HEADER_RULES.responseHeaders[0].header ||
-								header === REMOVE_CSP_HEADER_RULES.responseHeaders[1].header,
-						),
-				);
-
-				return {
-					removeRuleIds: possibleRuleToRemove
-						? [possibleRuleToRemove.id]
-						: undefined,
-				};
-			}
-
-			return {
+		if (isEnabled) {
+			await browser.declarativeNetRequest.updateSessionRules({
+				removeRuleIds: [cspBlockRuleId],
+			});
+		} else {
+			await browser.declarativeNetRequest.updateSessionRules({
 				addRules: [
 					{
 						action: REMOVE_CSP_HEADER_RULES,
 						condition: {
+							initiatorDomains: [host],
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: ruleIdWithOffset,
-						initiatorDomains: [initiatorDomain],
+						id: cspBlockRuleId,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				],
-				removeRuleIds: [ruleIdWithOffset],
-			};
-		},
-	);
+				removeRuleIds: [cspBlockRuleId],
+			});
+		}
+	}
 }
 
-async function toggleCspBlockingOnStartup() {
-	const { bypassCsp, enabled } =
-		await defaultGeneralSettingsStorageItem.getValue();
-
-	await applyAllCspRules(bypassCsp && enabled);
+async function toggleCspBlockingOnStartup(
+	payload: DnrRuleModifierCallbackPayload,
+) {
+	await applyAllCspRules(payload);
 }
 
-export async function cspBypassToggleWatcher() {
-	await toggleCspBlockingOnStartup();
+export async function cspBypassToggleWatcher(
+	payload: DnrRuleModifierCallbackPayload,
+) {
+	await toggleCspBlockingOnStartup(payload);
 
-	const defaultSettings = await defaultGeneralSettingsStorageItem.getValue();
-	let cachedEnabled = defaultSettings.enabled && defaultSettings.bypassCsp;
-
-	defaultGeneralSettingsStorageItem.watch(({ bypassCsp, enabled }) => {
-		cachedEnabled = bypassCsp && enabled;
-		applyDefaultCspRules(cachedEnabled);
-	});
-
-	// Reapply BOTH default and site rules when site settings change
-	// This fixes stale excludedInitiatorDomains when useDefaultRules changes
-	watchChangesToSiteSpecificSettings(async () => {
-		await applyAllCspRules(cachedEnabled);
+	runDnrRuleModifiersOnStorageChange(async (payload) => {
+		await applyAllCspRules(payload);
 	});
 }
