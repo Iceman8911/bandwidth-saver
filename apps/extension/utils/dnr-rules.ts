@@ -187,9 +187,7 @@ async function onChangedListener(
 
 	const payload = await getDnrRuleModifierCallbackPayload();
 
-	for (const cb of cbs) {
-		await cb(payload);
-	}
+	await Promise.all(cbs.map((cb) => cb(payload)));
 }
 
 // TODO: make a variant purely for default rule setters
