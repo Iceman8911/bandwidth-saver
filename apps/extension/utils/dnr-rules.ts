@@ -94,9 +94,9 @@ interface DnrSettingsDataPayload {
 export interface DnrRuleModifierCallbackPayload {
 	default: DnrSettingsDataPayload;
 	site: {
-		/** all the available site origins and their data and dnr ids */
+		/** all the available site hosts and their data and dnr ids */
 		originData: Map<
-			UrlSchema,
+			string,
 			{ data: DnrSettingsDataPayload; ids: DnrSiteScopeUrlIdPayload }
 		>;
 
@@ -161,7 +161,7 @@ async function onChangedListener(
 						};
 
 						return [
-							origin,
+							getUrlSchemaHost(origin),
 							{ data: payload, ids: getUrlIdsFromOrigin(origin) },
 						] as const;
 					})
