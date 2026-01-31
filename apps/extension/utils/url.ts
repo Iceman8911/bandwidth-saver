@@ -64,6 +64,12 @@ export function getUrlSchemaHost(url: UrlSchema): string {
 	return possibleHost;
 }
 
+const URL_SCHEMA_EXTENSION_CHECKER_MATCHER = /^.*extension.*:\/\//;
+
+export function isExtensionUrl(url: UrlSchema): boolean {
+	return URL_SCHEMA_EXTENSION_CHECKER_MATCHER.test(url);
+}
+
 export type DnrSiteScopeUrlIdPayload = Readonly<{
 	compression: Readonly<{
 		simple: number;
