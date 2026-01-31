@@ -1,4 +1,3 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
 import {
@@ -122,32 +121,27 @@ export async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifi
 		defaultProxySettingsStorageItem.getValue(),
 		getSiteUrlOrigins()
 			.then((origins) =>
-				origins
-					.keys()
-					.map(async (origin) => {
-						const [generalSettings, compressionSettings, proxySettings] =
-							await Promise.all([
-								getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
-								getSiteSpecificCompressionSettingsStorageItem(
-									origin,
-								).getValue(),
-								getSiteSpecificProxySettingsStorageItem(origin).getValue(),
-							]);
+				origins.keys().map(async (origin) => {
+					const [generalSettings, compressionSettings, proxySettings] =
+						await Promise.all([
+							getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
+							getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
+							getSiteSpecificProxySettingsStorageItem(origin).getValue(),
+						]);
 
-						const payload: DnrSettingsDataPayload = {
-							compression: compressionSettings,
-							general: generalSettings,
-							proxy: proxySettings,
-						};
+					const payload: DnrSettingsDataPayload = {
+						compression: compressionSettings,
+						general: generalSettings,
+						proxy: proxySettings,
+					};
 
-						return [
-							getUrlSchemaHost(origin),
-							{ data: payload, ids: getUrlIdsFromOrigin(origin) },
-						] as const;
-					})
-					.toArray(),
+					return [
+						getUrlSchemaHost(origin),
+						{ data: payload, ids: getUrlIdsFromOrigin(origin) },
+					] as const;
+				}),
 			)
-			.then((arrayOfPromises) => Promise.all(arrayOfPromises)),
+			.then((iterableOfPromises) => Promise.all(iterableOfPromises)),
 		getSiteDomainsWithPriorityRules(),
 	]);
 
@@ -198,6 +192,7 @@ async function onChangedListener(
 	}
 }
 
+// TODO: make a variant purely for default rule setters
 export function runDnrRuleModifiersOnStorageChange(
 	...cbs: ReadonlyArray<DnrCallback>
 ) {
