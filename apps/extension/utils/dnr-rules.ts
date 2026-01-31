@@ -81,18 +81,29 @@ type SiteDomainsWithPriorityRules = {
 
 	/** Prioritize site-scoped settings */
 	active: string[];
+
+	/** All the site domains */
+	all: string[];
 };
 
 export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWithPriorityRules> {
-	const domains: SiteDomainsWithPriorityRules = { active: [], disabled: [] };
+	const domains: SiteDomainsWithPriorityRules = {
+		active: [],
+		all: [],
+		disabled: [],
+	};
 
 	for (const url of await getSiteUrlOrigins()) {
 		const { ruleIdOffset, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-		if (!enabled) domains.disabled.push(getUrlSchemaHost(url));
+		const host = getUrlSchemaHost(url);
+
+		domains.all.push(host);
+
+		if (!enabled) domains.disabled.push(host);
 		else if (ruleIdOffset != null) {
-			domains.active.push(getUrlSchemaHost(url));
+			domains.active.push(host);
 		}
 	}
 
