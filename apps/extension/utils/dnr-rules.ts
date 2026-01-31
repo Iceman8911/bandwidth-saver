@@ -106,8 +106,8 @@ export interface DnrRuleModifierCallbackPayload {
 
 type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
 
-/** Gets all the daat needed for running the dnr rule modifier functions */
-export async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
+/** Gets all the data needed for running the dnr rule modifier functions */
+async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
 	// Get the values
 	const [
 		defaultGeneralSettings,

@@ -115,10 +115,15 @@ async function toggleCspBlockingOnStartup(
 	await applyAllCspRules(payload);
 }
 
+let hasRunOnStartup = false;
+
 export async function cspBypassToggleWatcher(
 	payload: DnrRuleModifierCallbackPayload,
 ) {
-	await toggleCspBlockingOnStartup(payload);
+	if (!hasRunOnStartup) {
+		await toggleCspBlockingOnStartup(payload);
+		hasRunOnStartup = true;
+	}
 
 	runDnrRuleModifiersOnStorageChange(async (payload) => {
 		await applyAllCspRules(payload);

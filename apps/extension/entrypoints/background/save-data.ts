@@ -113,10 +113,15 @@ async function toggleSaveDataOnStartup(
 	await applyAllSaveDataRules(payload);
 }
 
+let hasRunOnStartup = false;
+
 export async function saveDataToggleWatcher(
 	payload: DnrRuleModifierCallbackPayload,
 ) {
-	await toggleSaveDataOnStartup(payload);
+	if (!hasRunOnStartup) {
+		await toggleSaveDataOnStartup(payload);
+		hasRunOnStartup = true;
+	}
 
 	runDnrRuleModifiersOnStorageChange(async (payload) => {
 		await applyAllSaveDataRules(payload);
