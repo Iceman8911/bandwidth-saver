@@ -24,6 +24,7 @@
 		"@wxt-dev/module-solid": "^1.1.4",
 		"daisyui": "^5.5.13",
 		"tailwindcss": "^4.1.18",
+		"type-fest": "^5.4.3",
 		"typescript": "^5.9.3",
 		"vite-plugin-lucide-preprocess": "^1.4.6",
 		"vitest": "^4.0.17",
