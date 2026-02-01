@@ -19,7 +19,7 @@ export function shouldDisablePrefetchForSite(
 	defaultSettings: GeneralSettingsSchema,
 	siteSettings: GeneralSettingsSchema,
 ): boolean {
-	if (siteSettings.useSiteRule != null) {
+	if (siteSettings.useSiteRule) {
 		return siteSettings.enabled && siteSettings.lazyLoad;
 	}
 

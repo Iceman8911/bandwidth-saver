@@ -28,8 +28,7 @@ export async function checkIfUrlReturnsValidResponse(
 		if (
 			response.ok &&
 			(responseTypesToMatch
-				? contentTypeSet != null &&
-					responseTypesToMatchSet.intersection(contentTypeSet).size
+				? responseTypesToMatchSet.intersection(contentTypeSet).size
 				: true)
 		) {
 			return { success: true, url };

@@ -36,10 +36,10 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 	let used = 0;
 
 	for (const url of await getSiteUrlOrigins()) {
-		const { useSiteRule: ruleIdOffset } =
+		const { useSiteRule } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
-		if (ruleIdOffset != null) used++;
+		if (useSiteRule) used++;
 	}
 
 	return {
@@ -69,16 +69,18 @@ export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWith
 	};
 
 	for (const url of await getSiteUrlOrigins()) {
-		const { useSiteRule: ruleIdOffset, enabled } =
+		const { useSiteRule, enabled } =
 			await getSiteSpecificGeneralSettingsStorageItem(url).getValue();
 
 		const host = getUrlSchemaHost(url);
 
-		domains.all.push(host);
+		if (!enabled) {
+			domains.disabled.push(host);
 
-		if (!enabled) domains.disabled.push(host);
-		else if (ruleIdOffset != null) {
+			domains.all.push(host);
+		} else if (useSiteRule) {
 			domains.active.push(host);
+			domains.all.push(host);
 		}
 	}
 
