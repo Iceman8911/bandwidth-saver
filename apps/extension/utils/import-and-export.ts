@@ -9,10 +9,8 @@ import {
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
-	getSiteSpecificStatisticsStorageItem,
 	schemaVersionStorageItem,
 	siteUrlOriginsStorageItem,
-	statisticsStorageItem,
 } from "@/shared/storage";
 
 const {
@@ -24,8 +22,6 @@ const {
 	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
 	SITE_URL_ORIGINS,
 	SCHEMA_VERSION,
-	SITE_SPECIFIC_STATISTICS_PREFIX,
-	STATISTICS,
 } = StorageKey;
 
 async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
@@ -35,14 +31,12 @@ async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
 		defaultProxySettings,
 		schemaVersion,
 		siteUrlOrigins,
-		generalStatistics,
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultProxySettingsStorageItem.getValue(),
 		schemaVersionStorageItem.getValue(),
 		siteUrlOriginsStorageItem.getValue(),
-		statisticsStorageItem.getValue(),
 	]);
 
 	const exported: SettingsExportDataSchema = {
@@ -51,16 +45,14 @@ async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
 		[DEFAULT_SETTINGS_PROXY]: defaultProxySettings,
 		[SITE_URL_ORIGINS]: siteUrlOrigins,
 		[SCHEMA_VERSION]: schemaVersion,
-		[STATISTICS]: generalStatistics,
-		site: { compression: {}, general: {}, proxy: {}, statistics: {} },
+		site: { compression: {}, general: {}, proxy: {} },
 	};
 
 	const sitePromises = siteUrlOrigins.map(async (origin) => {
-		const [general, compression, proxy, statistics] = await Promise.all([
+		const [general, compression, proxy] = await Promise.all([
 			getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
 			getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
 			getSiteSpecificProxySettingsStorageItem(origin).getValue(),
-			getSiteSpecificStatisticsStorageItem(origin).getValue(),
 		]);
 
 		exported.site.general[`${SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${origin}`] =
@@ -70,8 +62,6 @@ async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
 		] = compression;
 		exported.site.proxy[`${SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${origin}`] =
 			proxy;
-		exported.site.statistics[`${SITE_SPECIFIC_STATISTICS_PREFIX}${origin}`] =
-			statistics;
 	});
 
 	await Promise.all(sitePromises);
@@ -99,14 +89,13 @@ async function importExtensionSettings(
 				case DEFAULT_SETTINGS_PROXY:
 				case SCHEMA_VERSION:
 				case SITE_URL_ORIGINS:
-				case STATISTICS:
 					promises.push(storage.setItem(settingsKey, settings[settingsKey]));
 					break;
 
 				case "site": {
 					const val = settings[settingsKey];
 
-					const { compression, general, proxy, statistics } = val;
+					const { compression, general, proxy } = val;
 
 					let compressionKey: keyof typeof compression;
 
@@ -126,14 +115,6 @@ async function importExtensionSettings(
 
 					for (proxyKey in proxy) {
 						promises.push(storage.setItem(proxyKey, proxy[proxyKey]));
-					}
-
-					let statisticsKey: keyof typeof statistics;
-
-					for (statisticsKey in statistics) {
-						promises.push(
-							storage.setItem(statisticsKey, statistics[statisticsKey]),
-						);
 					}
 
 					break;
