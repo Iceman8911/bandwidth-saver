@@ -34,8 +34,8 @@ const {
 } = StorageKey;
 
 export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
-	fallback: clone(DEFAULT_SCHEMA_VERSION),
-	init: () => clone(DEFAULT_SCHEMA_VERSION),
+	fallback: clone<number>(DEFAULT_SCHEMA_VERSION),
+	init: () => clone<number>(DEFAULT_SCHEMA_VERSION),
 });
 
 export const siteUrlOriginsStorageItem =
