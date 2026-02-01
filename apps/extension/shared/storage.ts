@@ -17,7 +17,6 @@ import {
 	type SiteUrlOriginsSchema,
 	type StatisticsSchema,
 } from "@/models/storage";
-import { addCacheSupportToStorageItem } from "@/utils/storage/storage-item-cache";
 import { getUrlSchemaOrigin } from "@/utils/url";
 import { StorageKey } from "./constants";
 
@@ -34,50 +33,41 @@ const {
 	SITE_URL_ORIGINS,
 } = StorageKey;
 
-export const schemaVersionStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem(SCHEMA_VERSION, {
-		fallback: clone(DEFAULT_SCHEMA_VERSION),
-		init: () => clone(DEFAULT_SCHEMA_VERSION),
-	}),
-);
+export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
+	fallback: clone(DEFAULT_SCHEMA_VERSION),
+	init: () => clone(DEFAULT_SCHEMA_VERSION),
+});
 
-export const siteUrlOriginsStorageItem = addCacheSupportToStorageItem(
+export const siteUrlOriginsStorageItem =
 	storage.defineItem<SiteUrlOriginsSchema>(SITE_URL_ORIGINS, {
 		fallback: clone(DEFAULT_SITE_URL_ORIGINS),
 		init: () => clone(DEFAULT_SITE_URL_ORIGINS),
-	}),
-);
+	});
 
-export const defaultGeneralSettingsStorageItem = addCacheSupportToStorageItem(
+export const defaultGeneralSettingsStorageItem =
 	storage.defineItem<GeneralSettingsSchema>(DEFAULT_SETTINGS_GENERAL, {
 		fallback: clone(DEFAULT_GENERAL_SETTINGS),
 		init: () => clone(DEFAULT_GENERAL_SETTINGS),
-	}),
-);
+	});
 
 export const defaultCompressionSettingsStorageItem =
-	addCacheSupportToStorageItem(
-		storage.defineItem<CompressionSettingsSchema>(
-			DEFAULT_SETTINGS_COMPRESSION,
-			{
-				fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
-				init: () => clone(DEFAULT_COMPRESSION_SETTINGS),
-			},
-		),
-	);
+	storage.defineItem<CompressionSettingsSchema>(DEFAULT_SETTINGS_COMPRESSION, {
+		fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
+		init: () => clone(DEFAULT_COMPRESSION_SETTINGS),
+	});
 
-export const defaultProxySettingsStorageItem = addCacheSupportToStorageItem(
+export const defaultProxySettingsStorageItem =
 	storage.defineItem<ProxySettingsSchema>(DEFAULT_SETTINGS_PROXY, {
 		fallback: clone(DEFAULT_PROXY_SETTINGS),
 		init: () => clone(DEFAULT_PROXY_SETTINGS),
-	}),
-);
+	});
 
-export const statisticsStorageItem = addCacheSupportToStorageItem(
-	storage.defineItem<StatisticsSchema>(STATISTICS, {
+export const statisticsStorageItem = storage.defineItem<StatisticsSchema>(
+	STATISTICS,
+	{
 		fallback: clone(DEFAULT_STATISTICS),
 		init: () => clone(DEFAULT_STATISTICS),
-	}),
+	},
 );
 
 const CACHE_SIZE = 100;
@@ -109,12 +99,10 @@ export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
-	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem<DetailedStatisticsSchema>(key, {
-			fallback: clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
-			init: () => clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
-		}),
-	);
+	const storageItem = storage.defineItem<DetailedStatisticsSchema>(key, {
+		fallback: clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
+		init: () => clone(DEFAULT_SITE_SPECIFIC_STATISTICS),
+	});
 
 	siteSpecificStatisticsStorageItemCache.set(key, storageItem);
 
@@ -130,12 +118,10 @@ export const getSiteSpecificGeneralSettingsStorageItem = (url: UrlSchema) => {
 
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
-	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem<GeneralSettingsSchema>(key, {
-			fallback: clone(DEFAULT_GENERAL_SETTINGS),
-			init: defaultGeneralSettingsStorageItem.getValue,
-		}),
-	);
+	const storageItem = storage.defineItem<GeneralSettingsSchema>(key, {
+		fallback: clone(DEFAULT_GENERAL_SETTINGS),
+		init: defaultGeneralSettingsStorageItem.getValue,
+	});
 
 	siteSpecificGeneralSettingsStorageItemCache.set(key, storageItem);
 
@@ -153,12 +139,10 @@ export const getSiteSpecificCompressionSettingsStorageItem = (
 
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
-	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem<CompressionSettingsSchema>(key, {
-			fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
-			init: defaultCompressionSettingsStorageItem.getValue,
-		}),
-	);
+	const storageItem = storage.defineItem<CompressionSettingsSchema>(key, {
+		fallback: clone(DEFAULT_COMPRESSION_SETTINGS),
+		init: defaultCompressionSettingsStorageItem.getValue,
+	});
 
 	siteSpecificCompressionSettingsStorageItemCache.set(key, storageItem);
 
@@ -174,12 +158,10 @@ export const getSiteSpecificProxySettingsStorageItem = (url: UrlSchema) => {
 
 	if (possibleCachedStorageItem) return possibleCachedStorageItem;
 
-	const storageItem = addCacheSupportToStorageItem(
-		storage.defineItem<ProxySettingsSchema>(key, {
-			fallback: clone(DEFAULT_PROXY_SETTINGS),
-			init: defaultProxySettingsStorageItem.getValue,
-		}),
-	);
+	const storageItem = storage.defineItem<ProxySettingsSchema>(key, {
+		fallback: clone(DEFAULT_PROXY_SETTINGS),
+		init: defaultProxySettingsStorageItem.getValue,
+	});
 
 	siteSpecificProxySettingsStorageItemCache.set(key, storageItem);
 
