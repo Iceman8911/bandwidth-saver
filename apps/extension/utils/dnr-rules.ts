@@ -50,23 +50,8 @@ export async function getSiteSpecificRuleAllocationUsage(): Promise<RuleAllocati
 	};
 }
 
-type SiteDomainsWithPriorityRules = {
-	/** All settings should be disabled on the site */
-	disabled: string[];
-
-	/** Prioritize site-scoped settings */
-	active: string[];
-
-	/** All the site domains */
-	all: string[];
-};
-
-export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWithPriorityRules> {
-	const domains: SiteDomainsWithPriorityRules = {
-		active: [],
-		all: [],
-		disabled: [],
-	};
+export async function getSiteDomainsWithPriorityRules(): Promise<string[]> {
+	const domains: string[] = [];
 
 	for (const url of await getSiteUrlOrigins()) {
 		const { useSiteRule, enabled } =
@@ -74,13 +59,8 @@ export async function getSiteDomainsWithPriorityRules(): Promise<SiteDomainsWith
 
 		const host = getUrlSchemaHost(url);
 
-		if (!enabled) {
-			domains.disabled.push(host);
-
-			domains.all.push(host);
-		} else if (useSiteRule) {
-			domains.active.push(host);
-			domains.all.push(host);
+		if (!enabled || useSiteRule) {
+			domains.push(host);
 		}
 	}
 
@@ -93,75 +73,83 @@ interface DnrSettingsDataPayload {
 	proxy: ProxySettingsSchema;
 }
 
-export type DnrRuleModifierCallbackPayload = ReadonlyDeep<{
-	default: DnrSettingsDataPayload;
-	site: {
-		/** all the available site hosts and their data and dnr ids */
-		originData: Map<
-			string,
-			{ data: DnrSettingsDataPayload; ids: DnrSiteScopeUrlIdPayload }
-		>;
+export type DefaultDnrRuleModifierPayload = ReadonlyDeep<
+	DnrSettingsDataPayload & {
+		excludedDomains: string[];
+	}
+>;
 
-		/** Solely for default dnr functions to exclude sites */
-		priorityDomains: SiteDomainsWithPriorityRules;
-	};
-}>;
+type _SiteScopedDnrRuleModifierPayloadValue = DnrSettingsDataPayload & {
+	/** Unique DNR ids for each site */ ids: DnrSiteScopeUrlIdPayload;
+};
 
-type DnrCallback = (payload: DnrRuleModifierCallbackPayload) => Promise<void>;
+export type SiteScopedDnrRuleModifierPayload = Map<
+	string,
+	_SiteScopedDnrRuleModifierPayloadValue
+>;
+export type SiteScopedDnrRuleModifierPayloadEntry = [
+	host: string,
+	_SiteScopedDnrRuleModifierPayloadValue,
+];
 
-/** Gets all the data needed for running the dnr rule modifier functions */
-export async function getDnrRuleModifierCallbackPayload(): Promise<DnrRuleModifierCallbackPayload> {
-	// Get the values
+type DnrCallback = (
+	payload: [DefaultDnrRuleModifierPayload, SiteScopedDnrRuleModifierPayload],
+) => Promise<unknown>;
+
+/** Gets all the data needed for running the default dnr rule modifier functions */
+export async function getDefaultDnrRuleModifierPayload(): Promise<DefaultDnrRuleModifierPayload> {
 	const [
 		defaultGeneralSettings,
 		defaultCompressionSettings,
 		defaultProxySettings,
-		siteOriginSettingsArray,
 		sitePriorityDomains,
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultProxySettingsStorageItem.getValue(),
-		getSiteUrlOrigins()
-			.then((origins) =>
-				origins.keys().map(async (origin) => {
-					const [generalSettings, compressionSettings, proxySettings] =
-						await Promise.all([
-							getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
-							getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
-							getSiteSpecificProxySettingsStorageItem(origin).getValue(),
-						]);
-
-					const payload: DnrSettingsDataPayload = {
-						compression: compressionSettings,
-						general: generalSettings,
-						proxy: proxySettings,
-					};
-
-					return [
-						getUrlSchemaHost(origin),
-						{ data: payload, ids: getUrlIdsFromOrigin(origin) },
-					] as const;
-				}),
-			)
-			.then((iterableOfPromises) => Promise.all(iterableOfPromises)),
 		getSiteDomainsWithPriorityRules(),
 	]);
 
-	const siteOriginSettingsMap: DnrRuleModifierCallbackPayload["site"]["originData"] =
-		new Map(siteOriginSettingsArray);
-
-	const payload: DnrRuleModifierCallbackPayload = {
-		default: {
-			compression: defaultCompressionSettings,
-			general: defaultGeneralSettings,
-			proxy: defaultProxySettings,
-		},
-		site: {
-			originData: siteOriginSettingsMap,
-			priorityDomains: sitePriorityDomains,
-		},
+	const payload: DefaultDnrRuleModifierPayload = {
+		compression: defaultCompressionSettings,
+		excludedDomains: sitePriorityDomains,
+		general: defaultGeneralSettings,
+		proxy: defaultProxySettings,
 	};
+
+	return payload;
+}
+
+/** Gets all the data needed for running the site-scoped dnr rule modifier functions */
+export async function getSiteScopedDnrRuleModifierPayload(): Promise<SiteScopedDnrRuleModifierPayload> {
+	const siteOriginSettingsArray = await getSiteUrlOrigins()
+		.then((origins) =>
+			origins.keys().map(async (origin) => {
+				const [generalSettings, compressionSettings, proxySettings] =
+					await Promise.all([
+						getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
+						getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
+						getSiteSpecificProxySettingsStorageItem(origin).getValue(),
+					]);
+
+				const entry: SiteScopedDnrRuleModifierPayloadEntry = [
+					getUrlSchemaHost(origin),
+					{
+						compression: compressionSettings,
+						general: generalSettings,
+						ids: getUrlIdsFromOrigin(origin),
+						proxy: proxySettings,
+					},
+				];
+
+				return entry;
+			}),
+		)
+		.then((iterableOfPromises) => Promise.all(iterableOfPromises));
+
+	const payload: SiteScopedDnrRuleModifierPayload = new Map(
+		siteOriginSettingsArray,
+	);
 
 	return payload;
 }
@@ -188,9 +176,12 @@ async function onChangedListener(
 
 	if (!shouldCallCbs) return;
 
-	const payload = await getDnrRuleModifierCallbackPayload();
+	const payloads = await Promise.all([
+		getDefaultDnrRuleModifierPayload(),
+		getSiteScopedDnrRuleModifierPayload(),
+	]);
 
-	await Promise.all(cbs.map((cb) => cb(payload)));
+	await Promise.all(cbs.map((cb) => cb(payloads)));
 }
 
 // TODO: make a variant purely for default rule setters

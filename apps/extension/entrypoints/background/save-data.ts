@@ -3,7 +3,10 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import type { DnrRuleModifierCallbackPayload } from "@/utils/dnr-rules";
+import type {
+	DefaultDnrRuleModifierPayload,
+	SiteScopedDnrRuleModifierPayloadEntry,
+} from "@/utils/dnr-rules";
 
 const declarativeNetRequest = browser.declarativeNetRequest;
 
@@ -22,20 +25,10 @@ const SAVE_DATA_RULE_ACTION: Browser.declarativeNetRequest.RuleAction = {
 	type: "modifyHeaders",
 };
 
-async function applyDefaultSaveDataRules(
-	payload: DnrRuleModifierCallbackPayload,
-): Promise<void> {
-	const {
-		default: {
-			general: { enabled, saveData },
-		},
-		site: {
-			priorityDomains: { all },
-		},
-	} = payload;
-
-	const excludedDomains = [...all];
-
+export async function applyDefaultSaveDataRules({
+	general: { enabled, saveData },
+	excludedDomains,
+}: DefaultDnrRuleModifierPayload): Promise<void> {
 	const isEnabled = enabled && saveData;
 
 	await browser.declarativeNetRequest.updateSessionRules({
@@ -45,7 +38,7 @@ async function applyDefaultSaveDataRules(
 						action: SAVE_DATA_RULE_ACTION,
 						condition: {
 							excludedInitiatorDomains: excludedDomains.length
-								? excludedDomains
+								? [...excludedDomains]
 								: undefined,
 							resourceTypes: RESOURCE_TYPES,
 						},
@@ -58,46 +51,29 @@ async function applyDefaultSaveDataRules(
 	});
 }
 
-async function applySiteSaveDataRules({
-	site: { originData },
-}: DnrRuleModifierCallbackPayload) {
-	const promises = originData.entries().map(
-		async ([
-			host,
-			{
-				data: {
-					general: { enabled, saveData, useSiteRule },
-				},
-				ids: { saveData: saveDataId },
-			},
-		]) => {
-			const isEnabled = enabled && useSiteRule && saveData;
+export async function applySiteSaveDataRules([
+	host,
+	{
+		general: { enabled, saveData, useSiteRule },
+		ids: { saveData: saveDataId },
+	},
+]: SiteScopedDnrRuleModifierPayloadEntry) {
+	const isEnabled = enabled && useSiteRule && saveData;
 
-			await browser.declarativeNetRequest.updateSessionRules({
-				addRules: isEnabled
-					? [
-							{
-								action: SAVE_DATA_RULE_ACTION,
-								condition: {
-									initiatorDomains: [host],
-									resourceTypes: RESOURCE_TYPES,
-								},
-								id: saveDataId,
-								priority: DeclarativeNetRequestPriority.LOWEST,
-							},
-						]
-					: undefined,
-				removeRuleIds: [saveDataId],
-			});
-		},
-	);
-
-	await Promise.all(promises);
-}
-
-export async function refreshSaveDataDnrRules(
-	payload: DnrRuleModifierCallbackPayload,
-) {
-	await applyDefaultSaveDataRules(payload);
-	await applySiteSaveDataRules(payload);
+	await browser.declarativeNetRequest.updateSessionRules({
+		addRules: isEnabled
+			? [
+					{
+						action: SAVE_DATA_RULE_ACTION,
+						condition: {
+							initiatorDomains: [host],
+							resourceTypes: RESOURCE_TYPES,
+						},
+						id: saveDataId,
+						priority: DeclarativeNetRequestPriority.LOWEST,
+					},
+				]
+			: undefined,
+		removeRuleIds: [saveDataId],
+	});
 }
