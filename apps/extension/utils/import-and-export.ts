@@ -28,7 +28,7 @@ const {
 	STATISTICS,
 } = StorageKey;
 
-export async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
+async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
 	const [
 		defaultGeneralSettings,
 		defaultCompressionSettings,
@@ -84,7 +84,7 @@ export async function exportExtensionSettingsAsString(): Promise<string> {
 }
 
 /** Returns true or false depending on whether the import was succesful or not */
-export async function importExtensionSettings(
+async function importExtensionSettings(
 	settings: SettingsExportDataSchema,
 ): Promise<boolean> {
 	try {
