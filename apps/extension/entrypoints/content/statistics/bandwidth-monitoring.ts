@@ -20,7 +20,7 @@ const pendingPerformanceResourceTimingPayloadBatchQueue =
 
 pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 	for (const { hostOrigin, initiatorType, name, transferSize } of details) {
-		// 0 transferSize usually means it came from Cache
+		// 0 transferSize usually means it came from Cache or the request was missing a header
 		if (transferSize > 0) {
 			//@ts-expect-error No need to parse since this will always be true unless the web breaks or smth
 			const parsedInitiatorType: PerformanceResourceTimingIntiatorTypeSchema =
