@@ -1,6 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import { DUMMY_TAB_URL } from "@/shared/constants";
 import { generateDeterministicNumericIdsFromString } from "./id";
 
 const IMAGE_EXTS = [
@@ -48,7 +49,7 @@ export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
 	const match = url.match(URL_SCHEMA_ORIGIN_MATCHER);
 
 	//@ts-expect-error This will always be a valid url
-	return match ? match[0] : url;
+	return match ? match[0] : DUMMY_TAB_URL;
 }
 
 const URL_SCHEMA_HOST_MATCHER = /^(?:[\w-]+:\/\/)?([\w.-]+)/;
