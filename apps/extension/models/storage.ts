@@ -35,16 +35,16 @@ export const GeneralSettingsSchema = v.object({
 	/** If `true`, disables autoplaying of videos and audio  */
 	noAutoplay: v.boolean(),
 
-	/** If `true`, the site will use it's own scoped rules over the default, else it fallback to the default.
-	 *
-		* If `enabled` is false, this has no effect
-		*
-		* If this object for the default settings, this value will always be `false`
-	 */
-	useSiteRule: v.boolean(),
-
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
+
+	/** If `true`, the site will use it's own scoped rules over the default, else it fallback to the default.
+	 *
+	 * If `enabled` is false, this has no effect
+	 *
+	 * If this object for the default settings, this value will always be `false`
+	 */
+	useSiteRule: v.boolean(),
 });
 export type GeneralSettingsSchema = v.InferOutput<typeof GeneralSettingsSchema>;
 
@@ -163,8 +163,8 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	enabled: true,
 	lazyLoad: true,
 	noAutoplay: true,
-	useSiteRule: false,
 	saveData: true,
+	useSiteRule: false,
 } as const satisfies GeneralSettingsSchema;
 
 export const DEFAULT_SINGLE_ASSET_STATISTICS = {
@@ -180,7 +180,7 @@ export const DEFAULT_SINGLE_ASSET_STATISTICS = {
 
 export const DEFAULT_COMBINED_ASSET_STATISTICS = {
 	aggregate: DEFAULT_SINGLE_ASSET_STATISTICS,
-	dailyStats: [],
+	dailyStats: {},
 } as const satisfies CombinedAssetStatisticsSchema;
 
 export const DEFAULT_STATISTICS = {
