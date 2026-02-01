@@ -25,7 +25,9 @@ export function generateDeterministicNumericIdsFromString<
 			hash = Math.imul(hash, 16777619);
 		}
 
-		const finalId = hash >>> 0 || i + 1;
+		// Mask with 0x7FFFFFFF to ensure it's positive and fits in 31 bits
+		// This keeps the value between 0 and 2,147,483,647
+		const finalId = hash & 0x7fffffff || i + 1;
 		ids.push(finalId);
 	}
 
