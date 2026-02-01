@@ -11,6 +11,7 @@ import {
 } from "@/shared/storage";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
 import { BaseButton } from "../button";
+import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type TempProxySettingsProps = {
@@ -21,8 +22,24 @@ type TempProxySettingsProps = {
 function ProxyHostInput(props: TempProxySettingsProps) {
 	return (
 		<>
-			<label class="flex items-center" for="proxy-host">
-				Host:
+			<label class="flex items-center justify-between" for="proxy-host">
+				<div>
+					Host: <span class="text-error">*</span>
+				</div>
+
+				<InformativeTooltip
+					tip={
+						<>
+							<p>
+								The host / domain of the external proxy, without the protocol.
+							</p>
+							<p>
+								E.g{" "}
+								<span class="text-info">saver-of-bandwidth.onrender.org</span>
+							</p>
+						</>
+					}
+				/>
 			</label>
 
 			<input
@@ -30,6 +47,7 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 				id="proxy-host"
 				onInput={(e) => props.set("host", e.target.value)}
 				placeholder="localhost"
+				required
 				type="text"
 				value={props.store.host}
 			/>
@@ -40,8 +58,10 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 function ProxyPortInput(props: TempProxySettingsProps) {
 	return (
 		<>
-			<label class="flex items-center" for="proxy-port">
-				Port:
+			<label class="flex items-center justify-between" for="proxy-port">
+				<div>Port:</div>
+
+				<InformativeTooltip tip="Optional if you aren't using a `localhost`" />
 			</label>
 
 			<input
