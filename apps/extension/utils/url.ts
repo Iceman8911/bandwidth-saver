@@ -43,7 +43,7 @@ export function detectAssetTypeFromUrl(
 	}
 }
 
-const URL_SCHEMA_ORIGIN_MATCHER = /^\w:\/\/[^/]+/;
+const URL_SCHEMA_ORIGIN_MATCHER = /^\w+:\/\/[^/]+/;
 
 export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
 	const match = url.match(URL_SCHEMA_ORIGIN_MATCHER);
