@@ -1,16 +1,16 @@
-import type { DEFAULT_COMBINED_ASSET_STATISTICS } from "@/models/storage";
+import type { CombinedAssetStatisticsSchema } from "@/models/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
 import type { OptionsPageUsageOverTimeProps } from "../components/statistic-charts";
 
 export function getDailyStatisticsForWeek(
-	dailyStats: Readonly<typeof DEFAULT_COMBINED_ASSET_STATISTICS.dailyStats>,
+	dailyStats: Readonly<CombinedAssetStatisticsSchema["dailyStats"]>,
 ): OptionsPageUsageOverTimeProps["usage"] {
 	const dailyStatsAsArray = Object.entries(dailyStats);
 
 	const dailyStatsWithAggregatedValues = dailyStatsAsArray
 		.map(([dateNumberString, stats]) => ({
 			date: new Date(Number(dateNumberString)),
-			used: getSumOfValuesInObject(stats),
+			used: getSumOfValuesInObject(stats ?? {}),
 		}))
 		// In descending order so the most recent entries are at the beginning of the array
 		.sort(({ date: a }, { date: b }) => Number(b) - Number(a))

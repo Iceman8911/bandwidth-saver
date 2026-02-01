@@ -1,7 +1,7 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
 import { For } from "solid-js";
-import type { DEFAULT_SITE_SPECIFIC_STATISTICS } from "@/models/storage";
+import type { DetailedStatisticsSchema } from "@/models/storage";
 import { getSiteSpecificStatisticsStorageItem } from "@/shared/storage";
 import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import { getSumOfValuesInObject } from "@/utils/object";
@@ -22,7 +22,7 @@ export function OptionsPageStatisticSummaryTable(
 	const allStatistics = createAsync(
 		async () => {
 			const statisticValuePromises: Promise<
-				[UrlSchema, typeof DEFAULT_SITE_SPECIFIC_STATISTICS]
+				[UrlSchema, DetailedStatisticsSchema]
 			>[] = [];
 
 			for (const url of await getSiteUrlOrigins()) {
