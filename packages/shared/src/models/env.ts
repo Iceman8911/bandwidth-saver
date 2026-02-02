@@ -10,6 +10,12 @@ const SharedEnvSchema = v.object({
  */
 export const ProxyEnvSchema = v.looseObject({
 	...SharedEnvSchema.entries,
+
+	DEPLOYMENT_PLATFORM: v.optional(
+		v.picklist(["server", "vercel", "cloudflare"]),
+		"server",
+	),
+
 	NODE_ENV: v.optional(
 		v.picklist(["development", "production", "test"]),
 		"development",

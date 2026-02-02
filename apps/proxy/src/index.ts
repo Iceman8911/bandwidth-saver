@@ -6,12 +6,16 @@ import {
 	ServerAPIEndpoint,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
+import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { compressImage } from "./compression";
 import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
 
 const env = getProxyEnv();
 
-const app = new Elysia()
+const app = new Elysia({
+	adapter:
+		env.DEPLOYMENT_PLATFORM === "cloudflare" ? CloudflareAdapter : undefined,
+})
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
@@ -62,8 +66,14 @@ const app = new Elysia()
 		{
 			query: ImageCompressionPayloadSchema,
 		},
-	)
-	.listen(
+	);
+
+if (env.DEPLOYMENT_PLATFORM === "cloudflare") {
+	app.compile();
+}
+
+if (env.DEPLOYMENT_PLATFORM === "server") {
+	app.listen(
 		{
 			hostname: env.VITE_SERVER_HOST,
 			port: env.VITE_SERVER_PORT,
@@ -74,5 +84,8 @@ const app = new Elysia()
 			);
 		},
 	);
+}
 
 export type ElysiaApp = typeof app;
+
+export default app;
