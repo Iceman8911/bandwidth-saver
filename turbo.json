@@ -1,9 +1,9 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalEnv": ["VITE_SERVER_*"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
-			"env": ["VITE_SERVER_HOST", "VITE_SERVER_PORT", "DEPLOYMENT_PLATFORM"],
 			"inputs": ["$TURBO_DEFAULT$"],
 			"outputs": [
 				".output/**",
@@ -20,6 +20,9 @@
 		},
 		"lint": {
 			"dependsOn": ["^lint"]
+		},
+		"proxy#build": {
+			"env": ["DEPLOYMENT_PLATFORM"]
 		},
 		"start": {
 			"cache": false,
