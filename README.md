@@ -34,7 +34,7 @@ Only available in browsers that still support `webRequest` with the blocking pri
 
 Simply redirects all relevant requests to a remote / self-hosted proxy that returns the compressed version.
 
-A free test proxy that can be used is `bandwidth-saver.onrender.com`. Use that in the popup.
+Two free test proxies that can be used are `bandwidth-saver.wuchijss2.workers.dev`, and `bandwidth-saver.onrender.com`[^3]. Use either in the popup.
 
 #### Comparison
 
@@ -59,3 +59,5 @@ Settings are synced to the user's profile while statistics are local since they 
 [^1]: Depending on if manifest v2 is available or a proxy server is set up.
 
 [^2]: Supporting specific settings for each site is too much work in MV3
+
+[^3]: The worker host is much, MUCH faster than the render alternative, since the latter will sleep after a while of inactivity.
