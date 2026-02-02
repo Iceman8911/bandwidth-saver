@@ -34,29 +34,25 @@ const app = new Elysia({
 				);
 			} else {
 				try {
-					if (env.DEPLOYMENT_PLATFORM === "cloudflare") {
-						// Compress the image ourselves
-						const { compressImage } = await import("./compression");
-						const response = await fetch(redirectedUrl);
+					// Compress the image ourselves
+					const { compressImage } = await import("./compression");
+					const response = await fetch(redirectedUrl);
 
-						const imgBuffer = await response.arrayBuffer();
+					const imgBuffer = await response.arrayBuffer();
 
-						const [compressedImgBuffer, contentType] = await compressImage(
-							imgBuffer,
-							response.headers.get("content-type"),
-							query,
-						);
+					const [compressedImgBuffer, contentType] = await compressImage(
+						imgBuffer,
+						response.headers.get("content-type"),
+						query,
+					);
 
-						set.headers["cache-control"] =
-							"public, max-age=86400, stale-while-revalidate=3600";
-						set.headers["content-length"] = compressedImgBuffer.byteLength;
-						set.headers["content-type"] = contentType;
-						set.headers.vary = "Accept";
+					set.headers["cache-control"] =
+						"public, max-age=86400, stale-while-revalidate=3600";
+					set.headers["content-length"] = compressedImgBuffer.byteLength;
+					set.headers["content-type"] = contentType;
+					set.headers.vary = "Accept";
 
-						return Buffer.from(compressedImgBuffer);
-					} else {
-						throw Error("Sharp compression unavailable on cloudflare");
-					}
+					return Buffer.from(compressedImgBuffer);
 				} catch (e) {
 					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
 

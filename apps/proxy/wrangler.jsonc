@@ -1,9 +1,20 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "bandwidth-saver-proxy",
+	"name": "bandwidth-saver",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-06-01",
+	"compatibility_date": "2026-02-02",
 	"compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    "DEPLOYMENT_PLATFORM": "cloudflare"
+  },
+  "preview_urls": true,
+  "workers_dev": true,
+  "observability": {
+      "logs": {
+        "enabled": false,
+        "invocation_logs": true
+      }
+    }
 }
