@@ -3,6 +3,7 @@
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
+			"env": ["VITE_SERVER_HOST", "VITE_SERVER_PORT"],
 			"inputs": ["$TURBO_DEFAULT$"],
 			"outputs": [
 				".output/**",
