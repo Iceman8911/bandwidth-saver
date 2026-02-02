@@ -18,7 +18,6 @@ const app = new Elysia({
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
-		// TODO: Maybe add custom compression using `imgproxy` or `sharp`
 		async ({ query, redirect, set }) => {
 			// I'll make this cleaner later
 			const redirectedUrl = await getCompressedImageUrlWithFallback({
