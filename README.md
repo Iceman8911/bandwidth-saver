@@ -20,15 +20,11 @@ Statistics are stored per day for at most 90 days of use, beyond that, older ent
 
 ### Modes
 
-There are four different modes of compressing assets at the moment; **simple redirect**, **MV2 webRequestBlocking redirect**, and **server-side proxying**:
+There are two different modes of compressing assets at the moment; **simple redirect**, and **server-side proxying**:
 
 #### Simple Redirect
 
 The simplest implementation that redirects all relevant requests to a single public compressor endpoint.
-
-#### MV2 WebRequest Redirect (Blocking)
-
-Only available in browsers that still support `webRequest` with the blocking privilege, every relevant request is intercepted and redirected to a valid compression service, if available, else, it falls back to the original url.
 
 #### Server-side Proxy
 
@@ -38,14 +34,14 @@ Two free test proxies that can be used are `bandwidth-saver.wuchijss2.workers.de
 
 #### Comparison
 
-| S/N                                   | Simple Redirect | MV2 WebRequest Redirect | Server-side Proxy |
-| ------------------------------------- | --------------- | ----------------------- | ----------------- |
-| MV3 Support                           | Yes             | No                      | Yes               |
-| No Server Costs                       | Yes             | Yes                     | No                |
-| Fallback on failure                   | No              | Yes                     | Yes               |
-| Easy implementation                   | Yes             | Yes                     | Yes               |
-| Can use the original url as reference | No              | Yes                     | Yes               |
-| Intercepts requests                   | Yes             | Yes                     | Yes               |
+| S/N                                   | Simple Redirect | Server-side Proxy               |
+| ------------------------------------- | --------------- | ------------------------------- |
+| MV3 Support                           | Yes             | Yes                             |
+| No Server Costs                       | Yes             | No (if you exceed free limits)  |
+| Fallback on failure                   | No              | Yes                             |
+| Easy implementation                   | Yes             | Yes                             |
+| Can use the original url as reference | No              | Yes                             |
+| Intercepts requests                   | Yes             | Yes                             |
 
 ## Storage
 

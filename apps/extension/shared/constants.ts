@@ -32,12 +32,6 @@ export const CompressionMode = {
 	 * 	Failed redirects on `img` elements fall back to the original url
 	 */
 	SIMPLE: "simple",
-
-	/** Only avaible for MV2.
-	 *
-	 * Uses `webRequestBlocking` to modify and redirect requests to any working endpoint.
-	 */
-	WEB_REQUEST: "mv2",
 } as const;
 export type CompressionMode = ObjectToEnum<typeof CompressionMode>;
 
@@ -87,8 +81,6 @@ export enum DeclarativeNetRequestRuleIds {
 	GLOBAL_COMPRESSION_MODE_SIMPLE,
 
 	GLOBAL_COMPRESSION_MODE_PROXY,
-
-	GLOBAL_COMPRESSION_MODE_MV2,
 
 	/** CSP removal for sites that block external image sources
 	 *

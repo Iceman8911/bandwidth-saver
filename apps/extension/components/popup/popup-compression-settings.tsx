@@ -1,6 +1,4 @@
-import {
-	IMAGE_COMPRESSOR_ENDPOINT_SET,
-} from "@bandwidth-saver/shared";
+import { IMAGE_COMPRESSOR_ENDPOINT_SET } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
 import {
@@ -89,15 +87,6 @@ function CompressionModeTooltip(props: { mode: CompressionMode }) {
 					have their request domains whitelisted.
 				</em>
 			</Match>
-
-			<Match when={props.mode === CompressionMode.WEB_REQUEST}>
-				<p>
-					(TODO) Only available in MV2, but is otherwise free from limitations
-					that would require a server for feature parity.
-				</p>
-
-				<em>May affect loading speed.</em>
-			</Match>
 		</Switch>
 	);
 }
@@ -132,9 +121,6 @@ function CompressionModeSelect(props: TempCompressionSettingsProps) {
 					{(mode) => (
 						<option selected={props.store.mode === mode} value={mode}>
 							<Switch>
-								<Match when={mode === CompressionMode.WEB_REQUEST}>
-									Web Request (MV2)
-								</Match>
 								<Match when={mode === CompressionMode.PROXY}>Proxy</Match>
 								<Match when={mode === CompressionMode.SIMPLE}>Simple</Match>
 							</Switch>
