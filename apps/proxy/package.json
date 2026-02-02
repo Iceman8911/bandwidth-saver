@@ -1,14 +1,14 @@
 {
 	"dependencies": {
 		"@bandwidth-saver/shared": "workspace:*",
-		"@elysiajs/eden": "^1.4.5",
+		"@elysiajs/eden": "^1.4.6",
 		"dotenv": "^17.2.3",
 		"elysia": "latest",
 		"sharp": "^0.34.5",
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.6"
+		"@biomejs/biome": "^2.3.13"
 	},
 	"exports": {
 		".": "./src/index.ts"
