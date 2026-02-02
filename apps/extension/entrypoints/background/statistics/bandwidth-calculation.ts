@@ -28,12 +28,13 @@ import {
 } from "@/shared/constants";
 import { onMessage } from "@/shared/messaging";
 import {
+	defaultProxySettingsStorageItem,
 	getSiteSpecificStatisticsStorageItem,
 	statisticsStorageItem,
 } from "@/shared/storage";
 import type { BandwidthMonitoringMessagePayload } from "@/shared/types";
 import { getSiteUrlOrigins } from "@/utils/storage";
-import { getUrlSchemaOrigin } from "@/utils/url";
+import { getUrlSchemaHost, getUrlSchemaOrigin } from "@/utils/url";
 
 const RAW_ENTRY_SETTLE_MS = 750;
 const RAW_ENTRY_MAX_AGE_MS = 2500;
@@ -243,6 +244,7 @@ function applyBandwidthMeasurementsToStatistics(
 	data: BandwidthMonitoringMessagePayload,
 	globalStats: StatisticsSchema,
 	siteScopedStats: DetailedStatisticsSchema,
+	proxyHost: string,
 ): {
 	globalStats: StatisticsSchema;
 	siteScopedStats: DetailedStatisticsSchema;
@@ -254,6 +256,7 @@ function applyBandwidthMeasurementsToStatistics(
 	const day = getDayStartInMillisecondsUTC();
 
 	const assetUrlOrigin = getUrlSchemaOrigin(assetUrl);
+	const assetUrlHost = getUrlSchemaHost(assetUrl);
 
 	const applyToCombinedStats = (
 		combinedStats: CombinedAssetStatisticsSchema,
@@ -270,7 +273,10 @@ function applyBandwidthMeasurementsToStatistics(
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
 
-		if (IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin)) {
+		if (
+			IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin) ||
+			proxyHost === assetUrlHost
+		) {
 			draft.requestsCompressed = applyToCombinedStats(
 				draft.requestsCompressed,
 				1,
@@ -293,7 +299,10 @@ function applyBandwidthMeasurementsToStatistics(
 			);
 		}
 
-		if (IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin)) {
+		if (
+			IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin) ||
+			proxyHost === assetUrlHost
+		) {
 			draft.requestsCompressed = applyToCombinedStats(
 				draft.requestsCompressed,
 				1,
@@ -309,7 +318,11 @@ function applyBandwidthMeasurementsToStatistics(
 
 pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 	async (measurements) => {
-		let globalStats = await statisticsStorageItem.getValue();
+		// TODO: account for proxies set for specific sites too since this only considers the general one
+		let [globalStats, { host: proxyHost }] = await Promise.all([
+			statisticsStorageItem.getValue(),
+			defaultProxySettingsStorageItem.getValue(),
+		]);
 
 		/** String keys are used over the storage item instances so it'll be easy for updated stats with the same storage entry to override older ones */
 		const siteScopedStorageKeysAndUpdatedValuesMap = new Map<
@@ -331,6 +344,7 @@ pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 				measurement,
 				globalStats,
 				siteScopedStats,
+				proxyHost,
 			);
 
 			globalStats = updatedStats.globalStats;
