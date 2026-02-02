@@ -45,7 +45,7 @@ Two free test proxies that can be used are `bandwidth-saver.wuchijss2.workers.de
 
 ## Storage
 
-Settings are synced to the user's profile while statistics are local since they can get quite heavy.
+Settings and statistics are stored locally per browser profile. The former can be manually backed up and restored.
 
 ## What will not be supported
 
