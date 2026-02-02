@@ -51,7 +51,7 @@ export async function applyDefaultSaveDataRules({
 	});
 }
 
-export async function applySiteSaveDataRules([
+export async function applySiteScopedSaveDataRules([
 	host,
 	{
 		general: { enabled, saveData, useSiteRule },

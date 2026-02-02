@@ -21,7 +21,10 @@ import {
 	applyDefaultCspRules,
 	applySiteScopedCspRules,
 } from "./csp-workaround";
-import { applyDefaultSaveDataRules, applySiteSaveDataRules } from "./save-data";
+import {
+	applyDefaultSaveDataRules,
+	applySiteScopedSaveDataRules,
+} from "./save-data";
 
 async function applyDefaultDnrRules(
 	defaultPayload: DefaultDnrRuleModifierPayload,
@@ -43,7 +46,7 @@ async function applySiteScopedDnrRules(
 			.entries()
 			.map((entry) =>
 				Promise.all([
-					applySiteSaveDataRules(entry),
+					applySiteScopedSaveDataRules(entry),
 					applySiteScopedCspRules(entry),
 					applySiteScopedFontBlockRules(entry),
 					applySiteScopedProxyCompressionRules(entry),
