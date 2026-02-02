@@ -28,6 +28,7 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 				</div>
 
 				<InformativeTooltip
+					dir="bottom"
 					tip={
 						<>
 							<p>
@@ -35,7 +36,9 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 							</p>
 							<p>
 								E.g{" "}
-								<span class="text-info">saver-of-bandwidth.onrender.org</span>
+								<span class="text-info">
+									bandwidth-saver.wuchijss2.workers.dev
+								</span>
 							</p>
 						</>
 					}
