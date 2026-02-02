@@ -17,6 +17,13 @@ export const StorageAreaSchema = v.picklist([
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
 export const GeneralSettingsSchema = v.object({
+	/** Blocks all remote fonts.
+	 *
+	 * Since the browser will fallback to system fonts, this is the only acceptable blocking functionality.
+	 *
+	 * NOTE: This will break icon fonts like FontAwesome. SVG icons are better anyway :p
+	 */
+	blockFont: v.boolean(),
 	/** Whether the csp headers should be removed.
 	 *
 	 * NOT ADVISED unless you know what you're doing.
@@ -158,6 +165,7 @@ export const DEFAULT_PROXY_SETTINGS = {
 } as const satisfies ProxySettingsSchema;
 
 export const DEFAULT_GENERAL_SETTINGS = {
+	blockFont: false,
 	bypassCsp: false,
 	compression: true,
 	enabled: true,
