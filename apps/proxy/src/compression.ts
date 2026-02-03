@@ -4,6 +4,7 @@ import {
 	type NumberBetween1and100Inclusively,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
+import { completeWithinFreeCloudflareWorkerTimeLimit } from "./utils/cloudflare";
 
 const { DEPLOYMENT_PLATFORM } = getProxyEnv();
 
@@ -148,9 +149,16 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 };
 
 export const compressImage: ImageCompressorHandler = async (payload) => {
-	// On cloudflare, sharp outright fails regardless
+	// On cloudflare, sharp outright fails regardless and we have a rather short duration
 	if (DEPLOYMENT_PLATFORM === "cloudflare") {
-		return compressImageUsingWasmImageOptimizer(payload);
+		return completeWithinFreeCloudflareWorkerTimeLimit(
+			() => compressImageUsingWasmImageOptimizer(payload),
+			() =>
+				[
+					new Uint8Array(payload.srcImg),
+					payload.srcMimeType ?? "image/jpeg",
+				] as [Uint8Array<ArrayBufferLike>, string],
+		);
 	}
 
 	try {
