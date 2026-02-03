@@ -19,6 +19,7 @@
 	"scripts": {
 		"build": "echo 'No build available for server proxy'",
 		"dev": "bun run --watch src/index.ts",
+		"dev:cloudflare": "wrangler dev",
 		"format": "biome format ./ --write",
 		"lint": "biome lint ./ --write",
 		"start": "bun run src/index.ts",
