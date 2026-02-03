@@ -160,6 +160,14 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 		}).then(({ headers }) => headers.get("content-length")),
 	]);
 
+	console.log(
+		"original url size =",
+		originalUrlSizeString,
+		"for url:",
+		payload.url_bwsvr8911,
+	);
+	console.log("alt url size =", altUrlSizeString, "for url:", newUrl);
+
 	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
 	if (!altUrlSizeString) return payload.url_bwsvr8911;
 
