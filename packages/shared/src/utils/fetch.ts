@@ -88,3 +88,7 @@ export function getLikelyImageUrlMimeType(
 			return null;
 	}
 }
+
+export function getFetchTimeoutSignal(timeoutInMs = 2500): AbortSignal {
+	return AbortSignal.timeout(timeoutInMs);
+}
