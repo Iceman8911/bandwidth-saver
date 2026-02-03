@@ -152,7 +152,7 @@ export type SiteUrlOriginsSchema = v.InferOutput<typeof SiteUrlOriginsSchema>;
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
 export const DEFAULT_COMPRESSION_SETTINGS = {
-	format: "webp",
+	format: "auto",
 	mode: CompressionMode.SIMPLE,
 	preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
 	preserveAnim: false,
