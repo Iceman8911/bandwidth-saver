@@ -55,4 +55,4 @@ Settings and statistics are stored locally per browser profile. The former can b
 
 [^2]: Supporting specific settings for each site is too much work in MV3
 
-[^3]: The worker host is much, MUCH faster than the render alternative, since the latter will sleep after a while of inactivity.
+[^3]: The worker host is much, MUCH faster than the render alternative, since the latter will sleep after a while of inactivity, however it has a higher chance of failure due to cloudflare's worker free tier execution time limit of 10ms
