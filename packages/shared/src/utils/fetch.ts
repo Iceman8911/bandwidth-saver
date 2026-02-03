@@ -1,3 +1,5 @@
+import * as v from "valibot";
+
 const IMAGE_MIME_TYPES = [
 	"image/jpeg",
 	"image/png",
@@ -10,6 +12,9 @@ const IMAGE_MIME_TYPES = [
 	"image/avif",
 	"image/apng",
 ] as const;
+
+const ImageMimeType = v.picklist(IMAGE_MIME_TYPES);
+export type ImageMimeType = v.InferOutput<typeof ImageMimeType>;
 
 export async function checkIfUrlReturnsValidResponse(
 	url: string,
@@ -41,4 +46,45 @@ export async function checkIfUrlReturnsValidResponse(
 
 export async function checkIfUrlReturnsValidImage(url: string) {
 	return checkIfUrlReturnsValidResponse(url, IMAGE_MIME_TYPES);
+}
+
+export function getLikelyImageUrlMimeType(
+	imgUrl: string,
+	srcMimeType?: string | undefined | null,
+): ImageMimeType | null {
+	if (srcMimeType) {
+		const { output, success } = v.safeParse(ImageMimeType, srcMimeType);
+
+		if (success) return output;
+	}
+
+	// Fall back to extension sniffing
+	const possibleExt = imgUrl.split(".").at(-1);
+
+	switch (possibleExt) {
+		case "png":
+			return "image/png";
+		case "jpeg":
+		case "jpg":
+		case "jfif":
+		case "pjpeg":
+		case "pj":
+			return "image/jpeg";
+		case "webp":
+			return "image/webp";
+		case "avif":
+			return "image/avif";
+		case "gif":
+			return "image/gif";
+		case "bmp":
+			return "image/bmp";
+		case "tif":
+		case "tiff":
+			return "image/tiff";
+		case "apng":
+			return "image/apng";
+
+		default:
+			return null;
+	}
 }
