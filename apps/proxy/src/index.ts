@@ -1,5 +1,6 @@
 import {
 	getCompressedImageUrlWithFallback,
+	getLikelyImageUrlMimeType,
 	getProxyEnv,
 	ImageCompressionPayloadSchema,
 	REDIRECTED_SEARCH_PARAM_FLAG,
@@ -38,6 +39,15 @@ const app = new Elysia({
 					const response = await fetch(redirectedUrl);
 
 					const imgBuffer = await response.arrayBuffer();
+					const imgMimeType = getLikelyImageUrlMimeType(
+						redirectedUrl,
+						response.headers.get("content-type"),
+					);
+
+					if (!imgMimeType)
+						throw Error(
+							`Url, "${redirectedUrl}", has no valid image mime type.`,
+						);
 
 					const [compressedImgBuffer, contentType] = await compressImage({
 						format: query.format_bwsvr8911,
