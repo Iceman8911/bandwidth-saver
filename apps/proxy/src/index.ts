@@ -6,6 +6,7 @@ import {
 	ImageCompressionPayloadSchema,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
+	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
@@ -38,6 +39,7 @@ const app = new Elysia({
 				try {
 					// Compress the image ourselves
 					const response = await fetch(redirectedUrl, {
+						headers: SPOOFING_FETCH_HEADERS,
 						signal: getFetchTimeoutSignal(),
 					});
 

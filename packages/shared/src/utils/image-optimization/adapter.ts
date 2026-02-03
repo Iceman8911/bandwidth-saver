@@ -10,7 +10,11 @@ import type {
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
 import { UrlSchema } from "../../models/shared";
-import { checkIfUrlReturnsValidImage, getFetchTimeoutSignal } from "../fetch";
+import {
+	checkIfUrlReturnsValidImage,
+	getFetchTimeoutSignal,
+	SPOOFING_FETCH_HEADERS,
+} from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
@@ -145,12 +149,15 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 
 	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
 		fetch(payload.url_bwsvr8911, {
+			headers: SPOOFING_FETCH_HEADERS,
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
 		}).then(({ headers }) => headers.get("content-length")),
-		fetch(newUrl, { method: "HEAD", signal: getFetchTimeoutSignal() }).then(
-			({ headers }) => headers.get("content-length"),
-		),
+		fetch(newUrl, {
+			headers: SPOOFING_FETCH_HEADERS,
+			method: "HEAD",
+			signal: getFetchTimeoutSignal(),
+		}).then(({ headers }) => headers.get("content-length")),
 	]);
 
 	// If the compression endpoint can't bother to set the `content-type` header, don't bother either

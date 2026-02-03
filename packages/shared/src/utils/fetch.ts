@@ -22,6 +22,7 @@ export async function checkIfUrlReturnsValidResponse(
 ): Promise<{ success: true; url: string } | { success: false }> {
 	try {
 		const response = await fetch(url, {
+			headers: SPOOFING_FETCH_HEADERS,
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
 		});
