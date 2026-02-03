@@ -1,6 +1,7 @@
 import {
 	getProxyEnv,
 	type ImageFormatSchema,
+	type ImageMimeType,
 	type NumberBetween1and100Inclusively,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
@@ -15,12 +16,12 @@ interface ImageCompressorHandlerPayload {
 	preserveAnim: boolean;
 	quality: NumberBetween1and100Inclusively;
 	srcImg: ArrayBuffer;
-	srcMimeType: string | undefined | null;
+	srcMimeType: ImageMimeType;
 }
 
 type ImageCompressorHandler = (
 	payload: ImageCompressorHandlerPayload,
-) => Promise<[Uint8Array, mimeType: string]>;
+) => Promise<[Uint8Array, ImageMimeType]>;
 
 /** May throw on certain serverless setups since it requires native node bindings */
 const compressImageUsingSharp: ImageCompressorHandler = async ({
@@ -157,7 +158,7 @@ export const compressImage: ImageCompressorHandler = async (payload) => {
 				[
 					new Uint8Array(payload.srcImg),
 					payload.srcMimeType ?? "image/jpeg",
-				] as [Uint8Array<ArrayBufferLike>, string],
+				] as [Uint8Array<ArrayBufferLike>, ImageMimeType],
 		);
 	}
 

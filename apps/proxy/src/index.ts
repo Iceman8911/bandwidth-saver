@@ -54,7 +54,7 @@ const app = new Elysia({
 						preserveAnim: query.preserveAnim_bwsvr8911,
 						quality: query.quality_bwsvr8911,
 						srcImg: imgBuffer,
-						srcMimeType: response.headers.get("content-type"),
+						srcMimeType: imgMimeType,
 					});
 
 					set.headers["cache-control"] =
