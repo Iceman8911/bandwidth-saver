@@ -10,7 +10,7 @@ import type {
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
 import { UrlSchema } from "../../models/shared";
-import { checkIfUrlReturnsValidImage } from "../fetch";
+import { checkIfUrlReturnsValidImage, getFetchTimeoutSignal } from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
 	url: string | URL,
@@ -144,11 +144,12 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	if (!success) return null;
 
 	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
-		fetch(payload.url_bwsvr8911, { method: "HEAD" }).then(({ headers }) =>
-			headers.get("content-length"),
-		),
-		fetch(newUrl, { method: "HEAD" }).then(({ headers }) =>
-			headers.get("content-length"),
+		fetch(payload.url_bwsvr8911, {
+			method: "HEAD",
+			signal: getFetchTimeoutSignal(),
+		}).then(({ headers }) => headers.get("content-length")),
+		fetch(newUrl, { method: "HEAD", signal: getFetchTimeoutSignal() }).then(
+			({ headers }) => headers.get("content-length"),
 		),
 	]);
 

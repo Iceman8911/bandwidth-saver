@@ -21,7 +21,10 @@ export async function checkIfUrlReturnsValidResponse(
 	responseTypesToMatch?: ReadonlyArray<string>,
 ): Promise<{ success: true; url: string } | { success: false }> {
 	try {
-		const response = await fetch(url, { method: "HEAD" });
+		const response = await fetch(url, {
+			method: "HEAD",
+			signal: getFetchTimeoutSignal(),
+		});
 
 		const contentTypeSet = new Set(
 			(response.headers.get("content-type") ?? "")

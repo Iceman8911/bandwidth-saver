@@ -1,5 +1,6 @@
 import {
 	getCompressedImageUrlWithFallback,
+	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
 	getProxyEnv,
 	ImageCompressionPayloadSchema,
@@ -36,7 +37,9 @@ const app = new Elysia({
 			} else {
 				try {
 					// Compress the image ourselves
-					const response = await fetch(redirectedUrl);
+					const response = await fetch(redirectedUrl, {
+						signal: getFetchTimeoutSignal(),
+					});
 
 					const imgBuffer = await response.arrayBuffer();
 					const imgMimeType = getLikelyImageUrlMimeType(
