@@ -7,6 +7,7 @@ import {
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
+import { compressImage } from "./compression";
 import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
 
 const env = getProxyEnv();
@@ -34,16 +35,17 @@ const app = new Elysia({
 			} else {
 				try {
 					// Compress the image ourselves
-					const { compressImage } = await import("./compression");
 					const response = await fetch(redirectedUrl);
 
 					const imgBuffer = await response.arrayBuffer();
 
-					const [compressedImgBuffer, contentType] = await compressImage(
-						imgBuffer,
-						response.headers.get("content-type"),
-						query,
-					);
+					const [compressedImgBuffer, contentType] = await compressImage({
+						format: query.format_bwsvr8911,
+						preserveAnim: query.preserveAnim_bwsvr8911,
+						quality: query.quality_bwsvr8911,
+						srcImg: imgBuffer,
+						srcMimeType: response.headers.get("content-type"),
+					});
 
 					set.headers["cache-control"] =
 						"public, max-age=86400, stale-while-revalidate=3600";
@@ -53,7 +55,12 @@ const app = new Elysia({
 
 					return Buffer.from(compressedImgBuffer);
 				} catch (e) {
-					console.warn("Why did sharp throw:", e, "on the url:", redirectedUrl);
+					console.warn(
+						"Why did compression throw:",
+						e,
+						"on the url:",
+						redirectedUrl,
+					);
 
 					// Default to the original url
 					return redirect(
