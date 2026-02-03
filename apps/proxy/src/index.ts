@@ -58,7 +58,7 @@ const app = new Elysia({
 					});
 
 					set.headers["cache-control"] =
-						"public, max-age=86400, stale-while-revalidate=3600";
+						"public, max-age=604800, stale-while-revalidate=3600";
 					set.headers["content-length"] = compressedImgBuffer.byteLength;
 					set.headers["content-type"] = contentType;
 					set.headers.vary = "Accept";
