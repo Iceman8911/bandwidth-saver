@@ -126,13 +126,13 @@ const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructo
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
 	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
-	[ImageCompressorEndpoint.IMAGE_CDN]: imageCompressionUrlConstructorIcdn,
-	[ImageCompressorEndpoint.FLY_WEBP_CLOUD]:
-		imageCompressionUrlConstructorFlyWebpCloud,
 	[ImageCompressorEndpoint.WORDPRESS]:
 		imageCompressionUrlConstructorFlyWordpress,
+	[ImageCompressorEndpoint.FLY_WEBP_CLOUD]:
+		imageCompressionUrlConstructorFlyWebpCloud,
 	[ImageCompressorEndpoint.SERVE_PROXY]:
 		imageCompressionUrlConstructorFlyServeProxy,
+	[ImageCompressorEndpoint.IMAGE_CDN]: imageCompressionUrlConstructorIcdn,
 } as const satisfies Record<
 	ImageCompressorEndpoint,
 	ImageCompressionUrlConstructor
