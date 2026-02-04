@@ -44,6 +44,9 @@ export enum ImageCompressorEndpoint {
 	 */
 	SERVE_PROXY = "https://serveproxy.com",
 
+	/** Requires a cloudinary public cloud name */
+	CLOUDINARY = "https://res.cloudinary.com",
+
 	/** The most reliable */
 	DEFAULT = WSRV_NL,
 

@@ -62,6 +62,7 @@ function getUrlToRedirectToForChosenEndpoint(
 
 export async function applyDefaultSimpleCompressionRules({
 	compression: { format, preferredEndpoint, preserveAnim, quality, mode },
+	proxy: { cloudinary },
 	general: { compression, enabled },
 	excludedDomains,
 }: DefaultDnrRuleModifierPayload): Promise<void> {
@@ -83,7 +84,9 @@ export async function applyDefaultSimpleCompressionRules({
 										IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
 
 									return urlConstructor({
+										cloudinary_bwsvr8911: cloudinary,
 										default_bwsvr8911: fallbackUrlConstructor({
+											cloudinary_bwsvr8911: cloudinary,
 											default_bwsvr8911: BASE_URL_WITH_FLAG,
 											format_bwsvr8911: format,
 											preserveAnim_bwsvr8911: preserveAnim,
@@ -130,6 +133,7 @@ export async function applySiteScopedSimpleCompressionRules([
 	{
 		compression: { format, preferredEndpoint, preserveAnim, quality, mode },
 		general: { compression, enabled, useSiteRule },
+		proxy: { cloudinary },
 		ids: {
 			compression: { simple: simpleCompressionId },
 		},
@@ -154,7 +158,9 @@ export async function applySiteScopedSimpleCompressionRules([
 										IMAGE_COMPRESSION_URL_CONSTRUCTORS[fallbackEndpoint];
 
 									return urlConstructor({
+										cloudinary_bwsvr8911: cloudinary,
 										default_bwsvr8911: fallbackUrlConstructor({
+											cloudinary_bwsvr8911: cloudinary,
 											default_bwsvr8911: BASE_URL_WITH_FLAG,
 											format_bwsvr8911: format,
 											preserveAnim_bwsvr8911: preserveAnim,

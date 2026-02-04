@@ -143,8 +143,41 @@ const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructo
 		return `${ImageCompressorEndpoint.SERVE_PROXY}/?url=${url}` as UrlSchema;
 	};
 
+/**
+ * See https://cloudinary.com/documentation/transformation_reference
+ */
+const imageCompressionUrlConstructorCloudinary: ImageCompressionUrlConstructor =
+	({
+		zz_url_bwsvr8911: url,
+		format_bwsvr8911: format,
+		preserveAnim_bwsvr8911: preserveAnim,
+		quality_bwsvr8911: quality,
+		cloudinary_bwsvr8911: cloudName,
+	}) => {
+		if (
+			!cloudName ||
+			isUrlAlreadyRedirectedToCompressionEndpoint(
+				url,
+				ImageCompressorEndpoint.CLOUDINARY,
+			)
+		)
+			return url;
+
+		let params = `dpr_auto,fl_lossy,f_${format},q_${format === "auto" ? "auto:eco" : quality}`;
+
+		if (preserveAnim) {
+			params += ",fl_animated";
+
+			if (format === "webp") params += ",fl_awebp";
+		}
+
+		return `${ImageCompressorEndpoint.CLOUDINARY}/${cloudName}/image/fetch/${params}/${url}` as UrlSchema;
+	};
+
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
+	[ImageCompressorEndpoint.CLOUDINARY]:
+		imageCompressionUrlConstructorCloudinary,
 	[ImageCompressorEndpoint.FLY_IMG_IO]: imageCompressionUrlConstructorFlyImgIo,
 	[ImageCompressorEndpoint.WORDPRESS]:
 		imageCompressionUrlConstructorFlyWordpress,
@@ -196,6 +229,9 @@ const optimalImageCompressionAdapter = async (
 	const originalUrl = payload.zz_url_bwsvr8911;
 	const altUrl = urlConstructor(payload);
 
+	// If both urls are the same, let the call site try another compressor endpoint
+	if (originalUrl === altUrl) return null;
+
 	const [
 		{ length: originalUrlSize, type: originalUrlType },
 		{ length: altUrlSize, type: altUrlType },
@@ -220,13 +256,15 @@ const optimalImageCompressionAdapter = async (
 const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WORDPRESS],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.SERVE_PROXY],
 ] as const satisfies ImageCompressionUrlConstructor[];
 
 const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_IMG_IO],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_WEBP_CLOUD],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_IMG_IO],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.IMAGE_CDN],
 ] as const satisfies ImageCompressionUrlConstructor[];
 

@@ -40,6 +40,7 @@ export async function applyDefaultProxyCompressionRules(
 
 	const proxyUrl = customProxyUrlConstructor(
 		{
+			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,
@@ -96,6 +97,7 @@ export async function applySiteScopedProxyCompressionRules([
 
 	const proxyUrl = customProxyUrlConstructor(
 		{
+			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,

@@ -76,6 +76,8 @@ export type CompressionSettingsSchema = v.InferOutput<
 >;
 
 export const ProxySettingsSchema = v.object({
+	/** Optional cloudinary cloud name to enable cloudinary-based processing */
+	cloudinary: v.optional(v.string()),
 	host: v.pipe(v.string(), v.minLength(1), v.trim()),
 	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
 });

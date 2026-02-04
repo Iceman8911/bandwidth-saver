@@ -82,6 +82,53 @@ function ProxyPortInput(props: TempProxySettingsProps) {
 	);
 }
 
+function CloudinaryCloudNameInput(props: TempProxySettingsProps) {
+	return (
+		<>
+			<label
+				class="flex items-center justify-between"
+				for="proxy-cloudinary-cloud-name"
+			>
+				<div>Cloudinary Cloud Name:</div>
+
+				<InformativeTooltip
+					dir="bottom"
+					tip={
+						<div class="max-w-3xs space-y-2 text-xs">
+							<p>
+								Optional. Only required if you wish to use cloudinary-based
+								optimization (which is rather efficient). You can get a{" "}
+								<a
+									class="link link-info"
+									href="https://cloudinary.com/users/register_free"
+									rel="noopener"
+									target="_blank"
+								>
+									free cloudinary account
+								</a>{" "}
+								and input the cloud name here :D.
+							</p>
+							<p>
+								Your cloudname will be a random bunch of letters like{" "}
+								<i>diyoicsa</i>.
+							</p>
+						</div>
+					}
+				/>
+			</label>
+
+			<input
+				class="input"
+				id="proxy-cloudinary-cloud-name"
+				onInput={(e) => props.set("cloudinary", e.target.value)}
+				placeholder="diyoicsa"
+				type="text"
+				value={props.store.cloudinary ?? ""}
+			/>
+		</>
+	);
+}
+
 export default function PopupProxySettings() {
 	const [context] = useContext(PopupContext);
 
@@ -141,6 +188,10 @@ export default function PopupProxySettings() {
 			>
 				<ProxyHostInput set={setTempProxySettings} store={tempProxySettings} />
 				<ProxyPortInput set={setTempProxySettings} store={tempProxySettings} />
+				<CloudinaryCloudNameInput
+					set={setTempProxySettings}
+					store={tempProxySettings}
+				/>
 
 				<BaseButton
 					class="btn-primary col-span-2 mt-4"

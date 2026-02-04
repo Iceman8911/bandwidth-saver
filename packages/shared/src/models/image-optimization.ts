@@ -6,6 +6,8 @@ export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
 
 /** loose object is used due to some funky query string behaviour and as such, the extra props this object might have are necessary for restoring the redirected url. */
 export const ImageCompressionPayloadSchema = v.looseObject({
+	/** Optional cloudinary cloud name like `ddwdeqdas` so cloudinary can be used */
+	cloudinary_bwsvr8911: v.optional(v.string()),
 	/** An optional url to fallback to, or a number that tells the compressor endpoint what to do */
 	default_bwsvr8911: v.optional(UrlSchema),
 	format_bwsvr8911: v.optional(ImageFormatSchema, "auto"),
