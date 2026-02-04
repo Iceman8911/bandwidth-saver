@@ -39,6 +39,7 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 								<span class="text-info">
 									bandwidth-saver.wuchijss2.workers.dev
 								</span>
+								, <span class="text-info">bandwidth-saver.onrender.com</span>
 							</p>
 						</>
 					}
