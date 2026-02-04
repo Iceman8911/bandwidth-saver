@@ -187,11 +187,38 @@ function CompressionQualityInput(props: TempCompressionSettingsProps) {
 	);
 }
 
+function PreserveAnimationTooltip() {
+	return (
+		<div class="w-3xs space-y-2 text-xs">
+			<p>
+				<b>NOTE</b>: This is a best-effort mode.
+			</p>
+
+			<p>
+				If <em>true</em>, wherever possible, animated images will keep their
+				animations. However, if that isn't possible, a non-animated compressed
+				image or the original image itself may be returned.
+			</p>
+
+			<p>
+				If <em>false</em>, wherever possible, animated images will lose their
+				animations and be reduced to the first frame. However, if that isn't
+				possible, an animated compressed image or the original image may be
+				returned.
+			</p>
+		</div>
+	);
+}
+
 function PreserveAnimationToggle(props: TempCompressionSettingsProps) {
 	return (
 		<>
-			<label class="flex items-center gap-2" for="compress-preserve-animation">
+			<label
+				class="flex items-center justify-between gap-2"
+				for="compress-preserve-animation"
+			>
 				Preserve Animation:
+				<InformativeTooltip dir="top" tip={<PreserveAnimationTooltip />} />
 			</label>
 
 			<input

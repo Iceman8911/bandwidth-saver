@@ -62,6 +62,12 @@ export const CompressionSettingsSchema = v.object({
 
 	/** Used in `simple` mode since we can't dynamically calculate the one to use */
 	preferredEndpoint: v.enum(ImageCompressorEndpoint),
+	/** This is best effort.
+	 *
+	 * If `false`, non-animated images from compression will be returned wherever possible. If not, it fallback to any compressor endpoint / technique that works, and then the original url.
+	 *
+	 * If `true`, animated images from compression will be preserved wherever possible. If not, it fallback to any compressor endpoint / technique that works, and then the original url.
+	 */
 	preserveAnim: v.boolean(),
 	quality: NumberBetween1and100Inclusively,
 });

@@ -223,6 +223,22 @@ const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.IMAGE_CDN],
 ] as const satisfies ImageCompressionUrlConstructor[];
 
+async function getFirstUsefulCompressedImageUrl(
+	payload: ImageCompressionPayloadSchema,
+	urlConstructorArray: ImageCompressionUrlConstructor[],
+): Promise<UrlSchema | null> {
+	return Promise.any(
+		urlConstructorArray.map(async (c) => {
+			const value = await imageCompressionAdapter(payload, c);
+
+			if (value) return value;
+
+			// Reject so Promise.any ignores this result.
+			throw new Error("No useful value");
+		}),
+	).catch(() => null);
+}
+
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
  * Tries each adapter sequentially until one succeeds.
@@ -232,31 +248,34 @@ const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 ): Promise<UrlSchema> {
-	try {
-		const firstUseful = await Promise.any(
-			(payload.preserveAnim_bwsvr8911
-				? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION
-				: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING
-			).map(async (c) => {
-				const value = await imageCompressionAdapter(payload, c);
+	const tryPreserveAnim = payload.preserveAnim_bwsvr8911;
 
-				if (value) return value;
+	const firstUseful = await getFirstUsefulCompressedImageUrl(
+		payload,
+		tryPreserveAnim
+			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION
+			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
+	);
 
-				// Reject so Promise.any ignores this result.
-				throw new Error("No useful value");
-			}),
-		);
+	if (firstUseful) return firstUseful;
 
-		return firstUseful;
-	} catch {
-		console.warn(
-			"No valid compression url for '",
-			payload.zz_url_bwsvr8911,
-			"' found.",
-		);
+	// Since the user's preferred choice was a bust, try out the remaining options
+	const secondUseful = await getFirstUsefulCompressedImageUrl(
+		payload,
+		tryPreserveAnim
+			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING
+			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
+	);
 
-		return payload.zz_url_bwsvr8911;
-	}
+	if (secondUseful) return secondUseful;
+
+	console.warn(
+		"No valid compression url for '",
+		payload.zz_url_bwsvr8911,
+		"' found. Falling back to original url",
+	);
+
+	return payload.zz_url_bwsvr8911;
 }
 
 export const customProxyUrlConstructor = (
