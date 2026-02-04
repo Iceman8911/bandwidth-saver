@@ -81,7 +81,7 @@ const app = new Elysia({
 
 					// Default to the original url
 					processedResponse = await fetch(
-						`${cleanedSrcUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						`${query.default_bwsvr8911 || cleanedSrcUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 						{
 							headers: SPOOFING_FETCH_HEADERS,
 						},
