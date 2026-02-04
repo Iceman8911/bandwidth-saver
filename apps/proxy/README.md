@@ -8,6 +8,8 @@ It checks if any external compressor endpoints return valid image data and redir
 
 ## Hosting
 
+You'll need to change the `DEPLOYMENT_PLATFORM` env variable depending on where you host it, to keep the proxy compatible with server-based or serverless platforms.
+
 ### Cloudflare
 
 Ensure your **Build configuration** matches this:
@@ -16,3 +18,5 @@ Ensure your **Build configuration** matches this:
 - **Deploy command**: `cd apps/proxy && npx wrangler deploy`
 - **Non-production branch deploy command**: `cd apps/proxy && npx wrangler versions upload`
 - **Path**: `/`
+
+And `DEPLOYMENT_PLATFORM` is `cloudflare`.
