@@ -135,6 +135,21 @@ function createStaticRules(): Browser.declarativeNetRequest.UpdateRuleOptions[] 
 				DeclarativeNetRequestRuleIds.EXEMPT_RECAPTCHA_FROM_COMPRESSION,
 			],
 		},
+
+		// Don't touch gstatic netcheck urls
+		{
+			addRules: [
+				{
+					action: { type: "allow" },
+					condition: { urlFilter: "ssl.gstatic.com" },
+					id: DeclarativeNetRequestRuleIds.EXEMPT_GSTATIC_NETCHECK_FROM_COMPRESSION,
+					priority: DeclarativeNetRequestPriority.HIGHEST,
+				},
+			],
+			removeRuleIds: [
+				DeclarativeNetRequestRuleIds.EXEMPT_GSTATIC_NETCHECK_FROM_COMPRESSION,
+			],
+		},
 	];
 }
 
