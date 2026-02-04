@@ -4,6 +4,7 @@ import {
 	ImageCompressionPayloadSchema,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
+	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
@@ -23,7 +24,6 @@ const app = new Elysia({
 		async (args) => {
 			const {
 				query,
-				redirect,
 				request: { url: rawRequestUrl },
 			} = args;
 
@@ -52,10 +52,13 @@ const app = new Elysia({
 			});
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
-				processedResponse = redirect(
+				processedResponse = await fetch(
 					decodeURIComponent(
 						`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					),
+					{
+						headers: SPOOFING_FETCH_HEADERS,
+					},
 				);
 			} else {
 				try {
@@ -77,11 +80,25 @@ const app = new Elysia({
 					);
 
 					// Default to the original url
-					processedResponse = redirect(
+					processedResponse = await fetch(
 						`${cleanedSrcUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						{
+							headers: SPOOFING_FETCH_HEADERS,
+						},
 					);
 				}
 			}
+
+			// Create a new Response to make headers mutable
+			processedResponse = new Response(
+				processedResponse.body,
+				processedResponse,
+			);
+
+			processedResponse.headers.set(
+				"Cache-Control",
+				"public, max-age=2592000, stale-while-revalidate=3600",
+			);
 
 			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
 				//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
