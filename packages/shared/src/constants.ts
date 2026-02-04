@@ -7,6 +7,10 @@ export enum ImageCompressorEndpoint {
 	 */
 	FLY_IMG_IO = "https://demo.flyimg.io",
 
+	/** Most consistent out of them all but has some issues with tiwtter, reddit, discord, etc
+	 *
+	 * Tbf, all the others also have problems with those, so I won't hold it against it.
+	 */
 	WSRV_NL = "https://wsrv.nl",
 
 	/** Must trim out url protocol before it can be passed to this endpoint.
