@@ -15,7 +15,6 @@ import type {
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
 import { getUrlSchemaHost } from "@/utils/url";
-import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { SIMPLE: SIMPLE_MODE } = CompressionMode;
 
@@ -26,7 +25,7 @@ const { SIMPLE: SIMPLE_MODE } = CompressionMode;
  * 2 -> host + path up to (but not including) query
  * 3 -> query string (including leading '?') if present
  */
-const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://)(.+?)(\\?.*)?$`;
+const IMAGE_URL_REGEX = `^(https?://)(.+?)(\\?.*)?$`;
 
 const PROTOCOL_OF_BASE_URL = "\\1" as UrlSchema;
 

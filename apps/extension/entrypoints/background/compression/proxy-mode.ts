@@ -13,11 +13,10 @@ import type {
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
 import { getUrlSchemaHost } from "@/utils/url";
-import { DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG } from "./shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
-const IMAGE_URL_REGEX = `^(?:${DECLARATIVE_NET_REQUEST_COMPRESSION_REGEX_FLAG})?(https?://.+)`;
+const IMAGE_URL_REGEX = `^(https?://.+)`;
 
 export async function applyDefaultProxyCompressionRules(
 	payload: DefaultDnrRuleModifierPayload,
