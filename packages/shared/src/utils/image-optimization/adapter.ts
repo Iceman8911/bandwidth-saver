@@ -210,7 +210,18 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	return altUrl;
 };
 
-const URL_CONSTRUCTOR_ARRAY = Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS);
+const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION = [
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WORDPRESS],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.SERVE_PROXY],
+] as const satisfies ImageCompressionUrlConstructor[];
+
+const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_IMG_IO],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_WEBP_CLOUD],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.IMAGE_CDN],
+] as const satisfies ImageCompressionUrlConstructor[];
 
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
@@ -223,7 +234,10 @@ export async function getCompressedImageUrlWithFallback(
 ): Promise<UrlSchema> {
 	try {
 		const firstUseful = await Promise.any(
-			URL_CONSTRUCTOR_ARRAY.map(async (c) => {
+			(payload.preserveAnim_bwsvr8911
+				? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION
+				: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING
+			).map(async (c) => {
 				const value = await imageCompressionAdapter(payload, c);
 
 				if (value) return value;
