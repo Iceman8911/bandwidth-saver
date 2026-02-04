@@ -9,8 +9,6 @@ import {
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
-import { set } from "valibot";
-import { completeWithinFreeCloudflareWorkerTimeLimit } from "./utils/cloudflare";
 
 const { DEPLOYMENT_PLATFORM } = getProxyEnv();
 
@@ -155,16 +153,9 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 };
 
 const compressImage: ImageCompressorHandler = async (payload) => {
-	// On cloudflare, sharp outright fails regardless and we have a rather short duration
+	// Cloudflare workers on the free tier have 10ms limit which is too small to do any meaningful compression
 	if (DEPLOYMENT_PLATFORM === "cloudflare") {
-		return completeWithinFreeCloudflareWorkerTimeLimit(
-			() => compressImageUsingWasmImageOptimizer(payload),
-			() =>
-				[
-					new Uint8Array(payload.srcImg),
-					payload.srcMimeType ?? "image/jpeg",
-				] as [Uint8Array<ArrayBufferLike>, ImageMimeType],
-		);
+		return [new Uint8Array(payload.srcImg), payload.srcMimeType];
 	}
 
 	try {
