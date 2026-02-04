@@ -11,8 +11,9 @@ import type {
 } from "../../models/image-optimization";
 import { UrlSchema } from "../../models/shared";
 import {
-	checkIfUrlReturnsValidImage,
 	getFetchTimeoutSignal,
+	getLikelyImageUrlMimeType,
+	type ImageMimeType,
 	SPOOFING_FETCH_HEADERS,
 } from "../fetch";
 
@@ -157,44 +158,56 @@ export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 	ImageCompressionUrlConstructor
 >;
 
+interface ContentLengthAndType {
+	length?: number | null;
+	type?: ImageMimeType | null;
+}
+
+const getContentLengthAndTypeFromUrl = async (
+	url: UrlSchema,
+): Promise<ContentLengthAndType> => {
+	try {
+		const { headers } = await fetch(url, {
+			headers: SPOOFING_FETCH_HEADERS,
+			method: "HEAD",
+			signal: getFetchTimeoutSignal(),
+		});
+
+		const headersLength = Number(headers.get("content-length"));
+
+		return {
+			length: Number.isNaN(headersLength) ? null : headersLength,
+			type: getLikelyImageUrlMimeType(url, headers.get("content-type")),
+		};
+	} catch {
+		return {};
+	}
+};
+
 const imageCompressionAdapter: ImageCompressionAdapter = async (
 	payload,
 	urlConstructor,
 ) => {
-	const newUrl = urlConstructor(payload);
+	const originalUrl = payload.zz_url_bwsvr8911;
+	const altUrl = urlConstructor(payload);
 
-	const { success } = await checkIfUrlReturnsValidImage(newUrl);
-	if (!success) return null;
-
-	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
-		fetch(payload.zz_url_bwsvr8911, {
-			headers: SPOOFING_FETCH_HEADERS,
-			method: "HEAD",
-			signal: getFetchTimeoutSignal(),
-		})
-			.then(({ headers }) => headers.get("content-length"))
-			.catch(() => null),
-		fetch(newUrl, {
-			headers: SPOOFING_FETCH_HEADERS,
-			method: "HEAD",
-			signal: getFetchTimeoutSignal(),
-		})
-			.then(({ headers }) => headers.get("content-length"))
-			.catch(() => null),
+	const [
+		{ length: originalUrlSize, type: originalUrlType },
+		{ length: altUrlSize, type: altUrlType },
+	] = await Promise.all([
+		getContentLengthAndTypeFromUrl(originalUrl),
+		getContentLengthAndTypeFromUrl(altUrl),
 	]);
 
-	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
-	if (!altUrlSizeString) return payload.zz_url_bwsvr8911;
+	// If the compression endpoint can't bother to set the `content-type` or `content-length` header, don't bother either
+	if (!altUrlSize || !altUrlType) return originalUrl;
 
-	if (originalUrlSizeString) {
-		const originalUrlSize = Number(originalUrlSizeString);
-		const altUrlSize = Number(altUrlSizeString);
-
-		// I'd rather only bother with actual compressed data. TAt the call site, I could just default to the original url if it's `null` here
-		return altUrlSize <= originalUrlSize ? newUrl : null;
+	if (originalUrlSize && originalUrlType) {
+		// I'd rather only bother with actual compressed data. At the call site, I could just default to the original url if it's `null` here
+		return altUrlSize <= originalUrlSize ? altUrl : null;
 	}
 
-	return newUrl;
+	return altUrl;
 };
 
 const URL_CONSTRUCTOR_ARRAY = Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS);

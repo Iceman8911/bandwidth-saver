@@ -16,42 +16,6 @@ const IMAGE_MIME_TYPES = [
 const ImageMimeType = v.picklist(IMAGE_MIME_TYPES);
 export type ImageMimeType = v.InferOutput<typeof ImageMimeType>;
 
-export async function checkIfUrlReturnsValidResponse(
-	url: string,
-	responseTypesToMatch?: ReadonlyArray<string>,
-): Promise<{ success: true; url: string } | { success: false }> {
-	try {
-		const response = await fetch(url, {
-			headers: SPOOFING_FETCH_HEADERS,
-			method: "HEAD",
-			signal: getFetchTimeoutSignal(),
-		});
-
-		const contentTypeSet = new Set(
-			(response.headers.get("content-type") ?? "")
-				.split(";")
-				.map((str) => str.trim()),
-		);
-		const responseTypesToMatchSet = new Set(responseTypesToMatch ?? []);
-
-		if (
-			response.ok &&
-			(responseTypesToMatch
-				? responseTypesToMatchSet.intersection(contentTypeSet).size
-				: true)
-		) {
-			return { success: true, url };
-		}
-		return { success: false };
-	} catch {
-		return { success: false };
-	}
-}
-
-export async function checkIfUrlReturnsValidImage(url: string) {
-	return checkIfUrlReturnsValidResponse(url, IMAGE_MIME_TYPES);
-}
-
 export function getLikelyImageUrlMimeType(
 	imgUrl: string,
 	srcMimeType?: string | undefined | null,
