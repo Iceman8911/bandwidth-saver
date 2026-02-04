@@ -17,13 +17,14 @@ import {
 } from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
-	url: string | URL,
+	url: UrlSchema,
+	...endPointsToCompareWith: string[]
 ): boolean => {
-	for (const endpoint of IMAGE_COMPRESSOR_ENDPOINT_SET) {
-		if (`${url}`.startsWith(endpoint)) return true;
-	}
+	const endpoints: ReadonlyArray<string> = endPointsToCompareWith.length
+		? endPointsToCompareWith
+		: [...IMAGE_COMPRESSOR_ENDPOINT_SET];
 
-	return false;
+	return endpoints.some((endpoint) => url.startsWith(endpoint));
 };
 
 const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
@@ -33,8 +34,13 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 	format_bwsvr8911: format,
 	default_bwsvr8911: defaultValue,
 }) => {
-	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-		return v.parse(UrlSchema, url);
+	if (
+		isUrlAlreadyRedirectedToCompressionEndpoint(
+			url,
+			ImageCompressorEndpoint.WSRV_NL,
+		)
+	)
+		return url;
 
 	// Check if this is a regex substitution placeholder
 	const n = preserveAnim ? "-1" : "1";
@@ -51,7 +57,7 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 
 	if (defaultValue) result += `&default=${defaultValue}`;
 
-	return v.parse(UrlSchema, result);
+	return result as UrlSchema;
 };
 
 const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
@@ -60,13 +66,15 @@ const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
 		quality_bwsvr8911: quality,
 		format_bwsvr8911: format,
 	}) => {
-		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-			return v.parse(UrlSchema, url);
+		if (
+			isUrlAlreadyRedirectedToCompressionEndpoint(
+				url,
+				ImageCompressorEndpoint.FLY_IMG_IO,
+			)
+		)
+			return url;
 
-		return v.parse(
-			UrlSchema,
-			`${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}`,
-		);
+		return `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}` as UrlSchema;
 	};
 
 const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
@@ -74,8 +82,13 @@ const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
 	format_bwsvr8911: format,
 	quality_bwsvr8911: quality,
 }) => {
-	if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-		return v.parse(UrlSchema, url);
+	if (
+		isUrlAlreadyRedirectedToCompressionEndpoint(
+			url,
+			ImageCompressorEndpoint.IMAGE_CDN,
+		)
+	)
+		return url;
 
 	let baseUrl = `${ImageCompressorEndpoint.IMAGE_CDN}/${url}?quality=${quality}`;
 
@@ -84,43 +97,49 @@ const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
 		else baseUrl += `&format=${format}`;
 	}
 
-	return v.parse(UrlSchema, baseUrl);
+	return baseUrl as UrlSchema;
 };
 
 const imageCompressionUrlConstructorFlyWebpCloud: ImageCompressionUrlConstructor =
 	({ zz_url_bwsvr8911: url }) => {
-		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-			return v.parse(UrlSchema, url);
+		if (
+			isUrlAlreadyRedirectedToCompressionEndpoint(
+				url,
+				ImageCompressorEndpoint.FLY_WEBP_CLOUD,
+			)
+		)
+			return url;
 
-		return v.parse(
-			UrlSchema,
-			`${ImageCompressorEndpoint.FLY_WEBP_CLOUD}?url=${url}`,
-		);
+		return `${ImageCompressorEndpoint.FLY_WEBP_CLOUD}?url=${url}` as UrlSchema;
 	};
 
-const PROTOCOL_REGEX = /^.*\/\//;
+const PROTOCOL_REGEX = /^https?:\/\//;
 const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor =
 	({ zz_url_bwsvr8911: url, quality_bwsvr8911: quality }) => {
-		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-			return v.parse(UrlSchema, url);
+		if (
+			isUrlAlreadyRedirectedToCompressionEndpoint(
+				url,
+				ImageCompressorEndpoint.WORDPRESS,
+			)
+		)
+			return url;
 
 		const noProtocolUrl = url.replace(PROTOCOL_REGEX, "");
 
-		return v.parse(
-			UrlSchema,
-			`${ImageCompressorEndpoint.WORDPRESS}/${noProtocolUrl}?quality=${quality}`,
-		);
+		return `${ImageCompressorEndpoint.WORDPRESS}/${noProtocolUrl}?quality=${quality}` as UrlSchema;
 	};
 
 const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructor =
 	({ zz_url_bwsvr8911: url }) => {
-		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
-			return v.parse(UrlSchema, url);
+		if (
+			isUrlAlreadyRedirectedToCompressionEndpoint(
+				url,
+				ImageCompressorEndpoint.SERVE_PROXY,
+			)
+		)
+			return url;
 
-		return v.parse(
-			UrlSchema,
-			`${ImageCompressorEndpoint.SERVE_PROXY}/?url=${url}`,
-		);
+		return `${ImageCompressorEndpoint.SERVE_PROXY}/?url=${url}` as UrlSchema;
 	};
 
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
@@ -152,21 +171,17 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 			headers: SPOOFING_FETCH_HEADERS,
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
-		}).then(({ headers }) => headers.get("content-length")),
+		})
+			.then(({ headers }) => headers.get("content-length"))
+			.catch(() => null),
 		fetch(newUrl, {
 			headers: SPOOFING_FETCH_HEADERS,
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
-		}).then(({ headers }) => headers.get("content-length")),
+		})
+			.then(({ headers }) => headers.get("content-length"))
+			.catch(() => null),
 	]);
-
-	console.log(
-		"original url size =",
-		originalUrlSizeString,
-		"for url:",
-		payload.zz_url_bwsvr8911,
-	);
-	console.log("alt url size =", altUrlSizeString, "for url:", newUrl);
 
 	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
 	if (!altUrlSizeString) return payload.zz_url_bwsvr8911;
