@@ -211,9 +211,6 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 };
 
 const URL_CONSTRUCTOR_ARRAY = Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS);
-const URL_CONSTRUCTOR_KEYS = Object.keys(
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
-).join(", ");
 
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
@@ -241,8 +238,7 @@ export async function getCompressedImageUrlWithFallback(
 		console.warn(
 			"No valid compression url for '",
 			payload.zz_url_bwsvr8911,
-			"' found. Tried all of '",
-			URL_CONSTRUCTOR_KEYS,
+			"' found.",
 		);
 
 		return payload.zz_url_bwsvr8911;
