@@ -1,95 +1,102 @@
 import {
 	getCompressedImageUrlWithFallback,
-	getFetchTimeoutSignal,
-	getLikelyImageUrlMimeType,
 	getProxyEnv,
 	ImageCompressionPayloadSchema,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
-	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
-import { compressImage } from "./compression";
+import { compressImagefromUrl } from "./compression";
 import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
 
 const env = getProxyEnv();
 
+const IS_HOSTED_ON_CLOUDFLARE = env.DEPLOYMENT_PLATFORM === "cloudflare";
+
 const app = new Elysia({
-	adapter:
-		env.DEPLOYMENT_PLATFORM === "cloudflare" ? CloudflareAdapter : undefined,
+	adapter: IS_HOSTED_ON_CLOUDFLARE ? CloudflareAdapter : undefined,
 })
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
-		async ({ query, redirect, set }) => {
+		async (args) => {
+			const { query, redirect } = args;
+
+			const srcUrl = cleanlyExtractUrlFromImageCompressorPayload(query);
+
+			/** Make a new trimmed request solely with the url for caching */
+			let trimmedRequest: Request | undefined;
+			/** The final response at the end of processing that I can cache and do some stuff */
+			let processedResponse: Response;
+
+			if (IS_HOSTED_ON_CLOUDFLARE) {
+				trimmedRequest = new Request(srcUrl);
+
+				const cachedResponse = await caches.default.match(trimmedRequest);
+
+				if (cachedResponse) return cachedResponse;
+			}
+
 			// I'll make this cleaner later
-			const redirectedUrl = await getCompressedImageUrlWithFallback({
+			const possiblyRedirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
-				url_bwsvr8911: cleanlyExtractUrlFromImageCompressorPayload(query),
+				url_bwsvr8911: srcUrl,
 			});
 
-			if (redirectedUrl !== query.url_bwsvr8911) {
-				return redirect(
+			if (possiblyRedirectedUrl !== query.url_bwsvr8911) {
+				processedResponse = redirect(
 					decodeURIComponent(
-						`${redirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					),
 				);
 			} else {
 				try {
 					// Compress the image ourselves
-					const response = await fetch(redirectedUrl, {
-						headers: SPOOFING_FETCH_HEADERS,
-						signal: getFetchTimeoutSignal(),
-					});
-
-					const imgBuffer = await response.arrayBuffer();
-					const imgMimeType = getLikelyImageUrlMimeType(
-						redirectedUrl,
-						response.headers.get("content-type"),
-					);
-
-					if (!imgMimeType)
-						throw Error(
-							`Url, "${redirectedUrl}", has no valid image mime type.`,
-						);
-
-					const [compressedImgBuffer, contentType] = await compressImage({
+					const compressedResponse = await compressImagefromUrl({
 						format: query.format_bwsvr8911,
 						preserveAnim: query.preserveAnim_bwsvr8911,
 						quality: query.quality_bwsvr8911,
-						srcImg: imgBuffer,
-						srcMimeType: imgMimeType,
+						url: possiblyRedirectedUrl,
 					});
 
-					set.headers["cache-control"] =
-						"public, max-age=604800, stale-while-revalidate=3600";
-					set.headers["content-length"] = compressedImgBuffer.byteLength;
-					set.headers["content-type"] = contentType;
-					set.headers.vary = "Accept";
-
-					return Buffer.from(compressedImgBuffer);
+					processedResponse = compressedResponse;
 				} catch (e) {
 					console.warn(
 						"Why did compression throw:",
 						e,
 						"on the url:",
-						redirectedUrl,
+						possiblyRedirectedUrl,
 					);
 
 					// Default to the original url
-					return redirect(
+					processedResponse = redirect(
 						`${query.url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					);
 				}
 			}
+
+			if (IS_HOSTED_ON_CLOUDFLARE && trimmedRequest) {
+				//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
+				const ctx = args.ctx as ExecutionContext;
+
+				const promise = caches.default.put(
+					trimmedRequest,
+					processedResponse.clone(),
+				);
+
+				// Optional access since, for some reason, this may be undefined :p
+				ctx?.waitUntil(promise);
+			}
+
+			return processedResponse;
 		},
 		{
 			query: ImageCompressionPayloadSchema,
 		},
 	);
 
-if (env.DEPLOYMENT_PLATFORM === "cloudflare") {
+if (IS_HOSTED_ON_CLOUDFLARE) {
 	app.compile();
 }
 
@@ -109,4 +116,12 @@ if (env.DEPLOYMENT_PLATFORM === "server") {
 
 export type ElysiaApp = typeof app;
 
-export default app;
+const defaultExport = IS_HOSTED_ON_CLOUDFLARE
+	? {
+			fetch: (request: Request, env: Env, ctx: ExecutionContext) => {
+				return app.decorate({ ctx, env }).handle(request);
+			},
+		}
+	: app;
+
+export default defaultExport;

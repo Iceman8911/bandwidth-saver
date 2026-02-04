@@ -1,10 +1,15 @@
 import {
+	getFetchTimeoutSignal,
+	getLikelyImageUrlMimeType,
 	getProxyEnv,
 	type ImageFormatSchema,
 	type ImageMimeType,
 	type NumberBetween1and100Inclusively,
+	SPOOFING_FETCH_HEADERS,
+	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
+import { set } from "valibot";
 import { completeWithinFreeCloudflareWorkerTimeLimit } from "./utils/cloudflare";
 
 const { DEPLOYMENT_PLATFORM } = getProxyEnv();
@@ -174,3 +179,49 @@ export const compressImage: ImageCompressorHandler = async (payload) => {
 		return compressImageUsingWasmImageOptimizer(payload);
 	}
 };
+
+interface CompressImageFromUrlProps {
+	url: UrlSchema;
+	format: ImageFormatSchema;
+	preserveAnim: boolean;
+	quality: NumberBetween1and100Inclusively;
+}
+
+export async function compressImagefromUrl({
+	format,
+	preserveAnim,
+	quality,
+	url,
+}: CompressImageFromUrlProps): Promise<Response> {
+	const fetchedUrlResponse = await fetch(url, {
+		headers: SPOOFING_FETCH_HEADERS,
+		signal: getFetchTimeoutSignal(),
+	});
+
+	const imgBuffer = await fetchedUrlResponse.arrayBuffer();
+	const imgMimeType = getLikelyImageUrlMimeType(
+		url,
+		fetchedUrlResponse.headers.get("content-type"),
+	);
+
+	if (!imgMimeType) throw Error(`Url, "${url}", has no valid image mime type.`);
+
+	const [compressedImgBuffer, contentType] = await compressImage({
+		format,
+		preserveAnim,
+		quality,
+		srcImg: imgBuffer,
+		srcMimeType: imgMimeType,
+	});
+
+	const response = new Response(compressedImgBuffer, {
+		headers: {
+			"cache-control": "public, max-age=604800, stale-while-revalidate=3600",
+			"content-length": `${compressedImgBuffer.byteLength}`,
+			"content-type": contentType,
+			vary: "Accept",
+		},
+	});
+
+	return response;
+}
