@@ -211,23 +211,29 @@ const URL_CONSTRUCTOR_KEYS = Object.keys(
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 ): Promise<UrlSchema> {
-	for (const urlConstructor of URL_CONSTRUCTOR_ARRAY) {
-		try {
-			const result = await imageCompressionAdapter(payload, urlConstructor);
-			if (result) return result;
-		} catch (error) {
-			console.warn(
-				"No valid compression url for '",
-				payload.zz_url_bwsvr8911,
-				"' found. Tried all of '",
-				URL_CONSTRUCTOR_KEYS,
-				"' ",
-				error,
-			);
-		}
-	}
+	try {
+		const firstUseful = await Promise.any(
+			URL_CONSTRUCTOR_ARRAY.map(async (c) => {
+				const value = await imageCompressionAdapter(payload, c);
 
-	return payload.zz_url_bwsvr8911;
+				if (value) return value;
+
+				// Reject so Promise.any ignores this result.
+				throw new Error("No useful value");
+			}),
+		);
+
+		return firstUseful;
+	} catch {
+		console.warn(
+			"No valid compression url for '",
+			payload.zz_url_bwsvr8911,
+			"' found. Tried all of '",
+			URL_CONSTRUCTOR_KEYS,
+		);
+
+		return payload.zz_url_bwsvr8911;
+	}
 }
 
 export const customProxyUrlConstructor = (
