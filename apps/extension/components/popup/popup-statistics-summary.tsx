@@ -77,7 +77,7 @@ export default function PopupStatisticsSummary() {
 			</div>
 
 			<div>
-				Data Saved:{" "}
+				Proxied Data Saved:{" "}
 				<span class="font-semibold">
 					{percentageOfBytesSaved()
 						? `${percentageOfBytesSaved()}%`

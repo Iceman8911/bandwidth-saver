@@ -1,4 +1,8 @@
-import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
+import {
+	BatchQueue,
+	ProxyCustomHeaders,
+	type UrlSchema,
+} from "@bandwidth-saver/shared";
 import { type Browser, browser } from "wxt/browser";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
@@ -49,6 +53,12 @@ function detectAssetTypeFromContentTypeOrUrl(
 	return detectAssetTypeFromUrl(parsedUrl);
 }
 
+function parsedNumber(numberish: unknown): number {
+	const parsed = Number(numberish);
+
+	return Number.isFinite(parsed) ? 0 : parsed;
+}
+
 function webRequestOnCompletedListener({
 	fromCache,
 	initiator,
@@ -66,6 +76,7 @@ function webRequestOnCompletedListener({
 
 	let contentLength = 0;
 	let contentType = "other";
+	let bytesSaved = 0;
 
 	for (const header of responseHeaders) {
 		const headerName = header.name.toLowerCase();
@@ -73,10 +84,13 @@ function webRequestOnCompletedListener({
 
 		switch (headerName) {
 			case "content-length":
-				contentLength = Number(headerValue);
+				contentLength = parsedNumber(headerValue);
 				break;
 			case "content-type":
-				contentType = (headerValue ?? contentType).toLowerCase();
+				if (headerValue) contentType = headerValue.toLowerCase();
+				break;
+			case ProxyCustomHeaders.BYTES_SAVED:
+				bytesSaved = parsedNumber(headerValue);
 				break;
 		}
 	}
@@ -102,9 +116,9 @@ function webRequestOnCompletedListener({
 	}
 
 	cacheBandwidthDataFromWebRequest({
-		//@ts-expect-error a stringified URL object will always be a valid url
-		assetUrl: `${parsedUrl}`,
+		assetUrl: `${parsedUrl}` as UrlSchema,
 		bytes: contentLength,
+		bytesSaved,
 		hostOrigin: getUrlSchemaOrigin(initiator),
 		type: assetType,
 	});

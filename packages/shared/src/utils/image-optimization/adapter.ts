@@ -184,10 +184,15 @@ const getContentLengthAndTypeFromUrl = async (
 	}
 };
 
-const imageCompressionAdapter: ImageCompressionAdapter = async (
-	payload,
-	urlConstructor,
-) => {
+interface CompressionUrlAndSavings {
+	url: UrlSchema;
+	bytesSaved: number;
+}
+
+const optimalImageCompressionAdapter = async (
+	payload: ImageCompressionPayloadSchema,
+	urlConstructor: ImageCompressionUrlConstructor,
+): Promise<CompressionUrlAndSavings | null> => {
 	const originalUrl = payload.zz_url_bwsvr8911;
 	const altUrl = urlConstructor(payload);
 
@@ -200,14 +205,16 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	]);
 
 	// If the compression endpoint can't bother to set the `content-type` or `content-length` header, don't bother either
-	if (!altUrlSize || !altUrlType) return originalUrl;
+	if (!altUrlSize || !altUrlType) return { bytesSaved: 0, url: originalUrl };
 
 	if (originalUrlSize && originalUrlType) {
 		// I'd rather only bother with actual compressed data. At the call site, I could just default to the original url if it's `null` here
-		return altUrlSize <= originalUrlSize ? altUrl : null;
+		const bytesSaved = originalUrlSize - altUrlSize;
+
+		return bytesSaved >= 0 ? { bytesSaved, url: altUrl } : null;
 	}
 
-	return altUrl;
+	return { bytesSaved: 0, url: altUrl };
 };
 
 const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION = [
@@ -226,10 +233,10 @@ const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 async function getFirstUsefulCompressedImageUrl(
 	payload: ImageCompressionPayloadSchema,
 	urlConstructorArray: ImageCompressionUrlConstructor[],
-): Promise<UrlSchema | null> {
+): Promise<CompressionUrlAndSavings | null> {
 	return Promise.any(
 		urlConstructorArray.map(async (c) => {
-			const value = await imageCompressionAdapter(payload, c);
+			const value = await optimalImageCompressionAdapter(payload, c);
 
 			if (value) return value;
 
@@ -247,8 +254,9 @@ async function getFirstUsefulCompressedImageUrl(
  */
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
-): Promise<UrlSchema> {
-	const tryPreserveAnim = payload.preserveAnim_bwsvr8911;
+): Promise<CompressionUrlAndSavings> {
+	const tryPreserveAnim = payload.preserveAnim_bwsvr8911,
+		originalUrl = payload.zz_url_bwsvr8911;
 
 	const firstUseful = await getFirstUsefulCompressedImageUrl(
 		payload,
@@ -271,11 +279,11 @@ export async function getCompressedImageUrlWithFallback(
 
 	console.warn(
 		"No valid compression url for '",
-		payload.zz_url_bwsvr8911,
+		originalUrl,
 		"' found. Falling back to original url",
 	);
 
-	return payload.zz_url_bwsvr8911;
+	return { bytesSaved: 0, url: originalUrl };
 }
 
 export const customProxyUrlConstructor = (

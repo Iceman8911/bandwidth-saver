@@ -15,6 +15,9 @@ export type BandwidthMonitoringMessagePayload = {
 
 	/** The asset type */
 	type: keyof SingleAssetStatisticsSchema;
+
+	/** Unless the user is using the proxy mode, this will most-likely be zero. This is because I manually send a header with the bytes saved  */
+	bytesSaved: number;
 };
 
 /** Just a base layout for any compoennt that maybe be able to receive external classes */

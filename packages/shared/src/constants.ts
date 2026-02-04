@@ -62,3 +62,10 @@ export enum ServerAPIEndpoint {
 
 /** Any urls with this query param will not be redirected by the extension */
 export const REDIRECTED_SEARCH_PARAM_FLAG = "bwsvr8911-flag=no-redirect";
+
+export enum ProxyCustomHeaders {
+	BYTES_SAVED = "x-bwsvr8911-bytes-saved",
+}
+
+// Ensure that all the headers are lowercase
+ProxyCustomHeaders satisfies Record<string, Lowercase<ProxyCustomHeaders>>;

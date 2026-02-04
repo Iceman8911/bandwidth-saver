@@ -76,6 +76,8 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
 				assetUrl: name,
 				bytes: assetSize,
+				// No way to get the bytesSaved header via Performance Metrics
+				bytesSaved: 0,
 				hostOrigin,
 				type: assetType,
 			});

@@ -133,6 +133,7 @@ class PendingBandwidthMeasurementMap {
 				const merged: BandwidthMonitoringMessagePayload = {
 					assetUrl: url,
 					bytes: perfApi?.bytes || webRequest?.bytes || 0,
+					bytesSaved: webRequest?.bytesSaved || perfApi?.bytesSaved || 0,
 					hostOrigin:
 						webRequest?.hostOrigin || perfApi?.hostOrigin || DUMMY_TAB_URL,
 					type: webRequest?.type || perfApi?.type || "other",
@@ -249,7 +250,7 @@ function applyBandwidthMeasurementsToStatistics(
 	globalStats: StatisticsSchema;
 	siteScopedStats: DetailedStatisticsSchema;
 } {
-	const { bytes: assetSize, type, assetUrl, hostOrigin } = data;
+	const { bytes: assetSize, type, assetUrl, hostOrigin, bytesSaved } = data;
 
 	if (!assetSize) return { globalStats, siteScopedStats };
 
@@ -272,6 +273,7 @@ function applyBandwidthMeasurementsToStatistics(
 	const updatedGlobalStats = immer.produce(globalStats, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
+		draft.bytesSaved = applyToCombinedStats(draft.bytesSaved, bytesSaved);
 
 		if (
 			IMAGE_COMPRESSOR_ENDPOINT_SET.has(assetUrlOrigin) ||
@@ -287,6 +289,7 @@ function applyBandwidthMeasurementsToStatistics(
 	const updatedSiteScopedStats = immer.produce(siteScopedStats, (draft) => {
 		draft.bytesUsed = applyToCombinedStats(draft.bytesUsed, assetSize);
 		draft.requestsMade = applyToCombinedStats(draft.requestsMade, 1);
+		draft.bytesSaved = applyToCombinedStats(draft.bytesSaved, bytesSaved);
 
 		if (hostOrigin !== assetUrlOrigin) {
 			const existingCrossOrigin =

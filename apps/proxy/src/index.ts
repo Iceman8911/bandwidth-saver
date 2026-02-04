@@ -2,6 +2,7 @@ import {
 	getCompressedImageUrlWithFallback,
 	getProxyEnv,
 	ImageCompressionPayloadSchema,
+	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
 	SPOOFING_FETCH_HEADERS,
@@ -37,6 +38,7 @@ const app = new Elysia({
 			let normalizedRequest: Request | undefined;
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
+			let relevantBytesSaved = 0;
 
 			if (IS_HOSTED_ON_CLOUDFLARE) {
 				normalizedRequest = new Request(cleanedSrcUrl);
@@ -46,10 +48,13 @@ const app = new Elysia({
 				if (cachedResponse) return cachedResponse;
 			}
 
-			const possiblyRedirectedUrl = await getCompressedImageUrlWithFallback({
-				...query,
-				zz_url_bwsvr8911: cleanedSrcUrl,
-			});
+			const { bytesSaved, url: possiblyRedirectedUrl } =
+				await getCompressedImageUrlWithFallback({
+					...query,
+					zz_url_bwsvr8911: cleanedSrcUrl,
+				});
+
+			relevantBytesSaved = bytesSaved;
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
@@ -63,12 +68,15 @@ const app = new Elysia({
 			} else {
 				try {
 					// Compress the image ourselves since none of the endpoints work
-					const compressedResponse = await compressImagefromUrl({
-						format: query.format_bwsvr8911,
-						preserveAnim: query.preserveAnim_bwsvr8911,
-						quality: query.quality_bwsvr8911,
-						url: cleanedSrcUrl,
-					});
+					const { bytesSaved, res: compressedResponse } =
+						await compressImagefromUrl({
+							format: query.format_bwsvr8911,
+							preserveAnim: query.preserveAnim_bwsvr8911,
+							quality: query.quality_bwsvr8911,
+							url: cleanedSrcUrl,
+						});
+
+					relevantBytesSaved = bytesSaved;
 
 					processedResponse = compressedResponse;
 				} catch (e) {
@@ -98,6 +106,10 @@ const app = new Elysia({
 			processedResponse.headers.set(
 				"Cache-Control",
 				"public, max-age=2592000, stale-while-revalidate=3600",
+			);
+			processedResponse.headers.set(
+				ProxyCustomHeaders.BYTES_SAVED,
+				`${relevantBytesSaved}`,
 			);
 
 			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {

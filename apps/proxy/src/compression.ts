@@ -178,12 +178,17 @@ interface CompressImageFromUrlProps {
 	quality: NumberBetween1and100Inclusively;
 }
 
+interface ResponseAndSavings {
+	res: Response;
+	bytesSaved: number;
+}
+
 export async function compressImagefromUrl({
 	format,
 	preserveAnim,
 	quality,
 	url,
-}: CompressImageFromUrlProps): Promise<Response> {
+}: CompressImageFromUrlProps): Promise<ResponseAndSavings> {
 	const fetchedUrlResponse = await fetch(url, {
 		headers: SPOOFING_FETCH_HEADERS,
 		signal: getFetchTimeoutSignal(),
@@ -213,5 +218,11 @@ export async function compressImagefromUrl({
 		},
 	});
 
-	return response;
+	return {
+		bytesSaved: Math.max(
+			imgBuffer.byteLength - compressedImgBuffer.byteLength,
+			0,
+		),
+		res: response,
+	};
 }
