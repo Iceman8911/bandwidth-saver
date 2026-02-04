@@ -175,7 +175,8 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 		const originalUrlSize = Number(originalUrlSizeString);
 		const altUrlSize = Number(altUrlSizeString);
 
-		return altUrlSize < originalUrlSize ? newUrl : payload.zz_url_bwsvr8911;
+		// I'd rather only bother with actual compressed data. TAt the call site, I could just default to the original url if it's `null` here
+		return altUrlSize <= originalUrlSize ? newUrl : null;
 	}
 
 	return newUrl;
