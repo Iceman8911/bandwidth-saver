@@ -21,6 +21,7 @@
 		"dev": "bun run --watch src/index.ts",
 		"dev:cloudflare": "wrangler dev",
 		"format": "biome format ./ --write",
+		"gen-types:cloudflare": "wrangler types",
 		"lint": "biome lint ./ --write",
 		"start": "bun run src/index.ts",
 		"test": "bun test"
