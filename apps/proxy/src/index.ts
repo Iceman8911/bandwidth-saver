@@ -27,28 +27,31 @@ const app = new Elysia({
 				request: { url: rawRequestUrl },
 			} = args;
 
-			const srcUrl = cleanlyExtractImageUrlFromRawRequestUrl(rawRequestUrl);
+			const cleanedSrcUrl =
+				cleanlyExtractImageUrlFromRawRequestUrl(rawRequestUrl);
 
-			/** Make a new trimmed request solely with the url for caching */
-			let trimmedRequest: Request | undefined;
+			/** Make a normalized request solely with the url for caching, since the original may have some headers (but otheriwse same url), that'll prevent the cache from matching.
+			 *
+			 * All the relevant data is stored in the url as search params so this is fine.
+			 */
+			let normalizedRequest: Request | undefined;
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
 
 			if (IS_HOSTED_ON_CLOUDFLARE) {
-				trimmedRequest = new Request(srcUrl);
+				normalizedRequest = new Request(cleanedSrcUrl);
 
-				const cachedResponse = await caches.default.match(trimmedRequest);
+				const cachedResponse = await caches.default.match(normalizedRequest);
 
 				if (cachedResponse) return cachedResponse;
 			}
 
-			// I'll make this cleaner later
 			const possiblyRedirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
-				zz_url_bwsvr8911: srcUrl,
+				zz_url_bwsvr8911: cleanedSrcUrl,
 			});
 
-			if (possiblyRedirectedUrl !== query.zz_url_bwsvr8911) {
+			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = redirect(
 					decodeURIComponent(
 						`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
@@ -56,12 +59,12 @@ const app = new Elysia({
 				);
 			} else {
 				try {
-					// Compress the image ourselves
+					// Compress the image ourselves since none of the endpoints work
 					const compressedResponse = await compressImagefromUrl({
 						format: query.format_bwsvr8911,
 						preserveAnim: query.preserveAnim_bwsvr8911,
 						quality: query.quality_bwsvr8911,
-						url: possiblyRedirectedUrl,
+						url: cleanedSrcUrl,
 					});
 
 					processedResponse = compressedResponse;
@@ -75,17 +78,17 @@ const app = new Elysia({
 
 					// Default to the original url
 					processedResponse = redirect(
-						`${query.zz_url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						`${cleanedSrcUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					);
 				}
 			}
 
-			if (IS_HOSTED_ON_CLOUDFLARE && trimmedRequest) {
+			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
 				//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
 				const ctx = args.ctx as ExecutionContext;
 
 				const promise = caches.default.put(
-					trimmedRequest,
+					normalizedRequest,
 					processedResponse.clone(),
 				);
 
