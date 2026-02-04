@@ -12,7 +12,7 @@ import type { Sharp } from "sharp";
 
 const { DEPLOYMENT_PLATFORM } = getProxyEnv();
 
-const EFFORT_LEVEL = 6;
+const EFFORT_LEVEL = 5;
 
 interface ImageCompressorHandlerPayload {
 	format: ImageFormatSchema;
