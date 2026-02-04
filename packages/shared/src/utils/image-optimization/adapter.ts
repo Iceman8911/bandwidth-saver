@@ -205,7 +205,7 @@ export async function getCompressedImageUrlWithFallback(
 		}
 	}
 
-	return v.parse(UrlSchema, `${payload.zz_url_bwsvr8911}`);
+	return payload.zz_url_bwsvr8911;
 }
 
 export const customProxyUrlConstructor = (
