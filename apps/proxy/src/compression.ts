@@ -154,7 +154,7 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 	];
 };
 
-export const compressImage: ImageCompressorHandler = async (payload) => {
+const compressImage: ImageCompressorHandler = async (payload) => {
 	// On cloudflare, sharp outright fails regardless and we have a rather short duration
 	if (DEPLOYMENT_PLATFORM === "cloudflare") {
 		return completeWithinFreeCloudflareWorkerTimeLimit(
