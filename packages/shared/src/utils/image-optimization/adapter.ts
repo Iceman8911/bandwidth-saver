@@ -9,7 +9,7 @@ import type {
 	ImageCompressionPayloadSchema,
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
-import { UrlSchema } from "../../models/shared";
+import type { UrlSchema } from "../../models/shared";
 import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
@@ -260,5 +260,5 @@ export const customProxyUrlConstructor = (
 		.map(([key, entry]) => `${key}=${entry}`)
 		.join("&");
 
-	return v.parse(UrlSchema, `${urlWithoutQueryString}?${queryString}`);
+	return `${urlWithoutQueryString}?${queryString}` as UrlSchema;
 };
