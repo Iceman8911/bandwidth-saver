@@ -18,7 +18,7 @@ export async function completeWithinFreeCloudflareWorkerTimeLimit<
 				} else {
 					res(fallback);
 				}
-			}, CLOUDFLARE_WORKER_FREE_TIER_DURATION * 0.5),
+			}, CLOUDFLARE_WORKER_FREE_TIER_DURATION * 0.33),
 		),
 	]);
 }
