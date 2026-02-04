@@ -8,7 +8,7 @@ import {
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { compressImagefromUrl } from "./compression";
-import { cleanlyExtractUrlFromImageCompressorPayload } from "./url";
+import { cleanlyExtractImageUrlFromRawRequestUrl } from "./url";
 
 const env = getProxyEnv();
 
@@ -21,9 +21,13 @@ const app = new Elysia({
 	.get(
 		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
 		async (args) => {
-			const { query, redirect } = args;
+			const {
+				query,
+				redirect,
+				request: { url: rawRequestUrl },
+			} = args;
 
-			const srcUrl = cleanlyExtractUrlFromImageCompressorPayload(query);
+			const srcUrl = cleanlyExtractImageUrlFromRawRequestUrl(rawRequestUrl);
 
 			/** Make a new trimmed request solely with the url for caching */
 			let trimmedRequest: Request | undefined;

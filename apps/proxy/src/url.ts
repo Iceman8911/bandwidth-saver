@@ -1,22 +1,26 @@
-import {
+import type {
 	ImageCompressionPayloadSchema,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
-import * as v from "valibot";
 
-/** Using `new URL()` to get the search params of a url string with a searchy query containing another url (that also has a query string) is wonky; in the sense that the latter url will only be extracted with the first query from its original string. */
-export function cleanlyExtractUrlFromImageCompressorPayload(
-	query: ImageCompressionPayloadSchema,
+const RAW_URL_SPLITTER =
+	"url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries}=`;
+
+/**
+ * Funny things happen with nested url + query strings within another url+query string, so just split the original raw url and believe the second element is the url :D
+ */
+export function cleanlyExtractImageUrlFromRawRequestUrl(
+	rawUrl: string,
 ): UrlSchema {
-	const extraQueryStringPairs = Object.entries(query).filter(
-		([key]) => !(key in ImageCompressionPayloadSchema.entries),
-	);
-
-	const starvedUrl = new URL(query.url_bwsvr8911);
-
-	for (const [key, val] of extraQueryStringPairs) {
-		starvedUrl.searchParams.append(key, String(val));
+	const idx = rawUrl.indexOf(RAW_URL_SPLITTER);
+	if (idx === -1) {
+		throw new Error(`Missing ${RAW_URL_SPLITTER} query param.`);
 	}
 
-	return v.parse(UrlSchema, decodeURIComponent(String(starvedUrl)));
+	const encoded = rawUrl.slice(idx + RAW_URL_SPLITTER.length);
+	if (!encoded) {
+		throw new Error(`Empty ${RAW_URL_SPLITTER} query param.`);
+	}
+
+	return decodeURIComponent(encoded) as UrlSchema;
 }
