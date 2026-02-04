@@ -216,7 +216,7 @@ export async function compressImagefromUrl({
 
 	const response = new Response(compressedImgBuffer, {
 		headers: {
-			"cache-control": "public, max-age=604800, stale-while-revalidate=3600",
+			"cache-control": "public, max-age=2592000, stale-while-revalidate=3600",
 			"content-length": `${compressedImgBuffer.byteLength}`,
 			"content-type": contentType,
 			vary: "Accept",
