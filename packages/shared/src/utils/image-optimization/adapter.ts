@@ -181,6 +181,8 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	return newUrl;
 };
 
+const URL_CONSTRUCTOR_ARRAY = Object.values(IMAGE_COMPRESSION_URL_CONSTRUCTORS);
+
 /**
  * Attempts to obtain the compressed image's url using available adapters with fallback.
  * Tries each adapter sequentially until one succeeds.
@@ -190,9 +192,7 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 ): Promise<UrlSchema> {
-	for (const urlConstructor of Object.values(
-		IMAGE_COMPRESSION_URL_CONSTRUCTORS,
-	)) {
+	for (const urlConstructor of URL_CONSTRUCTOR_ARRAY) {
 		try {
 			const result = await imageCompressionAdapter(payload, urlConstructor);
 			if (result) return result;
