@@ -27,7 +27,7 @@ const isUrlAlreadyRedirectedToCompressionEndpoint = (
 };
 
 const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
-	url_bwsvr8911: url,
+	zz_url_bwsvr8911: url,
 	quality_bwsvr8911: quality,
 	preserveAnim_bwsvr8911: preserveAnim,
 	format_bwsvr8911: format,
@@ -56,7 +56,7 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 
 const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
 	({
-		url_bwsvr8911: url,
+		zz_url_bwsvr8911: url,
 		quality_bwsvr8911: quality,
 		format_bwsvr8911: format,
 	}) => {
@@ -70,7 +70,7 @@ const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
 	};
 
 const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
-	url_bwsvr8911: url,
+	zz_url_bwsvr8911: url,
 	format_bwsvr8911: format,
 	quality_bwsvr8911: quality,
 }) => {
@@ -88,7 +88,7 @@ const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
 };
 
 const imageCompressionUrlConstructorFlyWebpCloud: ImageCompressionUrlConstructor =
-	({ url_bwsvr8911: url }) => {
+	({ zz_url_bwsvr8911: url }) => {
 		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 			return v.parse(UrlSchema, url);
 
@@ -100,7 +100,7 @@ const imageCompressionUrlConstructorFlyWebpCloud: ImageCompressionUrlConstructor
 
 const PROTOCOL_REGEX = /^.*\/\//;
 const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor =
-	({ url_bwsvr8911: url, quality_bwsvr8911: quality }) => {
+	({ zz_url_bwsvr8911: url, quality_bwsvr8911: quality }) => {
 		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 			return v.parse(UrlSchema, url);
 
@@ -113,7 +113,7 @@ const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor
 	};
 
 const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructor =
-	({ url_bwsvr8911: url }) => {
+	({ zz_url_bwsvr8911: url }) => {
 		if (isUrlAlreadyRedirectedToCompressionEndpoint(url))
 			return v.parse(UrlSchema, url);
 
@@ -148,7 +148,7 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 	if (!success) return null;
 
 	const [originalUrlSizeString, altUrlSizeString] = await Promise.all([
-		fetch(payload.url_bwsvr8911, {
+		fetch(payload.zz_url_bwsvr8911, {
 			headers: SPOOFING_FETCH_HEADERS,
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
@@ -164,18 +164,18 @@ const imageCompressionAdapter: ImageCompressionAdapter = async (
 		"original url size =",
 		originalUrlSizeString,
 		"for url:",
-		payload.url_bwsvr8911,
+		payload.zz_url_bwsvr8911,
 	);
 	console.log("alt url size =", altUrlSizeString, "for url:", newUrl);
 
 	// If the compression endpoint can't bother to set the `content-type` header, don't bother either
-	if (!altUrlSizeString) return payload.url_bwsvr8911;
+	if (!altUrlSizeString) return payload.zz_url_bwsvr8911;
 
 	if (originalUrlSizeString) {
 		const originalUrlSize = Number(originalUrlSizeString);
 		const altUrlSize = Number(altUrlSizeString);
 
-		return altUrlSize < originalUrlSize ? newUrl : payload.url_bwsvr8911;
+		return altUrlSize < originalUrlSize ? newUrl : payload.zz_url_bwsvr8911;
 	}
 
 	return newUrl;
@@ -198,13 +198,13 @@ export async function getCompressedImageUrlWithFallback(
 			if (result) return result;
 		} catch (error) {
 			console.warn(
-				`Image compression adapter failed for ${payload.url_bwsvr8911}:`,
+				`Image compression adapter failed for ${payload.zz_url_bwsvr8911}:`,
 				error,
 			);
 		}
 	}
 
-	return v.parse(UrlSchema, `${payload.url_bwsvr8911}`);
+	return v.parse(UrlSchema, `${payload.zz_url_bwsvr8911}`);
 }
 
 export const customProxyUrlConstructor = (

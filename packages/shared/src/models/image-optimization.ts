@@ -23,7 +23,7 @@ export const ImageCompressionPayloadSchema = v.looseObject({
 		NumberBetween1and100Inclusively,
 	),
 	/** Ensure that this is at the end, alphabetically, so I can do a simple regex match to get the url in one sweep */
-	url_bwsvr8911: v.union([
+	zz_url_bwsvr8911: v.union([
 		UrlSchema,
 		// For some reason, some image urls with commas get split into an array, so this normalizes them
 		v.pipe(

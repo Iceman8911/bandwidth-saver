@@ -45,10 +45,10 @@ const app = new Elysia({
 			// I'll make this cleaner later
 			const possiblyRedirectedUrl = await getCompressedImageUrlWithFallback({
 				...query,
-				url_bwsvr8911: srcUrl,
+				zz_url_bwsvr8911: srcUrl,
 			});
 
-			if (possiblyRedirectedUrl !== query.url_bwsvr8911) {
+			if (possiblyRedirectedUrl !== query.zz_url_bwsvr8911) {
 				processedResponse = redirect(
 					decodeURIComponent(
 						`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
@@ -75,7 +75,7 @@ const app = new Elysia({
 
 					// Default to the original url
 					processedResponse = redirect(
-						`${query.url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						`${query.zz_url_bwsvr8911}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 					);
 				}
 			}

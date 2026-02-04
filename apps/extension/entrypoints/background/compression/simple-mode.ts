@@ -89,13 +89,13 @@ export async function applyDefaultSimpleCompressionRules({
 											format_bwsvr8911: format,
 											preserveAnim_bwsvr8911: preserveAnim,
 											quality_bwsvr8911: quality,
-											url_bwsvr8911:
+											zz_url_bwsvr8911:
 												getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
 										}),
 										format_bwsvr8911: format,
 										preserveAnim_bwsvr8911: preserveAnim,
 										quality_bwsvr8911: quality,
-										url_bwsvr8911:
+										zz_url_bwsvr8911:
 											getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 									});
 								})(),
@@ -160,13 +160,13 @@ export async function applySiteScopedSimpleCompressionRules([
 											format_bwsvr8911: format,
 											preserveAnim_bwsvr8911: preserveAnim,
 											quality_bwsvr8911: quality,
-											url_bwsvr8911:
+											zz_url_bwsvr8911:
 												getUrlToRedirectToForChosenEndpoint(fallbackEndpoint),
 										}),
 										format_bwsvr8911: format,
 										preserveAnim_bwsvr8911: preserveAnim,
 										quality_bwsvr8911: quality,
-										url_bwsvr8911:
+										zz_url_bwsvr8911:
 											getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 									});
 								})(),

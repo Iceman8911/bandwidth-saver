@@ -4,7 +4,7 @@ import type {
 } from "@bandwidth-saver/shared";
 
 const RAW_URL_SPLITTER =
-	"url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries}=`;
+	"zz_url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries}=`;
 
 /**
  * Funny things happen with nested url + query strings within another url+query string, so just split the original raw url and believe the second element is the url :D

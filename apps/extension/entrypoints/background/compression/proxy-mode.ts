@@ -44,7 +44,7 @@ export async function applyDefaultProxyCompressionRules(
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,
-			url_bwsvr8911: "\\0" as UrlSchema,
+			zz_url_bwsvr8911: "\\0" as UrlSchema,
 		},
 		proxySettings,
 	);
@@ -100,7 +100,7 @@ export async function applySiteScopedProxyCompressionRules([
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,
-			url_bwsvr8911: "\\0" as UrlSchema,
+			zz_url_bwsvr8911: "\\0" as UrlSchema,
 		},
 		proxySettings,
 	);

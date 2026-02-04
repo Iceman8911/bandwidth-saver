@@ -53,7 +53,7 @@ async function fetchCompressedAndRegularImage(
 	compressedUrl.searchParams.set("format_bwsvr8911", "auto");
 	compressedUrl.searchParams.set("preserveAnim_bwsvr8911", "true");
 	compressedUrl.searchParams.set("quality_bwsvr8911", "75");
-	compressedUrl.searchParams.set("url_bwsvr8911", url);
+	compressedUrl.searchParams.set("zz_url_bwsvr8911", url);
 
 	const [compressedResponse, regularResponse] = await Promise.all([
 		fetch(compressedUrl),
