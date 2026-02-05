@@ -1,3 +1,5 @@
+// Based off https://github.com/lisonge/Disable-CSP
+
 import { type Browser, browser } from "wxt/browser";
 import {
 	DeclarativeNetRequestPriority,
@@ -8,17 +10,19 @@ import type {
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
 
+const HEADERS_TO_REMOVE = [
+	`content-security-policy`,
+	`content-security-policy-report-only`,
+	`x-webkit-csp`,
+	`x-content-security-policy`,
+	`x-frame-options`,
+] as const;
+
 const REMOVE_CSP_HEADER_RULES = {
-	responseHeaders: [
-		{
-			header: "content-security-policy",
-			operation: "remove",
-		},
-		{
-			header: "content-security-policy-report-only",
-			operation: "remove",
-		},
-	],
+	responseHeaders: HEADERS_TO_REMOVE.map((headerName) => ({
+		header: headerName,
+		operation: "remove",
+	})),
 	type: "modifyHeaders",
 } as const satisfies Browser.declarativeNetRequest.RuleAction;
 
