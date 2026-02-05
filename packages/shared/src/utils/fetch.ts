@@ -16,6 +16,8 @@ const IMAGE_MIME_TYPES = [
 const ImageMimeType = v.picklist(IMAGE_MIME_TYPES);
 export type ImageMimeType = v.InferOutput<typeof ImageMimeType>;
 
+const IMAGE_EXTENSION_REGEX = /(?<=\.)\w+(?=[?#]|$)/g;
+
 export function getLikelyImageUrlMimeType(
 	imgUrl: string,
 	srcMimeType?: string | undefined | null,
@@ -27,7 +29,7 @@ export function getLikelyImageUrlMimeType(
 	}
 
 	// Fall back to extension sniffing
-	const possibleExt = imgUrl.split(".").at(-1);
+	const possibleExt = imgUrl.match(IMAGE_EXTENSION_REGEX)?.[0];
 
 	switch (possibleExt) {
 		case "png":
