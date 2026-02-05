@@ -58,9 +58,8 @@ const app = new Elysia({
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
-					decodeURIComponent(
-						`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
-					),
+					`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+
 					{
 						headers: SPOOFING_FETCH_HEADERS,
 					},

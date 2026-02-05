@@ -46,7 +46,7 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 	// Check if this is a regex substitution placeholder
 	const n = preserveAnim ? "-1" : "1";
 
-	let result = `${ImageCompressorEndpoint.WSRV_NL}/?url=${url}&q=${quality}&n=${n}`;
+	let result = `${ImageCompressorEndpoint.WSRV_NL}/?url=${encodeURIComponent(url)}&q=${quality}&n=${n}`;
 
 	// Add output format if specified
 	if (format !== "auto" && format !== "avif") {
@@ -75,7 +75,7 @@ const imageCompressionUrlConstructorFlyImgIo: ImageCompressionUrlConstructor =
 		)
 			return url;
 
-		return `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${url}` as UrlSchema;
+		return `${ImageCompressorEndpoint.FLY_IMG_IO}/upload/q_${quality},o_${format}/${encodeURIComponent(url)}` as UrlSchema;
 	};
 
 const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
@@ -91,7 +91,7 @@ const imageCompressionUrlConstructorIcdn: ImageCompressionUrlConstructor = ({
 	)
 		return url;
 
-	let baseUrl = `${ImageCompressorEndpoint.IMAGE_CDN}/${url}?quality=${quality}`;
+	let baseUrl = `${ImageCompressorEndpoint.IMAGE_CDN}/${encodeURIComponent(url)}?quality=${quality}`;
 
 	if (format !== "auto") {
 		if (format === "jpg") baseUrl += "&format=jpeg";
@@ -111,7 +111,7 @@ const imageCompressionUrlConstructorFlyWebpCloud: ImageCompressionUrlConstructor
 		)
 			return url;
 
-		return `${ImageCompressorEndpoint.FLY_WEBP_CLOUD}?url=${url}` as UrlSchema;
+		return `${ImageCompressorEndpoint.FLY_WEBP_CLOUD}?url=${encodeURIComponent(url)}` as UrlSchema;
 	};
 
 const PROTOCOL_REGEX = /^https?:\/\//;
@@ -127,7 +127,7 @@ const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor
 
 		const noProtocolUrl = url.replace(PROTOCOL_REGEX, "");
 
-		return `${ImageCompressorEndpoint.WORDPRESS}/${noProtocolUrl}?quality=${quality}` as UrlSchema;
+		return `${ImageCompressorEndpoint.WORDPRESS}/${encodeURIComponent(noProtocolUrl)}?quality=${quality}` as UrlSchema;
 	};
 
 const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructor =
@@ -140,7 +140,7 @@ const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructo
 		)
 			return url;
 
-		return `${ImageCompressorEndpoint.SERVE_PROXY}/?url=${url}` as UrlSchema;
+		return `${ImageCompressorEndpoint.SERVE_PROXY}/?url=${encodeURIComponent(url)}` as UrlSchema;
 	};
 
 /**
@@ -171,7 +171,7 @@ const imageCompressionUrlConstructorCloudinary: ImageCompressionUrlConstructor =
 			if (format === "webp") params += ",fl_awebp";
 		}
 
-		return `${ImageCompressorEndpoint.CLOUDINARY}/${cloudName}/image/fetch/${params}/${url}` as UrlSchema;
+		return `${ImageCompressorEndpoint.CLOUDINARY}/${cloudName}/image/fetch/${params}/${encodeURIComponent(url)}` as UrlSchema;
 	};
 
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
