@@ -30,7 +30,7 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 				<InformativeTooltip
 					dir="bottom"
 					tip={
-						<>
+						<div class="max-w-3xs space-y-2 text-xs">
 							<p>
 								The host / domain of the external proxy, without the protocol.
 							</p>
@@ -41,7 +41,7 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 								</span>
 								, <span class="text-info">bandwidth-saver.onrender.com</span>
 							</p>
-						</>
+						</div>
 					}
 				/>
 			</label>
