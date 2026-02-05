@@ -6,6 +6,7 @@ import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
 	SPOOFING_FETCH_HEADERS,
+	UrlSchema,
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
@@ -41,6 +42,7 @@ const app = new Elysia({
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
 			let relevantBytesSaved = 0;
+			let processedNote: string | null = null;
 
 			if (IS_HOSTED_ON_CLOUDFLARE) {
 				normalizedRequest = new Request(cleanedSrcUrl);
@@ -66,6 +68,7 @@ const app = new Elysia({
 						headers: SPOOFING_FETCH_HEADERS,
 					},
 				);
+				processedNote = possiblyRedirectedUrl;
 			} else {
 				try {
 					// Compress the image ourselves since none of the endpoints work
@@ -80,6 +83,7 @@ const app = new Elysia({
 					relevantBytesSaved = bytesSaved;
 
 					processedResponse = compressedResponse;
+					processedNote = "self-compress";
 				} catch (e) {
 					console.warn(
 						"Why did compression throw:",
@@ -88,15 +92,21 @@ const app = new Elysia({
 						possiblyRedirectedUrl,
 					);
 
+					const urlToUse = query.default_bwsvr8911 || cleanedSrcUrl;
+
 					// Default to the original url
 					processedResponse = await fetch(
-						`${query.default_bwsvr8911 || cleanedSrcUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
 						{
 							headers: SPOOFING_FETCH_HEADERS,
 						},
 					);
+
+					processedNote = urlToUse;
 				}
 			}
+
+			const processedResponseUrl = processedResponse.url;
 
 			// Create a new Response to make headers mutable
 			processedResponse = new Response(
@@ -112,6 +122,10 @@ const app = new Elysia({
 				processedResponse.headers.set(
 					ProxyCustomHeaders.BYTES_SAVED,
 					`${relevantBytesSaved}`,
+				);
+				processedResponse.headers.set(
+					ProxyCustomHeaders.ENDPOINT_USED,
+					processedNote || processedResponseUrl || "null",
 				);
 
 				if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {

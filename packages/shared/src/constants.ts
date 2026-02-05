@@ -68,6 +68,9 @@ export const REDIRECTED_SEARCH_PARAM_FLAG = "bwsvr8911-flag=no-redirect";
 
 export enum ProxyCustomHeaders {
 	BYTES_SAVED = "x-bwsvr8911-bytes-saved",
+
+	/** Either the url of a free compression endpoint or "none" or "self" */
+	ENDPOINT_USED = "x-bwsvr8911-endpoint-used",
 }
 
 // Ensure that all the headers are lowercase
