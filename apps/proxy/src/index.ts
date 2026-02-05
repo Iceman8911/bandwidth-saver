@@ -102,26 +102,28 @@ const app = new Elysia({
 				processedResponse,
 			);
 
-			processedResponse.headers.set(
-				"Cache-Control",
-				"public, max-age=2592000, stale-while-revalidate=3600",
-			);
-			processedResponse.headers.set(
-				ProxyCustomHeaders.BYTES_SAVED,
-				`${relevantBytesSaved}`,
-			);
-
-			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
-				//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
-				const ctx = args.ctx as ExecutionContext;
-
-				const promise = caches.default.put(
-					normalizedRequest,
-					processedResponse.clone(),
+			if (processedResponse.ok) {
+				processedResponse.headers.set(
+					"Cache-Control",
+					"public, max-age=2592000, stale-while-revalidate=3600",
+				);
+				processedResponse.headers.set(
+					ProxyCustomHeaders.BYTES_SAVED,
+					`${relevantBytesSaved}`,
 				);
 
-				// Optional access since, for some reason, this may be undefined :p
-				ctx?.waitUntil(promise);
+				if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
+					//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
+					const ctx = args.ctx as ExecutionContext;
+
+					const promise = caches.default.put(
+						normalizedRequest,
+						processedResponse.clone(),
+					);
+
+					// Optional access since, for some reason, this may be undefined :p
+					ctx?.waitUntil(promise);
+				}
 			}
 
 			return processedResponse;
