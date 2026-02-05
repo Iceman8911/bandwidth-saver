@@ -1,5 +1,6 @@
 import {
-	customProxyUrlConstructor,
+	type ImageCompressionPayloadSchema,
+	ServerAPIEndpoint,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import { browser } from "wxt/browser";
@@ -17,6 +18,20 @@ import { getUrlSchemaHost } from "@/utils/url";
 const { PROXY: PROXY_MODE } = CompressionMode;
 
 const IMAGE_URL_REGEX = `^(https?://.+)`;
+
+const customProxyUrlConstructor = (
+	payload: ImageCompressionPayloadSchema,
+	proxy: { host: string; port: `${number}` | number },
+): UrlSchema => {
+	// TODO: Add a better way to determine the protocol
+	const urlWithoutQueryString = `${proxy.host === "localhost" ? `http://${proxy.host}:${proxy.port}/${ServerAPIEndpoint.COMPRESS_IMAGE}` : `https://${proxy.host}`}/${ServerAPIEndpoint.COMPRESS_IMAGE}`;
+
+	const queryString = Object.entries(payload)
+		.map(([key, entry]) => `${key}=${entry}`)
+		.join("&");
+
+	return `${urlWithoutQueryString}?${queryString}` as UrlSchema;
+};
 
 export async function applyDefaultProxyCompressionRules(
 	payload: DefaultDnrRuleModifierPayload,
