@@ -31,6 +31,8 @@ const app = new Elysia({
 			const cleanedSrcUrl =
 				cleanlyExtractImageUrlFromRawRequestUrl(rawRequestUrl);
 
+			console.log("raw:", rawRequestUrl, "\n\ncleaned:", cleanedSrcUrl);
+
 			/** Make a normalized request solely with the url for caching, since the original may have some headers (but otheriwse same url), that'll prevent the cache from matching.
 			 *
 			 * All the relevant data is stored in the url as search params so this is fine.

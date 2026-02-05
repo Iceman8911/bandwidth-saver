@@ -127,7 +127,7 @@ const imageCompressionUrlConstructorFlyWordpress: ImageCompressionUrlConstructor
 
 		const noProtocolUrl = url.replace(PROTOCOL_REGEX, "");
 
-		return `${ImageCompressorEndpoint.WORDPRESS}/${encodeURIComponent(noProtocolUrl)}?quality=${quality}` as UrlSchema;
+		return `${ImageCompressorEndpoint.WORDPRESS}/${noProtocolUrl}?quality=${quality}` as UrlSchema;
 	};
 
 const imageCompressionUrlConstructorFlyServeProxy: ImageCompressionUrlConstructor =
