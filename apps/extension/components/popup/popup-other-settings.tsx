@@ -28,13 +28,13 @@ function CspBypassTooltip() {
 				<div class="w-3xs space-y-2 text-error text-xs">
 					<p>
 						Some sites' CSP can block external image requests (e.g. redirected
-						compressed images). Disabling this may <i>fix</i> those failures.
+						compressed images). Disabling this <i>may</i> resolve those issues.
 					</p>
 
 					<p>
 						This <strong>WILL</strong> weaken site security and increase XSS
-						risk. <strong>Do NOT</strong> enable unless you understand the
-						risks.
+						risk, as well as having a chance to break some sites.{" "}
+						<strong>Do NOT</strong> enable unless you understand the risks.
 					</p>
 				</div>
 			}
