@@ -163,7 +163,7 @@ const imageCompressionUrlConstructorCloudinary: ImageCompressionUrlConstructor =
 		)
 			return url;
 
-		let params = `dpr_auto,fl_lossy,f_${format},q_${format === "auto" ? "auto:eco" : quality}`;
+		let params = `dpr_auto,fl_lossy,f_${format},q_${quality}`;
 
 		if (preserveAnim) {
 			params += ",fl_animated";
