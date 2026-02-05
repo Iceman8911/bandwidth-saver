@@ -56,7 +56,7 @@ function detectAssetTypeFromContentTypeOrUrl(
 function parsedNumber(numberish: unknown): number {
 	const parsed = Number(numberish);
 
-	return Number.isFinite(parsed) ? 0 : parsed;
+	return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function webRequestOnCompletedListener({
