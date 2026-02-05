@@ -19,12 +19,15 @@ const { PROXY: PROXY_MODE } = CompressionMode;
 
 const IMAGE_URL_REGEX = `^(https?://.+)`;
 
-const customProxyUrlConstructor = (
+const imageProxyUrlConstructor = (
 	payload: ImageCompressionPayloadSchema,
-	proxy: { host: string; port: `${number}` | number },
+	{ host, port }: { host: string; port: `${number}` | number },
 ): UrlSchema => {
 	// TODO: Add a better way to determine the protocol
-	const urlWithoutQueryString = `${proxy.host === "localhost" ? `http://${proxy.host}:${proxy.port}/${ServerAPIEndpoint.PROCESS_IMAGE}` : `https://${proxy.host}`}/${ServerAPIEndpoint.PROCESS_IMAGE}`;
+	const urlWithoutQueryString =
+		host === "localhost" || host === "127.0.0.1"
+			? `http://${host}:${port}/${ServerAPIEndpoint.PROCESS_IMAGE}`
+			: `https://${host}/${ServerAPIEndpoint.PROCESS_IMAGE}`;
 
 	const queryString = Object.entries(payload)
 		.map(([key, entry]) => `${key}=${entry}`)
@@ -53,7 +56,7 @@ export async function applyDefaultProxyCompressionRules(
 		});
 	}
 
-	const proxyUrl = customProxyUrlConstructor(
+	const proxyUrl = imageProxyUrlConstructor(
 		{
 			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
@@ -110,7 +113,7 @@ export async function applySiteScopedProxyCompressionRules([
 		});
 	}
 
-	const proxyUrl = customProxyUrlConstructor(
+	const proxyUrl = imageProxyUrlConstructor(
 		{
 			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
