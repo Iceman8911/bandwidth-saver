@@ -37,10 +37,10 @@ Two free test proxies that can be used are `bandwidth-saver.wuchijss2.workers.de
 | ------------------------------------- | --------------- | ------------------------------- |
 | MV3 Support                           | Yes             | Yes                             |
 | No Server Costs                       | Yes             | No (if you exceed free limits)  |
-| Fallback on failure                   | No              | Yes                             |
-| Easy implementation                   | Yes             | Yes                             |
+| Fallback(s) on failure                | No              | Yes                             |
 | Can use the original url as reference | No              | Yes                             |
 | Intercepts requests                   | Yes             | Yes                             |
+| Calculates bandwidth saved?           | No              | Yes                             |
 
 ## Storage
 
