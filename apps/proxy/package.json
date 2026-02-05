@@ -18,8 +18,8 @@
 	"name": "@bandwidth-saver/proxy",
 	"scripts": {
 		"build": "echo 'No build available for server proxy'",
-		"dev": "bun run --watch src/index.ts",
-		"dev:cloudflare": "wrangler dev",
+		"dev": "DEPLOYMENT_PLATFORM=server bun run --watch src/index.ts",
+		"dev:cloudflare": "DEPLOYMENT_PLATFORM=cloudflare wrangler dev",
 		"format": "biome format ./ --write",
 		"gen-types:cloudflare": "wrangler types",
 		"lint": "biome lint ./ --write",
