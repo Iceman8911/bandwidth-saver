@@ -60,7 +60,9 @@ export const IMAGE_COMPRESSOR_ENDPOINT_SET: ReadonlySet<string> = new Set(
 
 export enum ServerAPIEndpoint {
 	HEALTH = "health",
-	COMPRESS_IMAGE = "compress-image",
+
+	/** Compresses images */
+	PROCESS_IMAGE = "image",
 }
 
 /** Any urls with this query param will not be redirected by the extension */

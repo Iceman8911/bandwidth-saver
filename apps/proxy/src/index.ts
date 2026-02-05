@@ -22,7 +22,7 @@ const app = new Elysia({
 })
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
-		`/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
+		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 		async (args) => {
 			const {
 				query,
