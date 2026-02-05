@@ -51,8 +51,8 @@ const imageCompressionUrlConstructorWsrvNl: ImageCompressionUrlConstructor = ({
 	// Add output format if specified
 	if (format !== "auto" && format !== "avif") {
 		result += `&output=${format}`;
-	} else if (format === "avif") {
-		// Fall back to webp since avif is not yet supported
+	} else {
+		// Fall back to webp since it's usually da best
 		result += "&output=webp";
 	}
 
