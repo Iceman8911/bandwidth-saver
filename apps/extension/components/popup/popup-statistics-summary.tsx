@@ -35,14 +35,6 @@ export default function PopupStatisticsSummary() {
 		getSumOfValuesInObject(statistics()?.bytesUsed.dailyStats[day] ?? {}),
 	);
 
-	const percentageOfBytesSaved = createMemo(() => {
-		const ratio = bytesSaved() / (bytesUsed() + bytesSaved());
-
-		if (Number.isNaN(ratio)) return 0;
-
-		return ratio * 100;
-	});
-
 	const requestsMade = createMemo(() =>
 		getSumOfValuesInObject(statistics()?.requestsMade.dailyStats[day] ?? {}),
 	);
@@ -77,10 +69,10 @@ export default function PopupStatisticsSummary() {
 			</div>
 
 			<div>
-				Proxied Data Saved:{" "}
+				Data Saved:{" "}
 				<span class="font-semibold">
-					{percentageOfBytesSaved()
-						? `${percentageOfBytesSaved()}%`
+					{bytesSaved()
+						? `${convertBytesToAppropriateNotation(bytesSaved()).join(" ")}`
 						: LOADING_TEXT}
 				</span>{" "}
 			</div>
