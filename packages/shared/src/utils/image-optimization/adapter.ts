@@ -250,8 +250,8 @@ const optimalImageCompressionAdapter = async (
 	);
 	console.log("Alt Url:", altUrl, "Size:", altUrlSize, "Type:", altUrlType);
 
-	// If the compression endpoint can't bother to set the `content-type` or `content-length` header, don't bother either
-	if (!altUrlSize || !altUrlType) return { bytesSaved: 0, url: originalUrl };
+	// If the compression endpoint can't bother to set the `content-type` or `content-length` header, let the call site try another
+	if (!altUrlSize || !altUrlType) return null;
 
 	if (originalUrlSize && originalUrlType) {
 		// I'd rather only bother with actual compressed data. At the call site, I could just default to the original url if it's `null` here
