@@ -45,7 +45,10 @@ function CspBypassTooltip() {
 function CspBypassToggle(props: TempGeneralSettingsProps) {
 	return (
 		<>
-			<label class="flex items-center justify-between" for="other-bypass-csp">
+			<label
+				class="flex items-center justify-between text-warning"
+				for="other-bypass-csp"
+			>
 				Bypass CSP restrictions:
 				<CspBypassTooltip />
 			</label>
