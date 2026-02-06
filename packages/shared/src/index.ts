@@ -1,5 +1,6 @@
 export * from "./constants";
 export * from "./models/env";
+export * from "./models/html-optimization";
 export * from "./models/image-optimization";
 export * from "./models/shared";
 export * from "./utils/array";

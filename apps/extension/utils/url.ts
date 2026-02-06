@@ -76,6 +76,7 @@ export type DnrSiteScopeUrlIdPayload = Readonly<{
 	saveData: number;
 	cspBlock: number;
 	blockFont: number;
+	optimizeHtml: number;
 }>;
 
 const urlIdCache = lru<DnrSiteScopeUrlIdPayload>(200);
@@ -93,7 +94,8 @@ export function getUrlIdsFromOrigin(
 		saveDataId,
 		cspBlockId,
 		blockFontId,
-	] = generateDeterministicNumericIdsFromString(origin, 5);
+		optimizeHtmlId,
+	] = generateDeterministicNumericIdsFromString(origin, 6);
 
 	const ids: DnrSiteScopeUrlIdPayload = {
 		blockFont: blockFontId,
@@ -102,6 +104,7 @@ export function getUrlIdsFromOrigin(
 			simple: simpleCompressionId,
 		},
 		cspBlock: cspBlockId,
+		optimizeHtml: optimizeHtmlId,
 		saveData: saveDataId,
 	};
 

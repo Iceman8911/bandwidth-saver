@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/style/useLiteralEnumMembers: <I like it:p> */
 import { type ObjectToEnum, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
-import type { Browser } from "wxt/browser";
 import type { StorageItemKey } from "wxt/utils/storage";
 
 export enum ExtensionData {
@@ -91,6 +90,14 @@ export enum DeclarativeNetRequestRuleIds {
 	DEFAULT_BYPASS_CSP_BLOCKING,
 
 	DEFAULT_FONT_BLOCKING,
+
+	/** Only works in proxy mode.
+	 *
+	 * May remove csp meta tags if allowed.
+	 *
+	 * Minifies the html too.
+	 */
+	DEFAULT_HTML_OPTIMIZATION,
 
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,

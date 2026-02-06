@@ -1,6 +1,7 @@
 import {
 	getCompressedImageUrlWithFallback,
 	getProxyEnv,
+	HtmlOptimizationPayloadSchema,
 	ImageCompressionPayloadSchema,
 	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
@@ -11,7 +12,12 @@ import {
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { compressImagefromUrl } from "./compression";
-import { cleanlyExtractImageUrlFromRawRequestUrl } from "./url";
+import {
+	fetchHtmlText,
+	minifyHtmlString,
+	stripOutCspMetaTagsFromHtmlString,
+} from "./html-optimization";
+import { cleanlyExtractNestedUrlFromRawRequestUrl } from "./url";
 
 const env = getProxyEnv();
 
@@ -22,6 +28,78 @@ const app = new Elysia({
 })
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
+		`/${ServerAPIEndpoint.PROCESS_HTML}`,
+		async ({ query, request: { url: rawRequestUrl } }) => {
+			const cleanedSrcUrl =
+				cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
+
+			/** Make a normalized request solely with the url for caching, since the original may have some headers (but otheriwse same url), that'll prevent the cache from matching.
+			 *
+			 * All the relevant data is stored in the url as search params so this is fine.
+			 */
+			// let normalizedRequest: Request | undefined;
+			/** The final response at the end of processing that I can cache and do some stuff */
+			let processedResponse: Response;
+
+			// if (IS_HOSTED_ON_CLOUDFLARE) {
+			// 	normalizedRequest = new Request(cleanedSrcUrl);
+
+			// 	const cachedResponse = await caches.default.match(normalizedRequest);
+
+			// 	if (cachedResponse) return cachedResponse;
+			// }
+
+			let { headers: fetchedHeaders, html: fetchedHtml } =
+				await fetchHtmlText(cleanedSrcUrl);
+
+			if (query.stripCspMetaTag_bwsvr8911) {
+				fetchedHtml = stripOutCspMetaTagsFromHtmlString(fetchedHtml);
+			}
+
+			const {
+				bytesSaved,
+				html: minifiedHtml,
+				size,
+			} = await minifyHtmlString(fetchedHtml);
+
+			processedResponse = new Response(minifiedHtml, {
+				headers: fetchedHeaders,
+			});
+
+			if (processedResponse.ok) {
+				processedResponse.headers.set(
+					"cache-control",
+					"public, max-age=2592000, stale-while-revalidate=3600",
+				);
+				processedResponse.headers.set(
+					ProxyCustomHeaders.BYTES_SAVED,
+					`${bytesSaved}`,
+				);
+				processedResponse.headers.set("content-length", `${size}`);
+				processedResponse.headers.set(
+					"content-type",
+					"text/html; charset=UTF-8",
+				);
+			}
+
+			// if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
+			// 	//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
+			// 	const ctx = args.ctx as ExecutionContext;
+
+			// 	const promise = caches.default.put(
+			// 		normalizedRequest,
+			// 		processedResponse.clone(),
+			// 	);
+
+			// 	// Optional access since, for some reason, this may be undefined :p
+			// 	ctx?.waitUntil(promise);
+			// }
+
+			return processedResponse;
+		},
+		{ query: HtmlOptimizationPayloadSchema },
+	)
+	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 		async (args) => {
 			const {
@@ -30,7 +108,7 @@ const app = new Elysia({
 			} = args;
 
 			const cleanedSrcUrl =
-				cleanlyExtractImageUrlFromRawRequestUrl(rawRequestUrl);
+				cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
 
 			console.log("raw:", rawRequestUrl, "\n\ncleaned:", cleanedSrcUrl);
 

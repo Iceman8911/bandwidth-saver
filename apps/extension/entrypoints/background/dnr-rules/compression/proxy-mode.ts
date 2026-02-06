@@ -1,8 +1,4 @@
-import {
-	type ImageCompressionPayloadSchema,
-	ServerAPIEndpoint,
-	type UrlSchema,
-} from "@bandwidth-saver/shared";
+import { ServerAPIEndpoint, type UrlSchema } from "@bandwidth-saver/shared";
 import { browser } from "wxt/browser";
 import {
 	CompressionMode,
@@ -14,27 +10,11 @@ import type {
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
 import { getUrlSchemaHost } from "@/utils/url";
+import { proxyUrlConstructor } from "../shared";
 
 const { PROXY: PROXY_MODE } = CompressionMode;
 
 const IMAGE_URL_REGEX = `^(https?://.+)`;
-
-const imageProxyUrlConstructor = (
-	payload: ImageCompressionPayloadSchema,
-	{ host, port }: { host: string; port: `${number}` | number },
-): UrlSchema => {
-	// TODO: Add a better way to determine the protocol
-	const urlWithoutQueryString =
-		host === "localhost" || host === "127.0.0.1"
-			? `http://${host}:${port}/${ServerAPIEndpoint.PROCESS_IMAGE}`
-			: `https://${host}/${ServerAPIEndpoint.PROCESS_IMAGE}`;
-
-	const queryString = Object.entries(payload)
-		.map(([key, entry]) => `${key}=${entry}`)
-		.join("&");
-
-	return `${urlWithoutQueryString}?${queryString}` as UrlSchema;
-};
 
 export async function applyDefaultProxyCompressionRules(
 	payload: DefaultDnrRuleModifierPayload,
@@ -56,16 +36,17 @@ export async function applyDefaultProxyCompressionRules(
 		});
 	}
 
-	const proxyUrl = imageProxyUrlConstructor(
-		{
+	const proxyUrl = proxyUrlConstructor({
+		endpoint: ServerAPIEndpoint.PROCESS_IMAGE,
+		payload: {
 			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,
 			zz_url_bwsvr8911: "\\0" as UrlSchema,
 		},
-		proxySettings,
-	);
+		proxy: proxySettings,
+	});
 
 	const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
@@ -115,16 +96,17 @@ export async function applySiteScopedProxyCompressionRules([
 		});
 	}
 
-	const proxyUrl = imageProxyUrlConstructor(
-		{
+	const proxyUrl = proxyUrlConstructor({
+		endpoint: ServerAPIEndpoint.PROCESS_IMAGE,
+		payload: {
 			cloudinary_bwsvr8911: proxySettings.cloudinary,
 			format_bwsvr8911: format,
 			preserveAnim_bwsvr8911: preserveAnim,
 			quality_bwsvr8911: quality,
 			zz_url_bwsvr8911: "\\0" as UrlSchema,
 		},
-		proxySettings,
-	);
+		proxy: proxySettings,
+	});
 
 	const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
