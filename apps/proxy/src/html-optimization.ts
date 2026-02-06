@@ -3,6 +3,7 @@ import {
 	SPOOFING_FETCH_HEADERS,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
+import { minify } from "@cf-wasm/minify-html";
 import { TEXT_DECODER, TEXT_ENCODER } from "./shared";
 import { compressTextBuffer } from "./utils/text-compression";
 
@@ -48,7 +49,6 @@ export async function minifyHtmlString(
 	// 	process.env.DEPLOYMENT_PLATFORM === "cloudflare"
 	// 		? await import("@cf-wasm/minify-html/workerd")
 	// 		: await import("@cf-wasm/minify-html/node");
-	const { minify } = await import("@cf-wasm/minify-html");
 
 	const originalHtmlBuffer = TEXT_ENCODER.encode(originalHtmlString);
 	const minifiedHtmlBuffer = minify(originalHtmlBuffer, {
