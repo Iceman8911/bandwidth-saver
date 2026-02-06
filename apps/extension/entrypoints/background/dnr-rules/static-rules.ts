@@ -7,7 +7,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
-import { getWhitelistedDomains } from "./compression/whilisted-domains";
+import { getWhitelistedDomains } from "./whilisted-domains";
 
 const IMAGE_COMPRESSOR_ENDPOINT_HOSTS = Array.from(
 	IMAGE_COMPRESSOR_ENDPOINT_SET,
