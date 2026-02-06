@@ -48,12 +48,12 @@ export async function applyDefaultCspRules({
 								: undefined,
 							resourceTypes: RESOURCE_TYPES,
 						},
-						id: DeclarativeNetRequestRuleIds.GLOBAL_BYPASS_CSP_BLOCKING,
+						id: DeclarativeNetRequestRuleIds.DEFAULT_BYPASS_CSP_BLOCKING,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				]
 			: undefined,
-		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_BYPASS_CSP_BLOCKING],
+		removeRuleIds: [DeclarativeNetRequestRuleIds.DEFAULT_BYPASS_CSP_BLOCKING],
 	});
 }
 

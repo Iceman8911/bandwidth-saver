@@ -117,13 +117,13 @@ export async function applyDefaultSimpleCompressionRules({
 								resourceTypes: ["image"],
 							};
 						})(),
-						id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
+						id: DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE_SIMPLE,
 						priority: DeclarativeNetRequestPriority.LOWEST,
 					},
 				]
 			: undefined,
 		removeRuleIds: [
-			DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_SIMPLE,
+			DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE_SIMPLE,
 		],
 	});
 }

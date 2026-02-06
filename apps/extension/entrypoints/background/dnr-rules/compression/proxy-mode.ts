@@ -51,7 +51,7 @@ export async function applyDefaultProxyCompressionRules(
 	if (!isEnabled) {
 		return browser.declarativeNetRequest.updateSessionRules({
 			removeRuleIds: [
-				DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
+				DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE_PROXY,
 			],
 		});
 	}
@@ -84,12 +84,14 @@ export async function applyDefaultProxyCompressionRules(
 					regexFilter: IMAGE_URL_REGEX,
 					resourceTypes: ["image"],
 				},
-				id: DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY,
+				id: DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE_PROXY,
 				// Set to high to override some static rules
 				priority: DeclarativeNetRequestPriority.HIGH,
 			},
 		],
-		removeRuleIds: [DeclarativeNetRequestRuleIds.GLOBAL_COMPRESSION_MODE_PROXY],
+		removeRuleIds: [
+			DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE_PROXY,
+		],
 	});
 }
 

@@ -79,16 +79,16 @@ export enum DeclarativeNetRequestRuleIds {
 
 	DEFAULT_SAVE_DATA_HEADER = 1,
 
-	GLOBAL_COMPRESSION_MODE_SIMPLE,
+	DEFAULT_COMPRESSION_MODE_SIMPLE,
 
-	GLOBAL_COMPRESSION_MODE_PROXY,
+	DEFAULT_COMPRESSION_MODE_PROXY,
 
 	/** CSP removal for sites that block external image sources
 	 *
 	 * I've only seen need of it for sites like discord, and ofc I'll warn the user of the dangers of enabling this
 	 *
 	 */
-	GLOBAL_BYPASS_CSP_BLOCKING,
+	DEFAULT_BYPASS_CSP_BLOCKING,
 
 	DEFAULT_FONT_BLOCKING,
 
@@ -100,8 +100,6 @@ export enum DeclarativeNetRequestRuleIds {
 	EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
 	EXEMPT_RECAPTCHA_FROM_COMPRESSION,
 	EXEMPT_GSTATIC_NETCHECK_FROM_COMPRESSION,
-
-	_SITE_SCOPE_ID_OFFSET = 1000,
 }
 
 export enum DeclarativeNetRequestPriority {
