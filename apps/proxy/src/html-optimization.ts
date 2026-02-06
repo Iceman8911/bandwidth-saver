@@ -1,12 +1,9 @@
 import {
 	getFetchTimeoutSignal,
-	getProxyEnv,
 	SPOOFING_FETCH_HEADERS,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import { TEXT_DECODER, TEXT_ENCODER } from "./shared";
-
-const { DEPLOYMENT_PLATFORM } = getProxyEnv();
 
 interface FetchedHtmlStringAndHeaders {
 	html: string;

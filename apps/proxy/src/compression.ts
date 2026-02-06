@@ -1,7 +1,6 @@
 import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
-	getProxyEnv,
 	type ImageFormatSchema,
 	type ImageMimeType,
 	type NumberBetween1and100Inclusively,
@@ -9,8 +8,6 @@ import {
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
-
-const { DEPLOYMENT_PLATFORM } = getProxyEnv();
 
 const EFFORT_LEVEL = 5;
 
@@ -153,8 +150,9 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 };
 
 const compressImage: ImageCompressorHandler = async (payload) => {
-	// Cloudflare workers on the free tier have 10ms limit which is too small to do any meaningful compression
-	if (DEPLOYMENT_PLATFORM === "cloudflare") {
+	// Cloudflare workers on the free tier have 10ms limit which is too small to do any meaningful compression.
+	// Used the raw env for dead code elimination
+	if (process.env.DEPLOYMENT_PLATFORM === "cloudflare") {
 		return [new Uint8Array(payload.srcImg), payload.srcMimeType];
 	}
 
