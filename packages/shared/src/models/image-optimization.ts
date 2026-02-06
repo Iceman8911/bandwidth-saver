@@ -1,5 +1,9 @@
 import * as v from "valibot";
-import { NumberBetween1and100Inclusively, UrlSchema } from "./shared";
+import {
+	NormalizedUrlSchema,
+	NumberBetween1and100Inclusively,
+	UrlSchema,
+} from "./shared";
 
 export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"]);
 export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
@@ -15,25 +19,14 @@ export const ImageCompressionPayloadSchema = v.looseObject({
 	 *
 	 * May be ignored by an implementation
 	 */
-	preserveAnim_bwsvr8911: v.pipe(
-		v.string(),
-		v.transform((input) => Boolean(input)),
-	),
+	preserveAnim_bwsvr8911: v.pipe(v.string(), v.toBoolean()),
 	quality_bwsvr8911: v.pipe(
 		v.string(),
-		v.transform(Number),
+		v.toNumber(),
 		NumberBetween1and100Inclusively,
 	),
 	/** Ensure that this is at the end, alphabetically, so I can do a simple regex match to get the url in one sweep */
-	zz_url_bwsvr8911: v.union([
-		UrlSchema,
-		// For some reason, some image urls with commas get split into an array, so this normalizes them
-		v.pipe(
-			v.array(v.string()),
-			v.transform((arr) => arr.join(",")),
-			UrlSchema,
-		),
-	]),
+	zz_url_bwsvr8911: NormalizedUrlSchema,
 });
 export type ImageCompressionPayloadSchema = v.InferOutput<
 	typeof ImageCompressionPayloadSchema

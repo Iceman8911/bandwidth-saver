@@ -25,3 +25,13 @@ export type AnyValibotSchema = v.BaseSchema<
 	unknown,
 	v.BaseIssue<unknown>
 >;
+
+export const NormalizedUrlSchema = v.union([
+	UrlSchema,
+	// For some reason, some image urls with commas get split into an array, so this normalizes them
+	v.pipe(
+		v.array(v.string()),
+		v.transform((arr) => arr.join(",")),
+		UrlSchema,
+	),
+]);
