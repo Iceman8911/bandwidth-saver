@@ -42,12 +42,6 @@ export const GeneralSettingsSchema = v.object({
 	/** If `true`, disables autoplaying of videos and audio  */
 	noAutoplay: v.boolean(),
 
-	/** If `true`, all html requests will be rerouted to the given proxy where optimazations like minfication or csp meta tag removal will occur.
-	 *
-	 * NOTE: This WILL break page loading if the given proxy is inaccessible, so this property is disabled by default.
-	 */
-	optimizeHtml: v.boolean(),
-
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 
@@ -188,7 +182,6 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	enabled: true,
 	lazyLoad: true,
 	noAutoplay: true,
-	optimizeHtml: false,
 	saveData: true,
 	spoofSlowNetwork: "default",
 	useSiteRule: false,

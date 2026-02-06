@@ -22,10 +22,6 @@ import {
 	applySiteScopedCspRules,
 } from "./csp-workaround";
 import {
-	applyDefaultHtmlOptimizationRules,
-	applySiteScopedHtmlOptimizationRules,
-} from "./html-optimization";
-import {
 	applyDefaultSaveDataRules,
 	applySiteScopedSaveDataRules,
 } from "./save-data";
@@ -39,7 +35,6 @@ async function applyDefaultDnrRules(
 		applyDefaultFontBlockRules(defaultPayload),
 		applyDefaultSimpleCompressionRules(defaultPayload),
 		applyDefaultProxyCompressionRules(defaultPayload),
-		applyDefaultHtmlOptimizationRules(defaultPayload),
 	]);
 }
 
@@ -56,7 +51,6 @@ async function applySiteScopedDnrRules(
 					applySiteScopedFontBlockRules(entry),
 					applySiteScopedProxyCompressionRules(entry),
 					applySiteScopedSimpleCompressionRules(entry),
-					applySiteScopedHtmlOptimizationRules(entry),
 				]),
 			),
 	);

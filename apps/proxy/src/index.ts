@@ -1,7 +1,6 @@
 import {
 	getCompressedImageUrlWithFallback,
 	getProxyEnv,
-	HtmlOptimizationPayloadSchema,
 	ImageCompressionPayloadSchema,
 	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
@@ -11,11 +10,6 @@ import {
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
-import {
-	fetchHtmlText,
-	minifyHtmlString,
-	stripOutCspMetaTagsFromHtmlString,
-} from "./html-optimization";
 import { compressImagefromUrl } from "./image-compression";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "./url";
 
@@ -27,95 +21,6 @@ const app = new Elysia({
 	adapter: IS_HOSTED_ON_CLOUDFLARE ? CloudflareAdapter : undefined,
 })
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
-	.get(
-		`/${ServerAPIEndpoint.PROCESS_HTML}`,
-		async ({
-			query,
-			request: { url: rawRequestUrl, headers: requestHeaders },
-		}) => {
-			const cleanedSrcUrl =
-				cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
-
-			/** Make a normalized request solely with the url for caching, since the original may have some headers (but otheriwse same url), that'll prevent the cache from matching.
-			 *
-			 * All the relevant data is stored in the url as search params so this is fine.
-			 */
-			// let normalizedRequest: Request | undefined;
-			/** The final response at the end of processing that I can cache and do some stuff */
-			let processedResponse: Response;
-
-			// if (IS_HOSTED_ON_CLOUDFLARE) {
-			// 	normalizedRequest = new Request(cleanedSrcUrl);
-
-			// 	const cachedResponse = await caches.default.match(normalizedRequest);
-
-			// 	if (cachedResponse) return cachedResponse;
-			// }
-
-			let { headers: fetchedHeaders, html: fetchedHtml } =
-				await fetchHtmlText(cleanedSrcUrl);
-
-			if (query.stripCspMetaTag_bwsvr8911) {
-				fetchedHtml = stripOutCspMetaTagsFromHtmlString(fetchedHtml);
-			}
-
-			const {
-				bytesSaved,
-				html: minifiedHtmlBuffer,
-				size,
-				mode,
-			} = await minifyHtmlString(
-				fetchedHtml,
-				!!requestHeaders.get("accept-encoding")?.includes("zstd"),
-				false,
-			);
-
-			processedResponse = new Response(minifiedHtmlBuffer, {
-				headers: fetchedHeaders,
-			});
-
-			if (processedResponse.ok) {
-				if (mode) {
-					processedResponse.headers.set(
-						ProxyCustomHeaders.BYTES_SAVED,
-						`${bytesSaved}`,
-					);
-					processedResponse.headers.set(
-						"content-type",
-						"text/html; charset=UTF-8",
-					);
-					processedResponse.headers.set("content-length", `${size}`);
-					processedResponse.headers.set("content-encoding", mode);
-					processedResponse.headers.set("vary", "accept-encoding");
-					processedResponse.headers.delete("transfer-encoding");
-				}
-				// const transferEncoding = fetchedHeaders.get("transfer-encoding")
-				// if (transferEncoding) {
-				//   processedResponse.headers.set("transfer-encoding", transferEncoding.includes("chunked")? `${mode}, chunked`:mode);
-				// }
-				// 				// Since the response isn't compressed, this will be troublesome
-				// 				processedResponse.headers.delete(
-				// 	"content-encoding",
-				// );
-			}
-
-			// if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
-			// 	//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
-			// 	const ctx = args.ctx as ExecutionContext;
-
-			// 	const promise = caches.default.put(
-			// 		normalizedRequest,
-			// 		processedResponse.clone(),
-			// 	);
-
-			// 	// Optional access since, for some reason, this may be undefined :p
-			// 	ctx?.waitUntil(promise);
-			// }
-
-			return processedResponse;
-		},
-		{ query: HtmlOptimizationPayloadSchema },
-	)
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 		async (args) => {

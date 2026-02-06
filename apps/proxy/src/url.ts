@@ -1,11 +1,10 @@
 import type {
-	HtmlOptimizationPayloadSchema,
 	ImageCompressionPayloadSchema,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
 
 const RAW_URL_SPLITTER =
-	"zz_url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries & keyof typeof HtmlOptimizationPayloadSchema.entries}=`;
+	"zz_url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries}=`;
 
 const COLUMN_AND_COMMA_MATCHER = /(?<=https?:\/\/.*):|,/g;
 function columnAndCommaReplacer(subStringMatched: string) {

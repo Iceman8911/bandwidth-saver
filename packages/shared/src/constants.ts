@@ -63,9 +63,6 @@ export enum ServerAPIEndpoint {
 
 	/** Compresses images */
 	PROCESS_IMAGE = "image",
-
-	/** Strips CSP meta tags, if allowed, and minifies the string */
-	PROCESS_HTML = "html",
 }
 
 /** Any urls with this query param will not be redirected by the extension */

@@ -91,14 +91,6 @@ export enum DeclarativeNetRequestRuleIds {
 
 	DEFAULT_FONT_BLOCKING,
 
-	/** Only works in proxy mode.
-	 *
-	 * May remove csp meta tags if allowed.
-	 *
-	 * Minifies the html too.
-	 */
-	DEFAULT_HTML_OPTIMIZATION,
-
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,
 	EXEMPT_FAVICONS_FROM_COMPRESSION,

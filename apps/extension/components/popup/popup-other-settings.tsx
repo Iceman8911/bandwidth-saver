@@ -230,53 +230,6 @@ function SpoofSlowNetworkToggle(props: TempGeneralSettingsProps) {
 	);
 }
 
-function OptimizeHtmlTooltip() {
-	return (
-		<InformativeTooltip
-			dir="top"
-			tip={
-				<div class="max-w-3xs space-y-2 text-xs">
-					<p>
-						Optionally minifies the html of pages you load, as well as trimming
-						out any CSP meta tags, if CSP bypassing is enabled{" "}
-						<span class="text-error">
-							(Do not enable CSP bypassing unless you are aware of the security
-							implications)
-						</span>
-						.
-					</p>
-
-					<p class="text-warning">
-						This has a small chance to break some sites, YMMV.
-					</p>
-				</div>
-			}
-		/>
-	);
-}
-
-function OptimizeHtmlToggle(props: TempGeneralSettingsProps) {
-	return (
-		<>
-			<label
-				class="flex items-center justify-between"
-				for="other-optimize-html"
-			>
-				Optimize Html:
-				<OptimizeHtmlTooltip />
-			</label>
-
-			<input
-				checked={props.store.optimizeHtml}
-				class="toggle"
-				id="other-optimize-html"
-				onInput={(e) => props.set("optimizeHtml", e.target.checked)}
-				type="checkbox"
-			/>
-		</>
-	);
-}
-
 export default function PopupOtherSettings() {
 	const [context] = useContext(PopupContext);
 
@@ -334,7 +287,6 @@ export default function PopupOtherSettings() {
 					<SaveDataToggle set={setTempSettings} store={tempSettings} />
 					<DisableAutoplayToggle set={setTempSettings} store={tempSettings} />
 					<LazyLoadToggle set={setTempSettings} store={tempSettings} />
-					<OptimizeHtmlToggle set={setTempSettings} store={tempSettings} />
 					<BlockFontToggle set={setTempSettings} store={tempSettings} />
 					<SpoofSlowNetworkToggle set={setTempSettings} store={tempSettings} />
 					<CspBypassToggle set={setTempSettings} store={tempSettings} />

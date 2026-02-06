@@ -1,5 +1,4 @@
 import type {
-	HtmlOptimizationPayloadSchema,
 	ImageCompressionPayloadSchema,
 	ServerAPIEndpoint,
 	UrlSchema,
@@ -9,16 +8,10 @@ import type { ReadonlyDeep } from "type-fest";
 type ProxyUrlConstructorPayload = ReadonlyDeep<
 	{
 		proxy: { host: string; port: `${number}` | number };
-	} & (
-		| {
-				payload: ImageCompressionPayloadSchema;
-				endpoint: ServerAPIEndpoint.PROCESS_IMAGE;
-		  }
-		| {
-				payload: HtmlOptimizationPayloadSchema;
-				endpoint: ServerAPIEndpoint.PROCESS_HTML;
-		  }
-	)
+	} & {
+		payload: ImageCompressionPayloadSchema;
+		endpoint: ServerAPIEndpoint.PROCESS_IMAGE;
+	}
 >;
 
 export function proxyUrlConstructor({
