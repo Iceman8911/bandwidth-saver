@@ -36,12 +36,13 @@ interface MinifiedHtmlOutput {
 	/** The minified size (or  original size if the minfication actually made it larger) */
 	size: number;
 	html: Uint8Array<ArrayBufferLike>;
-	mode: "gzip" | "zstd";
+	mode?: "gzip" | "zstd";
 }
 
 export async function minifyHtmlString(
 	originalHtmlString: string,
 	mayUseZstd: boolean,
+	shouldCompress: boolean = true,
 ): Promise<MinifiedHtmlOutput> {
 	// Too many Wsam Instantiate issues with the workerd version :/
 	// const { minify } =
@@ -66,6 +67,13 @@ export async function minifyHtmlString(
 	const uncompressedHtmlBuffer = new Uint8Array(
 		didMinifyWell ? minifiedHtmlBuffer : originalHtmlBuffer,
 	);
+	if (!shouldCompress)
+		return {
+			bytesSaved: uncompressedBytesSaved,
+			html: uncompressedHtmlBuffer,
+			size: uncompressedHtmlBuffer.byteLength,
+		};
+
 	const { buffer: compressedHtmlBuffer, mode } = await compressTextBuffer({
 		mayUseZstd,
 		src: uncompressedHtmlBuffer,

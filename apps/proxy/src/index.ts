@@ -67,6 +67,7 @@ const app = new Elysia({
 			} = await minifyHtmlString(
 				fetchedHtml,
 				!!requestHeaders.get("accept-encoding")?.includes("zstd"),
+				false,
 			);
 
 			processedResponse = new Response(minifiedHtmlBuffer, {
@@ -74,17 +75,24 @@ const app = new Elysia({
 			});
 
 			if (processedResponse.ok) {
-				processedResponse.headers.set(
-					ProxyCustomHeaders.BYTES_SAVED,
-					`${bytesSaved}`,
-				);
-				processedResponse.headers.set(
-					"content-type",
-					"text/html; charset=UTF-8",
-				);
-				processedResponse.headers.set("content-length", `${size}`);
-				processedResponse.headers.set("content-encoding", mode);
-				processedResponse.headers.set("vary", "accept-encoding");
+				if (mode) {
+					processedResponse.headers.set(
+						ProxyCustomHeaders.BYTES_SAVED,
+						`${bytesSaved}`,
+					);
+					processedResponse.headers.set(
+						"content-type",
+						"text/html; charset=UTF-8",
+					);
+					processedResponse.headers.set("content-length", `${size}`);
+					processedResponse.headers.set("content-encoding", mode);
+					processedResponse.headers.set("vary", "accept-encoding");
+					processedResponse.headers.delete("transfer-encoding");
+				}
+				// const transferEncoding = fetchedHeaders.get("transfer-encoding")
+				// if (transferEncoding) {
+				//   processedResponse.headers.set("transfer-encoding", transferEncoding.includes("chunked")? `${mode}, chunked`:mode);
+				// }
 				// 				// Since the response isn't compressed, this will be troublesome
 				// 				processedResponse.headers.delete(
 				// 	"content-encoding",
