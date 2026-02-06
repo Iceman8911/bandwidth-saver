@@ -22,6 +22,11 @@
 		"start": "turbo run start",
 		"test": "turbo run test"
 	},
+	"trustedDependencies": [
+		"esbuild",
+		"sharp",
+		"workerd"
+	],
 	"workspaces": [
 		"packages/*",
 		"apps/*"
