@@ -11,12 +11,12 @@ import {
 } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
-import { compressImagefromUrl } from "./compression";
 import {
 	fetchHtmlText,
 	minifyHtmlString,
 	stripOutCspMetaTagsFromHtmlString,
 } from "./html-optimization";
+import { compressImagefromUrl } from "./image-compression";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "./url";
 
 const env = getProxyEnv();
@@ -29,7 +29,10 @@ const app = new Elysia({
 	.get(`/${ServerAPIEndpoint.HEALTH}`, ({ status }) => status(200))
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_HTML}`,
-		async ({ query, request: { url: rawRequestUrl } }) => {
+		async ({
+			query,
+			request: { url: rawRequestUrl, headers: requestHeaders },
+		}) => {
 			const cleanedSrcUrl =
 				cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
 
@@ -58,28 +61,33 @@ const app = new Elysia({
 
 			const {
 				bytesSaved,
-				html: minifiedHtml,
+				html: minifiedHtmlBuffer,
 				size,
-			} = await minifyHtmlString(fetchedHtml);
+				mode,
+			} = await minifyHtmlString(
+				fetchedHtml,
+				!!requestHeaders.get("accept-encoding")?.includes("zstd"),
+			);
 
-			processedResponse = new Response(minifiedHtml, {
+			processedResponse = new Response(minifiedHtmlBuffer, {
 				headers: fetchedHeaders,
 			});
 
 			if (processedResponse.ok) {
 				processedResponse.headers.set(
-					"cache-control",
-					"public, max-age=2592000, stale-while-revalidate=3600",
-				);
-				processedResponse.headers.set(
 					ProxyCustomHeaders.BYTES_SAVED,
 					`${bytesSaved}`,
 				);
-				processedResponse.headers.set("content-length", `${size}`);
 				processedResponse.headers.set(
 					"content-type",
 					"text/html; charset=UTF-8",
 				);
+				processedResponse.headers.set("content-length", `${size}`);
+				processedResponse.headers.set("content-encoding", mode);
+				// 				// Since the response isn't compressed, this will be troublesome
+				// 				processedResponse.headers.delete(
+				// 	"content-encoding",
+				// );
 			}
 
 			// if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {

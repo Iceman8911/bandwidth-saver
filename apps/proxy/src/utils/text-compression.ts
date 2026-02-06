@@ -9,12 +9,12 @@ export async function compressTextBuffer(
 	canUseZstd: boolean,
 ): Promise<CompressionResult> {
 	if (process.env.DEPLOYMENT_PLATFORM === "server") {
-		const { zstdCompressSync, gzipSync } = await import("node:zlib");
+		const { zstdCompressSync, gzipSync } = await import("bun");
 
 		// Since it's a generic server, bun should be installed
 		return canUseZstd
-			? { buffer: zstdCompressSync(src), mode: "zstd" }
-			: { buffer: gzipSync(src), mode: "gzip" };
+			? { buffer: zstdCompressSync(src, { level: 10 }), mode: "zstd" }
+			: { buffer: gzipSync(src, { level: 7 }), mode: "gzip" };
 	} else {
 		if (typeof globalThis.CompressionStream === "function") {
 			const compressedStream = new ReadableStream<Uint8Array<ArrayBuffer>>({
@@ -34,7 +34,7 @@ export async function compressTextBuffer(
 
 			return canUseZstd
 				? { buffer: zstdCompressSync(src), mode: "zstd" }
-				: { buffer: gzipSync(src), mode: "gzip" };
+				: { buffer: gzipSync(src, { level: 7 }), mode: "gzip" };
 		}
 	}
 }

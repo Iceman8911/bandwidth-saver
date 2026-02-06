@@ -4,6 +4,7 @@ import {
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import { TEXT_DECODER, TEXT_ENCODER } from "./shared";
+import { compressTextBuffer } from "./utils/text-compression";
 
 interface FetchedHtmlStringAndHeaders {
 	html: string;
@@ -32,11 +33,13 @@ interface MinifiedHtmlOutput {
 	bytesSaved: number;
 	/** The minified size (or  original size if the minfication actually made it larger) */
 	size: number;
-	html: string;
+	html: Uint8Array<ArrayBufferLike>;
+	mode: "gzip" | "zstd";
 }
 
 export async function minifyHtmlString(
 	originalHtmlString: string,
+	canUseZstd: boolean,
 ): Promise<MinifiedHtmlOutput> {
 	// Too many Wsam Instantiate issues with the workerd version :/
 	// const { minify } =
@@ -47,7 +50,7 @@ export async function minifyHtmlString(
 	const { minify } = await import("@cf-wasm/minify-html");
 
 	const originalHtmlBuffer = TEXT_ENCODER.encode(originalHtmlString);
-	const minifiedHtmlBuffer = await minify.async(originalHtmlBuffer, {
+	const minifiedHtmlBuffer = minify(originalHtmlBuffer, {
 		allow_noncompliant_unquoted_attribute_values: true,
 		allow_optimal_entities: true,
 		allow_removing_spaces_between_attributes: true,
@@ -56,14 +59,25 @@ export async function minifyHtmlString(
 	});
 	const originalHtmlBufferLength = originalHtmlBuffer.byteLength;
 	const minifiedHtmlBufferLength = minifiedHtmlBuffer.byteLength;
-	const bytesSaved = originalHtmlBufferLength - minifiedHtmlBufferLength;
-	const didMinifyWell = bytesSaved > 0;
+	const uncompressedBytesSaved =
+		originalHtmlBufferLength - minifiedHtmlBufferLength;
+	const didMinifyWell = uncompressedBytesSaved > 0;
+	const uncompressedHtmlBuffer = new Uint8Array(
+		didMinifyWell ? minifiedHtmlBuffer : originalHtmlBuffer,
+	);
+	const { buffer: compressedHtmlBuffer, mode } = await compressTextBuffer(
+		uncompressedHtmlBuffer,
+		canUseZstd,
+	);
+	const compressedHtmlBufferLength = compressedHtmlBuffer.byteLength;
 
 	return {
-		bytesSaved,
-		html: didMinifyWell
-			? TEXT_DECODER.decode(minifiedHtmlBuffer)
-			: originalHtmlString,
-		size: didMinifyWell ? minifiedHtmlBufferLength : originalHtmlBufferLength,
+		// This is a somewhat rough estimate since I don't really want to waste resources by compressing the original buffer :p
+		bytesSaved:
+			uncompressedBytesSaved *
+			(compressedHtmlBufferLength / uncompressedHtmlBuffer.byteLength),
+		html: compressedHtmlBuffer,
+		mode,
+		size: compressedHtmlBufferLength,
 	};
 }
