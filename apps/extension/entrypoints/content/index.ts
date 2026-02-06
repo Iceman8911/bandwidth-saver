@@ -6,6 +6,7 @@ import {
 } from "@/shared/storage";
 import { getActiveTabUrl } from "@/utils/tabs";
 import { runContentScriptDomManipulations } from "./combined-dom-manip";
+import { injectMainWorldScriptsViaContentScript } from "./script-injectors";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
 
 const getDefaultAndSiteGeneralSettings = (url: UrlSchema) =>
@@ -23,10 +24,14 @@ export default defineContentScript({
 		const [defaultSettings, siteSettings] =
 			await getDefaultAndSiteGeneralSettings(PAGE_ORIGIN);
 
-		runContentScriptDomManipulations({
+		const payload = {
 			origin: PAGE_ORIGIN,
 			settings: { default: defaultSettings, site: siteSettings },
-		});
+		};
+
+		runContentScriptDomManipulations(payload);
+
+		await injectMainWorldScriptsViaContentScript(payload);
 	},
 	matches: ["<all_urls>"],
 	runAt: "document_start",

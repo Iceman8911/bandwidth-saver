@@ -1,5 +1,8 @@
 import type { UrlSchema } from "@bandwidth-saver/shared";
-import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import type {
+	GeneralSettingsSchema,
+	SingleAssetStatisticsSchema,
+} from "@/models/storage";
 
 export type BandwidthMonitoringMessagePayload = {
 	/** The full url for the downloaded asset which may be cross-origin */
@@ -19,6 +22,18 @@ export type BandwidthMonitoringMessagePayload = {
 	/** Unless the user is using the proxy mode, this will most-likely be zero. This is because I manually send a header with the bytes saved  */
 	bytesSaved: number;
 };
+
+export type SpoofSlowNetworkViaInjectedScriptPayload =
+	| {
+			target: "content";
+			/** WHat mode the content script should message to the injected script */
+			mode: GeneralSettingsSchema["spoofSlowNetwork"];
+	  }
+	| {
+			target: "background";
+			/** The url origin of the content script in question */
+			origin: UrlSchema;
+	  };
 
 /** Just a base layout for any compoennt that maybe be able to receive external classes */
 export interface ComponentAcceptingClassesProps {

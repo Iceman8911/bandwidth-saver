@@ -1,6 +1,5 @@
-import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
+import { BatchQueue } from "@bandwidth-saver/shared";
 import { querySelectorAllDeep } from "query-selector-shadow-dom";
-import type { GeneralSettingsSchema } from "@/models/storage";
 import {
 	AUTOPLAYABLE_ELEMENT_SELECTOR,
 	disableAutoplayViaContentScript,
@@ -17,20 +16,13 @@ import {
 	PREFETCHABLE_ELEMENT_SELECTOR,
 	shouldDisablePrefetchForSite,
 } from "./prefetch";
+import type { ContentScriptTogglerPayload } from "./shared";
 
 type SettingsToApply = Readonly<{
 	disableAutoplay: boolean;
 	lazyload: boolean;
 	prefetch: boolean;
 }>;
-
-type DomManipPayload = {
-	origin: UrlSchema;
-	settings: {
-		default: GeneralSettingsSchema;
-		site: GeneralSettingsSchema;
-	};
-};
 
 const COMBINED_NODE_SELECTOR = `${AUTOPLAYABLE_ELEMENT_SELECTOR},${LAZY_LOADABLE_ELEMENT_SELECTOR},${PREFETCHABLE_ELEMENT_SELECTOR}`;
 
@@ -52,7 +44,7 @@ function queryMatchingElements(
 export function runContentScriptDomManipulations({
 	origin,
 	settings: { default: defaultSettings, site: siteSettings },
-}: DomManipPayload) {
+}: ContentScriptTogglerPayload) {
 	fixImageElementsBrokenFromFailedCompression(origin);
 
 	const { disableAutoplay, lazyload, prefetch }: SettingsToApply = {

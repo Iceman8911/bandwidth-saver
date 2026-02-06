@@ -26,7 +26,7 @@ import {
 	MAX_DAYS_OF_DAILY_STATISTICS,
 	MessageType,
 } from "@/shared/constants";
-import { onMessage } from "@/shared/messaging";
+import { onExtensionMessage } from "@/shared/messaging/extension";
 import {
 	defaultProxySettingsStorageItem,
 	getSiteSpecificStatisticsStorageItem,
@@ -211,8 +211,9 @@ function cacheBandwidthDataFromSource(
 }
 
 export function startCachingBandwidthDataFromPerformanceApi() {
-	onMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, ({ data }) =>
-		cacheBandwidthDataFromSource(data, "perfApi"),
+	onExtensionMessage(
+		MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API,
+		({ data }) => cacheBandwidthDataFromSource(data, "perfApi"),
 	);
 }
 

@@ -45,6 +45,9 @@ export const GeneralSettingsSchema = v.object({
 	/** Whether the save data header should be applied to each request */
 	saveData: v.boolean(),
 
+	/** Modify `navigator.connection.effectiveType` when present to make it seems like the user's network is slower than it actually is. Some sites may serve lower quality content if so. */
+	spoofSlowNetwork: v.picklist(["default", "3g", "2g", "slow-2g"]),
+
 	/** If `true`, the site will use it's own scoped rules over the default, else it fallback to the default.
 	 *
 	 * If `enabled` is false, this has no effect
@@ -180,6 +183,7 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	lazyLoad: true,
 	noAutoplay: true,
 	saveData: true,
+	spoofSlowNetwork: "default",
 	useSiteRule: false,
 } as const satisfies GeneralSettingsSchema;
 

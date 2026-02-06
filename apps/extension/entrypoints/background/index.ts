@@ -1,6 +1,7 @@
 import { defineBackground } from "wxt/utils/define-background";
 import { startRecordingPossibleSiteOriginsToEnqueue } from "@/utils/storage";
 import { setupDnrRulesAndRefreshing } from "./combined-dnr-setup";
+import { trackAndMessageSpoofSlowNetworkChangesViaContentScript } from "./spoof-slow-network";
 import { registerStaticRules } from "./static-rules";
 import {
 	createDailyAlarmForAggregatingOldDailyStats,
@@ -19,6 +20,8 @@ export default defineBackground({
 		createDailyAlarmForAggregatingOldDailyStats();
 
 		setupDnrRulesAndRefreshing();
+
+		trackAndMessageSpoofSlowNetworkChangesViaContentScript();
 	},
 	type: "module",
 });

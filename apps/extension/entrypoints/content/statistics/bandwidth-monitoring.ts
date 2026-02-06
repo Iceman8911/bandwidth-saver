@@ -2,7 +2,7 @@ import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
 import type { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
-import { sendMessage } from "@/shared/messaging";
+import { sendExtensionMessage } from "@/shared/messaging/extension";
 import { detectAssetTypeFromUrl, getUrlSchemaOrigin } from "@/utils/url";
 
 type PerformanceResourceTimingPayload = {
@@ -73,7 +73,7 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 			assetSize += transferSize;
 
 			//@ts-expect-error `name` will always be a url here
-			sendMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
+			sendExtensionMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
 				assetUrl: name,
 				bytes: assetSize,
 				// No way to get the bytesSaved header via Performance Metrics

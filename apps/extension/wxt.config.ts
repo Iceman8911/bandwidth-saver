@@ -24,6 +24,12 @@ export default defineConfig({
 		],
 		short_name: "Bandwidth Saver And Monitor",
 		version: "0.0.1",
+		web_accessible_resources: [
+			{
+				matches: ["<all_urls>"],
+				resources: ["/spoof-slow-network.js"],
+			},
+		],
 	},
 	modules: ["@wxt-dev/module-solid", "@wxt-dev/auto-icons"],
 	vite: () => ({

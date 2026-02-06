@@ -1,10 +1,19 @@
+import { capitalizeString } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
-import { createEffect, createMemo, Show, useContext } from "solid-js";
+import {
+	createEffect,
+	createMemo,
+	createSelector,
+	Index,
+	Show,
+	useContext,
+} from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
+import * as v from "valibot";
 import {
 	DEFAULT_GENERAL_SETTINGS,
-	type GeneralSettingsSchema,
+	GeneralSettingsSchema,
 } from "@/models/storage";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -158,6 +167,69 @@ function BlockFontToggle(props: TempGeneralSettingsProps) {
 	);
 }
 
+function SpoofSlowNetworkTooltip() {
+	return (
+		<InformativeTooltip
+			dir="top"
+			tip={
+				<div class="max-w-3xs space-y-2 text-xs">
+					<p>
+						Some sites <em>may</em> use this as a hint to serve more
+						bandwidth-friendly content.
+					</p>
+
+					<p>This will in no quantifiable way slow down your browsing.</p>
+				</div>
+			}
+		/>
+	);
+}
+
+function SpoofSlowNetworkToggle(props: TempGeneralSettingsProps) {
+	const options = [
+		"default",
+		"3g",
+		"2g",
+		"slow-2g",
+	] as const satisfies GeneralSettingsSchema["spoofSlowNetwork"][];
+
+	const isOptionSelected = createSelector(() => props.store.spoofSlowNetwork);
+
+	return (
+		<>
+			<label
+				class="flex items-center justify-between"
+				for="other-spoof-slow-network"
+			>
+				Spoof Slow Network:
+				<SpoofSlowNetworkTooltip />
+			</label>
+
+			<select
+				class="select"
+				id="other-spoof-slow-network"
+				onInput={(e) =>
+					props.set(
+						"spoofSlowNetwork",
+						v.parse(
+							GeneralSettingsSchema.entries.spoofSlowNetwork,
+							e.target.value,
+						),
+					)
+				}
+			>
+				<Index each={options}>
+					{(val) => (
+						<option selected={isOptionSelected(val())} value={val()}>
+							{capitalizeString(val())}
+						</option>
+					)}
+				</Index>
+			</select>
+		</>
+	);
+}
+
 export default function PopupOtherSettings() {
 	const [context] = useContext(PopupContext);
 
@@ -216,6 +288,7 @@ export default function PopupOtherSettings() {
 					<DisableAutoplayToggle set={setTempSettings} store={tempSettings} />
 					<LazyLoadToggle set={setTempSettings} store={tempSettings} />
 					<BlockFontToggle set={setTempSettings} store={tempSettings} />
+					<SpoofSlowNetworkToggle set={setTempSettings} store={tempSettings} />
 					<CspBypassToggle set={setTempSettings} store={tempSettings} />
 
 					<BaseButton

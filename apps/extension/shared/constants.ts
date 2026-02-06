@@ -14,10 +14,11 @@ export const DUMMY_TAB_URL = v.parse(UrlSchema, "https://foo.bar");
 export const MessageType = {
 	/** Sends the bandwidth used from content scripts to the background */
 	MONITOR_BANDWIDTH_WITH_PERFORMANCE_API: "1",
+
+	/** Background Watcher -> Content script -> Injected Script */
+	SPOOF_SLOW_NETWORK: "2",
 	/** Check if the url returns a valid response code */
 	VALIDATE_URL: "0",
-
-	// MONITOR_BANDWIDTH_WITH_WEB_REQUEST = "2",
 } as const;
 export type MessageType = ObjectToEnum<typeof MessageType>;
 
