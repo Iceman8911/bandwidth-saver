@@ -222,6 +222,7 @@ interface CompressionUrlAndSavings {
 	bytesSaved: number;
 }
 
+/** This intentionally doesn't look for the endpoint with the smallest size, just the one with a smaller size that arrives first for perf */
 const optimalImageCompressionAdapter = async (
 	payload: ImageCompressionPayloadSchema,
 	urlConstructor: ImageCompressionUrlConstructor,
