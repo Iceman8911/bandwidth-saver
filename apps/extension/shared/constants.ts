@@ -112,15 +112,6 @@ export enum DeclarativeNetRequestPriority {
 
 export const UPDATE_INTERVAL_IN_MINUTES = 5;
 
-/** A no-op rule condition that matches no requests.
- *
- * Uses an impossible domain to ensure the rule never triggers.
- * Useful for site-specific rules where the feature is disabled but we still need a valid rule.
- */
-export const NOOP_RULE_CONDITION = {
-	requestDomains: ["never-ever-match.invalid"],
-} as const satisfies Browser.declarativeNetRequest.RuleCondition;
-
 export const MAX_DAYS_OF_DAILY_STATISTICS = 90;
 
 export enum ALARM_NAME {
