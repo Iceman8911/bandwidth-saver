@@ -20,3 +20,8 @@ Ensure your **Build configuration** matches this:
 - **Path**: `/`
 
 And `DEPLOYMENT_PLATFORM` is `cloudflare`.
+
+### VPS
+
+- You'll prolly want [bun](https://bun.sh/) since some code relies on it, and it's much more performant.
+- Ensure `DEPLOYMENT_PLATFORM` is `server`.
