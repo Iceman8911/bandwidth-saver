@@ -84,6 +84,7 @@ const app = new Elysia({
 				);
 				processedResponse.headers.set("content-length", `${size}`);
 				processedResponse.headers.set("content-encoding", mode);
+				processedResponse.headers.set("vary", "accept-encoding");
 				// 				// Since the response isn't compressed, this will be troublesome
 				// 				processedResponse.headers.delete(
 				// 	"content-encoding",

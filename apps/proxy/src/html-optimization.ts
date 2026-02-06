@@ -30,6 +30,7 @@ export function stripOutCspMetaTagsFromHtmlString(htmlString: string): string {
 }
 
 interface MinifiedHtmlOutput {
+	/** Rough estimate for perf reasons */
 	bytesSaved: number;
 	/** The minified size (or  original size if the minfication actually made it larger) */
 	size: number;
@@ -39,7 +40,7 @@ interface MinifiedHtmlOutput {
 
 export async function minifyHtmlString(
 	originalHtmlString: string,
-	canUseZstd: boolean,
+	mayUseZstd: boolean,
 ): Promise<MinifiedHtmlOutput> {
 	// Too many Wsam Instantiate issues with the workerd version :/
 	// const { minify } =
@@ -65,17 +66,18 @@ export async function minifyHtmlString(
 	const uncompressedHtmlBuffer = new Uint8Array(
 		didMinifyWell ? minifiedHtmlBuffer : originalHtmlBuffer,
 	);
-	const { buffer: compressedHtmlBuffer, mode } = await compressTextBuffer(
-		uncompressedHtmlBuffer,
-		canUseZstd,
-	);
+	const { buffer: compressedHtmlBuffer, mode } = await compressTextBuffer({
+		mayUseZstd,
+		src: uncompressedHtmlBuffer,
+	});
 	const compressedHtmlBufferLength = compressedHtmlBuffer.byteLength;
 
 	return {
 		// This is a somewhat rough estimate since I don't really want to waste resources by compressing the original buffer :p
-		bytesSaved:
+		bytesSaved: Math.round(
 			uncompressedBytesSaved *
-			(compressedHtmlBufferLength / uncompressedHtmlBuffer.byteLength),
+				(compressedHtmlBufferLength / uncompressedHtmlBuffer.byteLength),
+		),
 		html: compressedHtmlBuffer,
 		mode,
 		size: compressedHtmlBufferLength,
