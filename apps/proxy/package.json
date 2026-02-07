@@ -21,6 +21,7 @@
 	"scripts": {
 		"build": "bun build src/index.ts --outdir .output --target=bun --env=inline --external cloudflare:workers",
 		"build:cloudflare": "DEPLOYMENT_PLATFORM=cloudflare bun run build",
+		"build:deno": "DEPLOYMENT_PLATFORM=deno bun run build",
 		"dev": "DEPLOYMENT_PLATFORM=server bun run --watch src/index.ts",
 		"dev:cloudflare": "DEPLOYMENT_PLATFORM=cloudflare wrangler dev",
 		"format": "biome format ./ --write",

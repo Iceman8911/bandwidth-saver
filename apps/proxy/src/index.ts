@@ -18,6 +18,11 @@ if (IS_HOSTED_ON_CLOUDFLARE) {
 	baseApp.compile();
 }
 
+if (env.DEPLOYMENT_PLATFORM === "deno") {
+	//@ts-expect-error deno will be available
+	Deno.serve(baseApp.fetch);
+}
+
 if (env.DEPLOYMENT_PLATFORM === "server") {
 	baseApp.listen(
 		{

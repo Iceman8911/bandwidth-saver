@@ -12,7 +12,7 @@ export const ProxyEnvSchema = v.looseObject({
 	...SharedEnvSchema.entries,
 
 	DEPLOYMENT_PLATFORM: v.optional(
-		v.picklist(["server", "vercel", "cloudflare"]),
+		v.picklist(["server", "vercel", "cloudflare", "deno"]),
 		"server",
 	),
 
