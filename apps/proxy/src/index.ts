@@ -34,12 +34,4 @@ if (env.DEPLOYMENT_PLATFORM === "server") {
 
 export type ElysiaApp = typeof baseApp;
 
-const defaultExport = IS_HOSTED_ON_CLOUDFLARE
-	? {
-			fetch: (request: Request, env: Env, ctx: ExecutionContext) => {
-				return new Elysia().decorate({ ctx, env }).use(baseApp).handle(request);
-			},
-		}
-	: baseApp;
-
-export default defaultExport;
+export default baseApp;

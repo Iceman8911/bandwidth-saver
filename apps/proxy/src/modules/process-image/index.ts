@@ -98,18 +98,22 @@ export const processImageRoute = new Elysia()
 		{
 			async afterHandle(args) {
 				const {
-					responseValue,
 					request,
 					set,
 					store: { bytesSaved, note },
-					ctx,
-				} = args as AugumentWithCloudflareContextAndEnv<typeof args>;
+				} = args;
 
-				const response = responseValue as Response;
+				const oldResponse = args.response as Response;
+				const response = new Response(oldResponse.body, {
+					headers: oldResponse.headers,
+				});
 
 				if (response.ok) {
-					set.headers["cache-control"] =
-						"public, max-age=2592000, stale-while-revalidate=3600";
+					// To modify a proably old header, use the good o'l fashioned way
+					response.headers.set(
+						"cache-control",
+						"public, max-age=2592000, stale-while-revalidate=3600",
+					);
 
 					set.headers[ProxyCustomHeaders.BYTES_SAVED] = `${bytesSaved}`;
 
@@ -122,7 +126,8 @@ export const processImageRoute = new Elysia()
 							response.clone(),
 						);
 
-						ctx.waitUntil(promise);
+						const { waitUntil } = await import("cloudflare:workers");
+						waitUntil(promise);
 					}
 				}
 
