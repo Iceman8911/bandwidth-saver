@@ -28,7 +28,7 @@ export const processImageRoute = new Elysia()
 	.state({ bytesSaved: 0, note: "" })
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
-		async ({ query, request, store }) => {
+		async ({ query, request, store, redirect }) => {
 			const cleanedSrcUrl = cleanlyExtractNestedUrlFromRawRequestUrl(
 				request.url,
 			);
@@ -81,15 +81,10 @@ export const processImageRoute = new Elysia()
 
 					const urlToUse = query.default_bwsvr8911 || cleanedSrcUrl;
 
-					// Default to the original url
-					processedResponse = await fetch(
-						`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
-						{
-							headers: SPOOFING_FETCH_HEADERS,
-						},
-					);
-
 					store.note = urlToUse;
+
+					// Default to the original url
+					return redirect(`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`);
 				}
 			}
 
