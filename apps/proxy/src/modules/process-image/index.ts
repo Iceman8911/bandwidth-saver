@@ -7,10 +7,10 @@ import {
 	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
-import { compressImagefromUrl } from "../../image-compression";
-import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../url";
 import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-type-patch";
+import { compressImagefromUrl } from "../../utils/image-optimization/manual-compression";
 import { normaliseRequestByUrl } from "../../utils/request";
+import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../utils/url";
 
 const IS_HOSTED_ON_CLOUDFLARE =
 	process.env.DEPLOYMENT_PLATFORM === "cloudflare";
