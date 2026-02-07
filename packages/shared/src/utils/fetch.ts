@@ -16,7 +16,8 @@ const IMAGE_MIME_TYPES = [
 const ImageMimeType = v.picklist(IMAGE_MIME_TYPES);
 export type ImageMimeType = v.InferOutput<typeof ImageMimeType>;
 
-const IMAGE_EXTENSION_REGEX = /(?<=\.)\w+(?=[?#]|$)/g;
+/** Matches any extension preceded by a "." that is not in a query string / hash fragemnt but is at the end of the url string / right before a query string / has fragment */
+const IMAGE_EXTENSION_REGEX = /(?<![?#].+)(?<=\.)\w+(?=[?#]|$)/g;
 
 export function getLikelyImageUrlMimeType(
 	imgUrl: string,
