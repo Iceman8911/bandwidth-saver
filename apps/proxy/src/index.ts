@@ -8,18 +8,18 @@ const env = getProxyEnv();
 
 const IS_HOSTED_ON_CLOUDFLARE = env.DEPLOYMENT_PLATFORM === "cloudflare";
 
-const app = new Elysia({
+const baseApp = new Elysia({
 	adapter: IS_HOSTED_ON_CLOUDFLARE ? CloudflareAdapter : undefined,
 })
 	.use(healthRoute)
 	.use(processImageRoute);
 
 if (IS_HOSTED_ON_CLOUDFLARE) {
-	app.compile();
+	baseApp.compile();
 }
 
 if (env.DEPLOYMENT_PLATFORM === "server") {
-	app.listen(
+	baseApp.listen(
 		{
 			hostname: env.VITE_SERVER_HOST,
 			port: env.VITE_SERVER_PORT,
@@ -32,14 +32,14 @@ if (env.DEPLOYMENT_PLATFORM === "server") {
 	);
 }
 
-export type ElysiaApp = typeof app;
+export type ElysiaApp = typeof baseApp;
 
 const defaultExport = IS_HOSTED_ON_CLOUDFLARE
 	? {
 			fetch: (request: Request, env: Env, ctx: ExecutionContext) => {
-				return app.decorate({ ctx, env }).handle(request);
+				return new Elysia().decorate({ ctx, env }).use(baseApp).handle(request);
 			},
 		}
-	: app;
+	: baseApp;
 
 export default defaultExport;

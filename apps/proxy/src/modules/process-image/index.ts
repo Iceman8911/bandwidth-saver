@@ -9,6 +9,7 @@ import {
 import Elysia from "elysia";
 import { compressImagefromUrl } from "../../image-compression";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../url";
+import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-type-patch";
 
 const IS_HOSTED_ON_CLOUDFLARE =
 	process.env.DEPLOYMENT_PLATFORM === "cloudflare";
@@ -19,7 +20,8 @@ export const processImageRoute = new Elysia().get(
 		const {
 			query,
 			request: { url: rawRequestUrl },
-		} = args;
+			ctx,
+		} = args as AugumentWithCloudflareContextAndEnv<typeof args>;
 
 		const cleanedSrcUrl =
 			cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
@@ -118,16 +120,13 @@ export const processImageRoute = new Elysia().get(
 			);
 
 			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
-				//@ts-expect-error `ctx` should exist in the worker's args if hosted on Cloudflare workers
-				const ctx = args.ctx as ExecutionContext;
-
 				const promise = caches.default.put(
 					normalizedRequest,
 					processedResponse.clone(),
 				);
 
 				// Optional access since, for some reason, this may be undefined :p
-				ctx?.waitUntil(promise);
+				ctx.waitUntil(promise);
 			}
 		}
 
