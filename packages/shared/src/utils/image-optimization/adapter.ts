@@ -265,7 +265,7 @@ const optimalImageCompressionAdapter = async (
 		// I'd rather only bother with actual compressed data. At the call site, I could just default to the original url if it's `null` here
 		const bytesSaved = originalUrlSize - altUrlSize;
 
-		return bytesSaved >= 0 ? { bytesSaved, url: altUrl } : null;
+		return bytesSaved > 0 ? { bytesSaved, url: altUrl } : null;
 	}
 
 	return { bytesSaved: 0, url: altUrl };
