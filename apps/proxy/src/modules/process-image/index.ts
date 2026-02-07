@@ -10,129 +10,124 @@ import Elysia from "elysia";
 import { compressImagefromUrl } from "../../image-compression";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../url";
 import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-type-patch";
+import { normaliseRequestByUrl } from "../../utils/request";
 
 const IS_HOSTED_ON_CLOUDFLARE =
 	process.env.DEPLOYMENT_PLATFORM === "cloudflare";
 
-export const processImageRoute = new Elysia().get(
-	`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
-	async (args) => {
-		const {
-			query,
-			request: { url: rawRequestUrl },
-			ctx,
-		} = args as AugumentWithCloudflareContextAndEnv<typeof args>;
-
-		const cleanedSrcUrl =
-			cleanlyExtractNestedUrlFromRawRequestUrl(rawRequestUrl);
-
-		console.log("raw:", rawRequestUrl, "\n\ncleaned:", cleanedSrcUrl);
-
-		/** Make a normalized request solely with the url for caching, since the original may have some headers (but otheriwse same url), that'll prevent the cache from matching.
-		 *
-		 * All the relevant data is stored in the url as search params so this is fine.
-		 */
-		let normalizedRequest: Request | undefined;
-		/** The final response at the end of processing that I can cache and do some stuff */
-		let processedResponse: Response;
-		let relevantBytesSaved = 0;
-		let processedNote: string | null = null;
-
+export const processImageRoute = new Elysia()
+	.onRequest(async ({ request }) => {
 		if (IS_HOSTED_ON_CLOUDFLARE) {
-			normalizedRequest = new Request(cleanedSrcUrl);
-
-			const cachedResponse = await caches.default.match(normalizedRequest);
+			const cachedResponse = await caches.default.match(
+				normaliseRequestByUrl(request),
+			);
 
 			if (cachedResponse) return cachedResponse;
 		}
-
-		const { bytesSaved, url: possiblyRedirectedUrl } =
-			await getCompressedImageUrlWithFallback({
-				...query,
-				zz_url_bwsvr8911: cleanedSrcUrl,
-			});
-
-		relevantBytesSaved = bytesSaved;
-
-		if (possiblyRedirectedUrl !== cleanedSrcUrl) {
-			processedResponse = await fetch(
-				`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
-
-				{
-					headers: SPOOFING_FETCH_HEADERS,
-				},
+	})
+	.state({ bytesSaved: 0, note: "" })
+	.get(
+		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
+		async ({ query, request, store }) => {
+			const cleanedSrcUrl = cleanlyExtractNestedUrlFromRawRequestUrl(
+				request.url,
 			);
-			processedNote = possiblyRedirectedUrl;
-		} else {
-			try {
-				// Compress the image ourselves since none of the endpoints work
-				const { bytesSaved, res: compressedResponse } =
-					await compressImagefromUrl({
-						format: query.format_bwsvr8911,
-						preserveAnim: query.preserveAnim_bwsvr8911,
-						quality: query.quality_bwsvr8911,
-						url: cleanedSrcUrl,
-					});
 
-				relevantBytesSaved = bytesSaved;
+			console.log("raw:", request.url, "\n\ncleaned:", cleanedSrcUrl);
 
-				processedResponse = compressedResponse;
-				processedNote = "self-compress";
-			} catch (e) {
-				console.warn(
-					"Why did compression throw:",
-					e,
-					"on the url:",
-					possiblyRedirectedUrl,
-				);
+			/** The final response at the end of processing that I can cache and do some stuff */
+			let processedResponse: Response;
 
-				const urlToUse = query.default_bwsvr8911 || cleanedSrcUrl;
+			const { bytesSaved, url: possiblyRedirectedUrl } =
+				await getCompressedImageUrlWithFallback({
+					...query,
+					zz_url_bwsvr8911: cleanedSrcUrl,
+				});
 
-				// Default to the original url
+			store.bytesSaved = bytesSaved;
+
+			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
-					`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+					`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+
 					{
 						headers: SPOOFING_FETCH_HEADERS,
 					},
 				);
 
-				processedNote = urlToUse;
+				store.note = possiblyRedirectedUrl;
+			} else {
+				try {
+					// Compress the image ourselves since none of the endpoints work
+					const { bytesSaved, res: compressedResponse } =
+						await compressImagefromUrl({
+							format: query.format_bwsvr8911,
+							preserveAnim: query.preserveAnim_bwsvr8911,
+							quality: query.quality_bwsvr8911,
+							url: cleanedSrcUrl,
+						});
+
+					store.bytesSaved = bytesSaved;
+
+					processedResponse = compressedResponse;
+					store.note = "self-compress";
+				} catch (e) {
+					console.warn(
+						"Why did compression throw:",
+						e,
+						"on the url:",
+						possiblyRedirectedUrl,
+					);
+
+					const urlToUse = query.default_bwsvr8911 || cleanedSrcUrl;
+
+					// Default to the original url
+					processedResponse = await fetch(
+						`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+						{
+							headers: SPOOFING_FETCH_HEADERS,
+						},
+					);
+
+					store.note = urlToUse;
+				}
 			}
-		}
 
-		const processedResponseUrl = processedResponse.url;
+			return processedResponse;
+		},
+		{
+			async afterHandle(args) {
+				const {
+					responseValue,
+					request,
+					set,
+					store: { bytesSaved, note },
+					ctx,
+				} = args as AugumentWithCloudflareContextAndEnv<typeof args>;
 
-		// Create a new Response to make headers mutable
-		processedResponse = new Response(processedResponse.body, processedResponse);
+				const response = responseValue as Response;
 
-		if (processedResponse.ok) {
-			processedResponse.headers.set(
-				"Cache-Control",
-				"public, max-age=2592000, stale-while-revalidate=3600",
-			);
-			processedResponse.headers.set(
-				ProxyCustomHeaders.BYTES_SAVED,
-				`${relevantBytesSaved}`,
-			);
-			processedResponse.headers.set(
-				ProxyCustomHeaders.ENDPOINT_USED,
-				processedNote || processedResponseUrl || "null",
-			);
+				if (response.ok) {
+					set.headers["cache-control"] =
+						"public, max-age=2592000, stale-while-revalidate=3600";
 
-			if (IS_HOSTED_ON_CLOUDFLARE && normalizedRequest) {
-				const promise = caches.default.put(
-					normalizedRequest,
-					processedResponse.clone(),
-				);
+					set.headers[ProxyCustomHeaders.BYTES_SAVED] = `${bytesSaved}`;
 
-				// Optional access since, for some reason, this may be undefined :p
-				ctx.waitUntil(promise);
-			}
-		}
+					set.headers[ProxyCustomHeaders.ENDPOINT_USED] =
+						note || response.url || "";
 
-		return processedResponse;
-	},
-	{
-		query: ImageCompressionPayloadSchema,
-	},
-);
+					if (IS_HOSTED_ON_CLOUDFLARE) {
+						const promise = caches.default.put(
+							normaliseRequestByUrl(request),
+							response.clone(),
+						);
+
+						ctx.waitUntil(promise);
+					}
+				}
+
+				return response;
+			},
+			query: ImageCompressionPayloadSchema,
+		},
+	);
