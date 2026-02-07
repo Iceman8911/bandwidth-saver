@@ -7,9 +7,10 @@ import {
 	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
+import * as v from "valibot";
 import { compressImagefromUrl } from "../../image-compression";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../url";
-import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-type-patch";
+import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-patch";
 import { normaliseRequestByUrl } from "../../utils/request";
 
 const IS_HOSTED_ON_CLOUDFLARE =
@@ -28,7 +29,7 @@ export const processImageRoute = new Elysia()
 	.state({ bytesSaved: 0, note: "" })
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
-		async ({ query, request, store }) => {
+		async ({ query: rawQuery, request, store }) => {
 			const cleanedSrcUrl = cleanlyExtractNestedUrlFromRawRequestUrl(
 				request.url,
 			);
@@ -37,6 +38,9 @@ export const processImageRoute = new Elysia()
 
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
+
+			// In aot-less mode, manual parsing is required since for some reason elysia may throw :p
+			const query = v.parse(ImageCompressionPayloadSchema, rawQuery);
 
 			const { bytesSaved, url: possiblyRedirectedUrl } =
 				await getCompressedImageUrlWithFallback({
@@ -98,14 +102,14 @@ export const processImageRoute = new Elysia()
 		{
 			async afterHandle(args) {
 				const {
-					responseValue,
 					request,
 					set,
 					store: { bytesSaved, note },
 					ctx,
 				} = args as AugumentWithCloudflareContextAndEnv<typeof args>;
 
-				const response = responseValue as Response;
+				// `responseValue` doesn't exist. Elysia's types are mangled here
+				const response = (args.response as Response).clone();
 
 				if (response.ok) {
 					set.headers["cache-control"] =
@@ -128,6 +132,6 @@ export const processImageRoute = new Elysia()
 
 				return response;
 			},
-			query: ImageCompressionPayloadSchema,
+			// query: ImageCompressionPayloadSchema,
 		},
 	);

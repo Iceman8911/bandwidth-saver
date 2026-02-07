@@ -8,15 +8,7 @@ const env = getProxyEnv();
 
 const IS_HOSTED_ON_CLOUDFLARE = env.DEPLOYMENT_PLATFORM === "cloudflare";
 
-const baseApp = new Elysia({
-	adapter: IS_HOSTED_ON_CLOUDFLARE ? CloudflareAdapter : undefined,
-})
-	.use(healthRoute)
-	.use(processImageRoute);
-
-if (IS_HOSTED_ON_CLOUDFLARE) {
-	baseApp.compile();
-}
+const baseApp = new Elysia().use(healthRoute).use(processImageRoute);
 
 if (env.DEPLOYMENT_PLATFORM === "server") {
 	baseApp.listen(
@@ -32,14 +24,20 @@ if (env.DEPLOYMENT_PLATFORM === "server") {
 	);
 }
 
-export type ElysiaApp = typeof baseApp;
-
 const defaultExport = IS_HOSTED_ON_CLOUDFLARE
 	? {
 			fetch: (request: Request, env: Env, ctx: ExecutionContext) => {
-				return new Elysia().decorate({ ctx, env }).use(baseApp).handle(request);
+				// Can't compile() or enable aot until elysia adds an intuitive way to access cloudflrae worker ctx
+				return new Elysia({
+					adapter: CloudflareAdapter,
+					aot: false,
+				})
+					.use(baseApp)
+					.decorate({ ctx, env })
+					.handle(request);
 			},
 		}
 	: baseApp;
 
+export type ElysiaApp = typeof baseApp;
 export default defaultExport;
