@@ -273,17 +273,17 @@ const optimalImageCompressionAdapter = async (
 
 const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.SERVE_PROXY],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WORDPRESS],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.SERVE_PROXY],
 ] as const satisfies ImageCompressionUrlConstructor[];
 
 const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.WSRV_NL],
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_WEBP_CLOUD],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.FLY_IMG_IO],
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.IMAGE_CDN],
+	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
 ] as const satisfies ImageCompressionUrlConstructor[];
 
 async function getFirstUsefulCompressedImageUrl(
