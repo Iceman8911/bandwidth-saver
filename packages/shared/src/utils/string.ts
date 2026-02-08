@@ -1,3 +1,6 @@
+export const TEXT_ENCODER = new TextEncoder();
+export const TEXT_DECODER = new TextDecoder();
+
 /**
  * Capitalize the first character of a string.
  * Leaves the rest of the string unchanged.
