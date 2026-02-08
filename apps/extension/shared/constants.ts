@@ -94,7 +94,11 @@ export enum DeclarativeNetRequestRuleIds {
 	 */
 	DEFAULT_BYPASS_CSP_BLOCKING,
 
-	DEFAULT_FONT_BLOCKING,
+	/** Block requests based off their resource type */
+	DEFAULT_RESOURCE_TYPE_BLOCKING,
+
+	/** Block requests based off their extension in the url via regex */
+	DEFAULT_EXTENSION_BLOCKING,
 
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,
