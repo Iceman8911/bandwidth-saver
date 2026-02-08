@@ -86,4 +86,75 @@ describe("generateDeterministicNumericIdsFromString", () => {
 			),
 		).not.toThrow();
 	});
+
+	it("has a near-zero collision rate for a realistic DNR-sized corpus (200 origins, 15 ids each)", () => {
+		const TOTAL_ORIGINS = 200;
+		const IDS_PER_ORIGIN = 15;
+
+		const BASE_DOMAINS = [
+			"google.com",
+			"youtube.com",
+			"facebook.com",
+			"wikipedia.org",
+			"amazon.com",
+			"x.com",
+			"reddit.com",
+			"netflix.com",
+			"microsoft.com",
+			"apple.com",
+			"cloudflare.com",
+			"mozilla.org",
+			"openai.com",
+			"github.com",
+			"stackoverflow.com",
+			"bbc.co.uk",
+			"nytimes.com",
+			"cnn.com",
+			"duckduckgo.com",
+			"bing.com",
+		] as const;
+
+		const seen = new Set<number>();
+		let collisions = 0;
+		let totalDraws = 0;
+
+		for (let i = 0; i < TOTAL_ORIGINS; i++) {
+			const base = BASE_DOMAINS[i % BASE_DOMAINS.length];
+
+			const subdomainVariant = (() => {
+				switch (i % 5) {
+					case 0:
+						return "www";
+					case 1:
+						return "m";
+					case 2:
+						return "api";
+					case 3:
+						return "cdn";
+					default:
+						return "images";
+				}
+			})();
+
+			// Keep the corpus fully deterministic and URL-like.
+			const origin = `https://${subdomainVariant}.${i.toString(36)}.${base}`;
+
+			const ids = generateDeterministicNumericIdsFromString(
+				origin,
+				IDS_PER_ORIGIN,
+			);
+			totalDraws += ids.length;
+
+			for (const id of ids) {
+				if (seen.has(id)) collisions++;
+				else seen.add(id);
+			}
+		}
+
+		const collisionRate = collisions / totalDraws;
+		const uniqueRate = seen.size / totalDraws;
+
+		expect(collisionRate).toBeLessThanOrEqual(0.00075);
+		expect(uniqueRate).toBeGreaterThanOrEqual(0.99925);
+	});
 });
