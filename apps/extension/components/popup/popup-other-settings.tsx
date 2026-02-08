@@ -109,6 +109,45 @@ function LazyLoadToggle(props: TempGeneralSettingsProps) {
 	);
 }
 
+function CacheHtmlBetterTooltip() {
+	return (
+		<InformativeTooltip
+			tip={
+				<div class="max-w-3xs space-y-2 text-xs">
+					<p>Slightly improves page loads while reducing stale content risk.</p>
+
+					<p class="text-warning">
+						Don't enable this for sensitive sites like banking sites, since it
+						may cause sensitive data to be cached.
+					</p>
+				</div>
+			}
+		/>
+	);
+}
+
+function CacheHtmlBetterToggle(props: TempGeneralSettingsProps) {
+	return (
+		<>
+			<label
+				class="flex items-center justify-between"
+				for="other-cache-html-better"
+			>
+				Cache HTML Better:
+				<CacheHtmlBetterTooltip />
+			</label>
+
+			<input
+				checked={props.store.cacheHtmlBetter}
+				class="toggle"
+				id="other-cache-html-better"
+				onInput={(e) => props.set("cacheHtmlBetter", e.target.checked)}
+				type="checkbox"
+			/>
+		</>
+	);
+}
+
 function SaveDataToggle(props: TempGeneralSettingsProps) {
 	return (
 		<>
@@ -247,6 +286,7 @@ export default function PopupOtherSettings() {
 					<SaveDataToggle set={setTempSettings} store={tempSettings} />
 					<DisableAutoplayToggle set={setTempSettings} store={tempSettings} />
 					<LazyLoadToggle set={setTempSettings} store={tempSettings} />
+					<CacheHtmlBetterToggle set={setTempSettings} store={tempSettings} />
 					<SpoofSlowNetworkToggle set={setTempSettings} store={tempSettings} />
 					<CspBypassToggle set={setTempSettings} store={tempSettings} />
 

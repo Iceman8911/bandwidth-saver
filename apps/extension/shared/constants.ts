@@ -100,6 +100,9 @@ export enum DeclarativeNetRequestRuleIds {
 	/** Block requests based off their extension in the url via regex */
 	DEFAULT_EXTENSION_BLOCKING,
 
+	/** e.g `public, max-age=0, must-revalidate` is better than `no-store` */
+	DEFAULT_ENFORCE_CACHE_FRIENDLY_HEADERS_ON_HTML,
+
 	EXEMPT_WHITELISTED_DOMAINS_FROM_COMPRESSION,
 	EXEMPT_FLAGGED_REQUESTS,
 	EXEMPT_FAVICONS_FROM_COMPRESSION,

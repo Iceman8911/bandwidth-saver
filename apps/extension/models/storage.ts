@@ -23,6 +23,9 @@ export const GeneralSettingsSchema = v.object({
 	 */
 	bypassCsp: v.boolean(),
 
+	/** Replaces `no-store` and similar cache headers on html resources with more cache-friendly ones that won't result in outdated content. However, it may not be ideal for sensitive content like banking sites. */
+	cacheHtmlBetter: v.boolean(),
+
 	/** If disabled, no compression at all is applied */
 	compression: v.boolean(),
 
@@ -189,6 +192,7 @@ export const DEFAULT_PROXY_SETTINGS = {
 
 export const DEFAULT_GENERAL_SETTINGS = {
 	bypassCsp: false,
+	cacheHtmlBetter: false,
 	compression: true,
 	enabled: true,
 	lazyLoad: true,

@@ -10,6 +10,10 @@ import {
 	applySiteScopedBlockRules,
 } from "./block-assets";
 import {
+	applyDefaultCacheHtmlBetterRules,
+	applySiteScopedCacheHtmlBetterRules,
+} from "./cache-html-better";
+import {
 	applyDefaultProxyCompressionRules,
 	applySiteScopedProxyCompressionRules,
 } from "./compression/proxy-mode";
@@ -35,6 +39,7 @@ async function applyDefaultDnrRules(
 		applyDefaultBlockRules(defaultPayload),
 		applyDefaultSimpleCompressionRules(defaultPayload),
 		applyDefaultProxyCompressionRules(defaultPayload),
+		applyDefaultCacheHtmlBetterRules(defaultPayload),
 	]);
 }
 
@@ -51,6 +56,7 @@ async function applySiteScopedDnrRules(
 					applySiteScopedBlockRules(entry),
 					applySiteScopedProxyCompressionRules(entry),
 					applySiteScopedSimpleCompressionRules(entry),
+					applySiteScopedCacheHtmlBetterRules(entry),
 				]),
 			),
 	);
