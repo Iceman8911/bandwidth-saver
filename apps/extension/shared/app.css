@@ -5,6 +5,9 @@
 		night --prefersdark;
 }
 @plugin "@kobalte/tailwindcss";
+@plugin "tailwind-scrollbar" {
+	nocompatible: true;
+}
 
 @theme {
 	/* For kobalte anims */
