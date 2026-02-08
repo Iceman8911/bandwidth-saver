@@ -6,9 +6,9 @@ import {
 	type SiteScopedDnrRuleModifierPayload,
 } from "@/utils/dnr-rules";
 import {
-	applyDefaultFontBlockRules,
-	applySiteScopedFontBlockRules,
-} from "./block-font";
+	applyDefaultBlockRules,
+	applySiteScopedBlockRules,
+} from "./block-assets";
 import {
 	applyDefaultProxyCompressionRules,
 	applySiteScopedProxyCompressionRules,
@@ -32,7 +32,7 @@ async function applyDefaultDnrRules(
 	await Promise.all([
 		applyDefaultSaveDataRules(defaultPayload),
 		applyDefaultCspRules(defaultPayload),
-		applyDefaultFontBlockRules(defaultPayload),
+		applyDefaultBlockRules(defaultPayload),
 		applyDefaultSimpleCompressionRules(defaultPayload),
 		applyDefaultProxyCompressionRules(defaultPayload),
 	]);
@@ -48,7 +48,7 @@ async function applySiteScopedDnrRules(
 				Promise.all([
 					applySiteScopedSaveDataRules(entry),
 					applySiteScopedCspRules(entry),
-					applySiteScopedFontBlockRules(entry),
+					applySiteScopedBlockRules(entry),
 					applySiteScopedProxyCompressionRules(entry),
 					applySiteScopedSimpleCompressionRules(entry),
 				]),

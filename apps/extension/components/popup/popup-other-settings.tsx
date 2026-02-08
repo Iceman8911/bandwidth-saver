@@ -127,46 +127,6 @@ function SaveDataToggle(props: TempGeneralSettingsProps) {
 	);
 }
 
-function BlockFontTooltip() {
-	return (
-		<InformativeTooltip
-			dir="top"
-			tip={
-				<div class="w-3xs space-y-2 text-xs">
-					<p>
-						Blocks all remote fonts since they can be heavy. The browser will
-						simply use the system ones as backup.
-					</p>
-
-					<p class="text-warning">
-						This will break icon fonts, like{" "}
-						<span class="font-semibold">FontAwesome Icons</span>
-					</p>
-				</div>
-			}
-		/>
-	);
-}
-
-function BlockFontToggle(props: TempGeneralSettingsProps) {
-	return (
-		<>
-			<label class="flex items-center justify-between" for="other-block-font">
-				Block Remote Fonts:
-				<BlockFontTooltip />
-			</label>
-
-			<input
-				checked={props.store.blockFont}
-				class="toggle"
-				id="other-block-font"
-				onInput={(e) => props.set("blockFont", e.target.checked)}
-				type="checkbox"
-			/>
-		</>
-	);
-}
-
 function SpoofSlowNetworkTooltip() {
 	return (
 		<InformativeTooltip
@@ -287,7 +247,6 @@ export default function PopupOtherSettings() {
 					<SaveDataToggle set={setTempSettings} store={tempSettings} />
 					<DisableAutoplayToggle set={setTempSettings} store={tempSettings} />
 					<LazyLoadToggle set={setTempSettings} store={tempSettings} />
-					<BlockFontToggle set={setTempSettings} store={tempSettings} />
 					<SpoofSlowNetworkToggle set={setTempSettings} store={tempSettings} />
 					<CspBypassToggle set={setTempSettings} store={tempSettings} />
 

@@ -36,6 +36,8 @@ export const CompressionMode = {
 export type CompressionMode = ObjectToEnum<typeof CompressionMode>;
 
 export const StorageKey = {
+	/** Default settings for blocking rules*/
+	DEFAULT_SETTINGS_BLOCK: "local:block",
 	/** Default settings for customizing compression */
 	DEFAULT_SETTINGS_COMPRESSION: "local:compression",
 
@@ -46,6 +48,9 @@ export const StorageKey = {
 	DEFAULT_SETTINGS_PROXY: "local:proxy",
 
 	SCHEMA_VERSION: "local:schemaVersion",
+
+	/** Site-specific settings for blocking rules*/
+	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX: "local:siteScopeBlock-",
 
 	/** Site-specific settings for customizing compression */
 	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX: "local:siteScopeCompression-",

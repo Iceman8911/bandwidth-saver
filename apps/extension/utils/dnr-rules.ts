@@ -2,15 +2,18 @@ import type { ReadonlyDeep } from "type-fest";
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
 import {
+	BlockSettingsSchema,
 	CompressionSettingsSchema,
 	GeneralSettingsSchema,
 	ProxySettingsSchema,
 } from "@/models/storage";
 import { DeclarativeNetRequestRuleIds } from "@/shared/constants";
 import {
+	defaultBlockSettingsStorageItem,
 	defaultCompressionSettingsStorageItem,
 	defaultGeneralSettingsStorageItem,
 	defaultProxySettingsStorageItem,
+	getSiteSpecificBlockSettingsStorageItem,
 	getSiteSpecificCompressionSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
@@ -70,6 +73,7 @@ export async function getSiteDomainsWithPriorityRules(): Promise<string[]> {
 interface DnrSettingsDataPayload {
 	general: GeneralSettingsSchema;
 	compression: CompressionSettingsSchema;
+	block: BlockSettingsSchema;
 	proxy: ProxySettingsSchema;
 }
 
@@ -102,15 +106,18 @@ export async function getDefaultDnrRuleModifierPayload(): Promise<DefaultDnrRule
 		defaultGeneralSettings,
 		defaultCompressionSettings,
 		defaultProxySettings,
+		defaultBlockSettings,
 		sitePriorityDomains,
 	] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		defaultCompressionSettingsStorageItem.getValue(),
 		defaultProxySettingsStorageItem.getValue(),
+		defaultBlockSettingsStorageItem.getValue(),
 		getSiteDomainsWithPriorityRules(),
 	]);
 
 	const payload: DefaultDnrRuleModifierPayload = {
+		block: defaultBlockSettings,
 		compression: defaultCompressionSettings,
 		excludedDomains: sitePriorityDomains,
 		general: defaultGeneralSettings,
@@ -125,16 +132,22 @@ export async function getSiteScopedDnrRuleModifierPayload(): Promise<SiteScopedD
 	const siteOriginSettingsArray = await getSiteUrlOrigins()
 		.then((origins) =>
 			origins.keys().map(async (origin) => {
-				const [generalSettings, compressionSettings, proxySettings] =
-					await Promise.all([
-						getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
-						getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
-						getSiteSpecificProxySettingsStorageItem(origin).getValue(),
-					]);
+				const [
+					generalSettings,
+					compressionSettings,
+					blockSettings,
+					proxySettings,
+				] = await Promise.all([
+					getSiteSpecificGeneralSettingsStorageItem(origin).getValue(),
+					getSiteSpecificCompressionSettingsStorageItem(origin).getValue(),
+					getSiteSpecificBlockSettingsStorageItem(origin).getValue(),
+					getSiteSpecificProxySettingsStorageItem(origin).getValue(),
+				]);
 
 				const entry: SiteScopedDnrRuleModifierPayloadEntry = [
 					getUrlSchemaHost(origin),
 					{
+						block: blockSettings,
 						compression: compressionSettings,
 						general: generalSettings,
 						ids: getUrlIdsFromOrigin(origin),
@@ -168,7 +181,8 @@ async function onChangedListener(
 		if (
 			v.is(GeneralSettingsSchema, newChange) ||
 			v.is(CompressionSettingsSchema, newChange) ||
-			v.is(ProxySettingsSchema, newChange)
+			v.is(ProxySettingsSchema, newChange) ||
+			v.is(BlockSettingsSchema, newChange)
 		) {
 			shouldCallCbs = true;
 		}

@@ -3,7 +3,9 @@ import { clone } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
 import { storage, type WxtStorageItem } from "wxt/utils/storage";
 import {
+	type BlockSettingsSchema,
 	type CompressionSettingsSchema,
+	DEFAULT_BLOCK_SETTINGS,
 	DEFAULT_COMPRESSION_SETTINGS,
 	DEFAULT_GENERAL_SETTINGS,
 	DEFAULT_PROXY_SETTINGS,
@@ -31,6 +33,8 @@ const {
 	SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX,
 	SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
 	SITE_URL_ORIGINS,
+	DEFAULT_SETTINGS_BLOCK,
+	SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX,
 } = StorageKey;
 
 export const schemaVersionStorageItem = storage.defineItem(SCHEMA_VERSION, {
@@ -62,6 +66,12 @@ export const defaultProxySettingsStorageItem =
 		init: () => clone(DEFAULT_PROXY_SETTINGS),
 	});
 
+export const defaultBlockSettingsStorageItem =
+	storage.defineItem<BlockSettingsSchema>(DEFAULT_SETTINGS_BLOCK, {
+		fallback: clone(DEFAULT_BLOCK_SETTINGS),
+		init: () => clone(DEFAULT_BLOCK_SETTINGS),
+	});
+
 export const statisticsStorageItem = storage.defineItem<StatisticsSchema>(
 	STATISTICS,
 	{
@@ -89,6 +99,9 @@ const siteSpecificCompressionSettingsStorageItemCache =
 
 const siteSpecificProxySettingsStorageItemCache =
 	lru<WxtStorageItem<ProxySettingsSchema, Record<string, unknown>>>(CACHE_SIZE);
+
+const siteSpecificBlockSettingsStorageItemCache =
+	lru<WxtStorageItem<BlockSettingsSchema, Record<string, unknown>>>(CACHE_SIZE);
 
 export const getSiteSpecificStatisticsStorageItem = (url: UrlSchema) => {
 	const key =
@@ -164,6 +177,25 @@ export const getSiteSpecificProxySettingsStorageItem = (url: UrlSchema) => {
 	});
 
 	siteSpecificProxySettingsStorageItemCache.set(key, storageItem);
+
+	return storageItem;
+};
+
+export const getSiteSpecificBlockSettingsStorageItem = (url: UrlSchema) => {
+	const key =
+		`${SITE_SPECIFIC_SETTINGS_BLOCK_PREFIX}${getUrlSchemaOrigin(url)}` as const;
+
+	const possibleCachedStorageItem =
+		siteSpecificBlockSettingsStorageItemCache.get(key);
+
+	if (possibleCachedStorageItem) return possibleCachedStorageItem;
+
+	const storageItem = storage.defineItem<BlockSettingsSchema>(key, {
+		fallback: clone(DEFAULT_BLOCK_SETTINGS),
+		init: defaultBlockSettingsStorageItem.getValue,
+	});
+
+	siteSpecificBlockSettingsStorageItemCache.set(key, storageItem);
 
 	return storageItem;
 };

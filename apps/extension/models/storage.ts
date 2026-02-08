@@ -17,13 +17,6 @@ export const StorageAreaSchema = v.picklist([
 export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
 
 export const GeneralSettingsSchema = v.object({
-	/** Blocks all remote fonts.
-	 *
-	 * Since the browser will fallback to system fonts, this is the only acceptable blocking functionality.
-	 *
-	 * NOTE: This will break icon fonts like FontAwesome. SVG icons are better anyway :p
-	 */
-	blockFont: v.boolean(),
 	/** Whether the csp headers should be removed.
 	 *
 	 * NOT ADVISED unless you know what you're doing.
@@ -77,6 +70,25 @@ export const CompressionSettingsSchema = v.object({
 export type CompressionSettingsSchema = v.InferOutput<
 	typeof CompressionSettingsSchema
 >;
+
+export const BlockSettingsSchema = v.object({
+	/** Blocks all remote fonts.
+	 *
+	 * Since the browser will fallback to system fonts, this is the only acceptable blocking functionality.
+	 *
+	 * NOTE: This will break icon fonts like FontAwesome. SVG icons are better anyway :p
+	 */
+	font: v.boolean(),
+	/** 2nd most useful one */
+	image: v.boolean(),
+	/** Most useful one */
+	media: v.boolean(),
+	/** Breaks non-progressive site */
+	script: v.boolean(),
+	/** Uglifies sites */
+	style: v.boolean(),
+});
+export type BlockSettingsSchema = v.InferOutput<typeof BlockSettingsSchema>;
 
 export const ProxySettingsSchema = v.object({
 	/** Optional cloudinary cloud name to enable cloudinary-based processing */
@@ -176,7 +188,6 @@ export const DEFAULT_PROXY_SETTINGS = {
 } as const satisfies ProxySettingsSchema;
 
 export const DEFAULT_GENERAL_SETTINGS = {
-	blockFont: false,
 	bypassCsp: false,
 	compression: true,
 	enabled: true,
@@ -186,6 +197,14 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	spoofSlowNetwork: "default",
 	useSiteRule: false,
 } as const satisfies GeneralSettingsSchema;
+
+export const DEFAULT_BLOCK_SETTINGS = {
+	font: false,
+	image: false,
+	media: false,
+	script: false,
+	style: false,
+} as const satisfies BlockSettingsSchema;
 
 export const DEFAULT_SINGLE_ASSET_STATISTICS = {
 	audio: 0,

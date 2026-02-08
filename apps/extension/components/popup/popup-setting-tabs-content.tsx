@@ -1,7 +1,6 @@
 import { Tabs } from "@kobalte/core";
-import { FileArchive, Network, Settings } from "lucide-solid";
 import { For, type JSXElement } from "solid-js";
-import { Dynamic } from "solid-js/web";
+import PopupBlockSettings from "./popup-block-settings";
 import PopupCompressionSettings from "./popup-compression-settings";
 import PopupOtherSettings from "./popup-other-settings";
 import PopupProxySettings from "./popup-proxy-settings";
@@ -10,7 +9,7 @@ interface TabsComponentProps<TTabValue extends string> {
 	default: TTabValue;
 	tabs: ReadonlyArray<{
 		val: TTabValue;
-		header: () => JSXElement;
+		header: JSXElement;
 		content: () => JSXElement;
 	}>;
 }
@@ -25,9 +24,16 @@ function TabsComponent<TTabValue extends string>(
 		>
 			<Tabs.List class="relative flex w-full">
 				<For each={props.tabs}>
-					{(tab) => (
-						<Tabs.Trigger class="btn btn-ghost rounded-none" value={tab.val}>
-							<Dynamic class="flex gap-2" component={tab.header} />
+					{(tab, idx) => (
+						<Tabs.Trigger
+							class="btn btn-ghost rounded-none"
+							classList={{
+								"ml-auto": idx() === 0,
+								"mr-auto": idx() === props.tabs.length - 1,
+							}}
+							value={tab.val}
+						>
+							{tab.header}
 						</Tabs.Trigger>
 					)}
 				</For>
@@ -36,10 +42,10 @@ function TabsComponent<TTabValue extends string>(
 			<For each={props.tabs}>
 				{(tab) => (
 					<Tabs.Content
-						class="h-full overflow-auto rounded-b-box bg-base-200 p-4 [scrollbar-gutter:stable]"
+						class="h-full overflow-auto rounded-box bg-base-200 p-4 [scrollbar-gutter:stable]"
 						value={tab.val}
 					>
-						<Dynamic component={tab.content} />
+						<tab.content />
 					</Tabs.Content>
 				)}
 			</For>
@@ -47,7 +53,7 @@ function TabsComponent<TTabValue extends string>(
 	);
 }
 
-type SelectedTab = "compress" | "proxy" | "other";
+type SelectedTab = "compress" | "proxy" | "other" | "block";
 
 const DEFAULT_TAB: SelectedTab = "compress";
 
@@ -58,29 +64,22 @@ export default function PopupSettingsTabsContent() {
 			tabs={[
 				{
 					content: PopupCompressionSettings,
-					header: () => (
-						<>
-							<FileArchive /> Compression
-						</>
-					),
+					header: "Compression",
 					val: "compress",
 				},
 				{
 					content: PopupProxySettings,
-					header: () => (
-						<>
-							<Network /> Proxy
-						</>
-					),
+					header: "Proxy",
 					val: "proxy",
 				},
 				{
+					content: PopupBlockSettings,
+					header: "Block",
+					val: "block",
+				},
+				{
 					content: PopupOtherSettings,
-					header: () => (
-						<>
-							<Settings /> Other
-						</>
-					),
+					header: "Other",
 					val: "other",
 				},
 			]}
