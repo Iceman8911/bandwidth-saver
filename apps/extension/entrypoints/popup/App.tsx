@@ -53,7 +53,7 @@ export default function App() {
 	);
 
 	return (
-		<div class="aspect-2/3 w-100 p-4">
+		<div class="**:scrollbar-thin **:scrollbar-thumb-primary **:scrollbar-track-base-100 aspect-2/3 w-100 p-4">
 			<PopupContext.Provider value={[context, setContext]}>
 				<div class="grid size-full grid-rows-[3rem_1fr_1.15fr_50%_3.5rem] gap-3">
 					<PopupHeaderScopeButtons />
