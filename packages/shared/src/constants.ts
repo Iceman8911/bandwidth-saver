@@ -65,8 +65,8 @@ export enum ServerAPIEndpoint {
 	PROCESS_IMAGE = "image",
 }
 
-/** Any urls with this query param will not be redirected by the extension */
-export const REDIRECTED_SEARCH_PARAM_FLAG = "bwsvr8911-flag=no-redirect";
+/** Any urls with this hash fragment will not be redirected by the extension */
+export const REDIRECTED_SEARCH_PARAM_FLAG = "#bwsvr8911-flag-no-redirect";
 
 export enum ProxyCustomHeaders {
 	BYTES_SAVED = "x-bwsvr8911-bytes-saved",

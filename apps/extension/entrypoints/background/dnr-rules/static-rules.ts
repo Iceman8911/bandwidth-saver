@@ -21,7 +21,7 @@ const STATIC_ISH_RULES = {
 		{
 			action: { type: "allow" },
 			condition: {
-				regexFilter: REDIRECTED_SEARCH_PARAM_FLAG,
+				urlFilter: `*${REDIRECTED_SEARCH_PARAM_FLAG}|`,
 			},
 			id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
 			priority: DeclarativeNetRequestPriority.HIGHEST,

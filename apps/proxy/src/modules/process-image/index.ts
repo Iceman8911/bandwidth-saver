@@ -48,7 +48,7 @@ export const processImageRoute = new Elysia()
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
-					`${possiblyRedirectedUrl}#${REDIRECTED_SEARCH_PARAM_FLAG}`,
+					`${possiblyRedirectedUrl}${REDIRECTED_SEARCH_PARAM_FLAG}`,
 
 					{
 						headers: SPOOFING_FETCH_HEADERS,
@@ -84,7 +84,7 @@ export const processImageRoute = new Elysia()
 					store.note = urlToUse;
 
 					// Default to the original url
-					return redirect(`${urlToUse}#${REDIRECTED_SEARCH_PARAM_FLAG}`);
+					return redirect(`${urlToUse}${REDIRECTED_SEARCH_PARAM_FLAG}`);
 				}
 			}
 

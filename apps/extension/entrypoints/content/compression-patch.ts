@@ -43,7 +43,7 @@ async function repairImageElement(
 
 	if (img instanceof HTMLImageElement) {
 		// Append the src and srcset so that the DNR rules won't redirect and fail again
-		img.src += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+		img.src += REDIRECTED_SEARCH_PARAM_FLAG;
 
 		if (img.srcset)
 			img.srcset = img.srcset
@@ -52,14 +52,14 @@ async function repairImageElement(
 					const validated = v.safeParse(UrlSchema, urlOrSizeDefinition);
 
 					if (validated.success) {
-						urlOrSizeDefinition += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+						urlOrSizeDefinition += REDIRECTED_SEARCH_PARAM_FLAG;
 					}
 
 					return urlOrSizeDefinition;
 				})
 				.join(" ");
 	} else {
-		img.href.baseVal += `#${REDIRECTED_SEARCH_PARAM_FLAG}`;
+		img.href.baseVal += REDIRECTED_SEARCH_PARAM_FLAG;
 	}
 
 	repairedImgElements.add(img);

@@ -39,7 +39,7 @@ const CAPTURED_QUERY_STRING = "\\3" as UrlSchema;
 
 /** When we add our redirected-search-param flag, it must come after any original query string */
 const BASE_URL_WITH_FLAG =
-	`${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}#${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
+	`${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
 
 function getFallbackEndpoint(preferredEndpoint: ImageCompressorEndpoint) {
 	return preferredEndpoint === ImageCompressorEndpoint.DEFAULT
