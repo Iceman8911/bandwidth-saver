@@ -33,7 +33,7 @@ const STATIC_ISH_RULES = {
 				type: "allow",
 			},
 			condition: {
-				regexFilter: ".*\\.ico(?:[?#].*)?$",
+				urlFilter: ".ico^",
 			},
 			id: DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
 			priority: DeclarativeNetRequestPriority.HIGHEST,
@@ -43,7 +43,7 @@ const STATIC_ISH_RULES = {
 				type: "allow",
 			},
 			condition: {
-				regexFilter: "^https?://[^/]+/.*_next/image(?:[/?#]|$)",
+				urlFilter: "/_next/image",
 			},
 			id: DeclarativeNetRequestRuleIds.EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
 			// Put at mid so the proxy mode can override it
@@ -53,7 +53,9 @@ const STATIC_ISH_RULES = {
 		// Don't process svgs
 		{
 			action: { type: "allow" },
-			condition: { regexFilter: "^https?://.+\\.svg(?:[?#].*)?$" },
+			condition: {
+				urlFilter: ".svg^",
+			},
 			id: DeclarativeNetRequestRuleIds.EXEMPT_SVGS_FROM_COMPRESSION,
 			priority: DeclarativeNetRequestPriority.HIGHEST,
 		},
