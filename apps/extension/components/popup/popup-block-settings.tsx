@@ -110,7 +110,6 @@ function BlockFontTooltip() {
 			tip={
 				<div class="max-w-3xs space-y-2 text-xs">
 					<p>
-						{" "}
 						When fonts are blocked, your browser will simply use it's defaults
 						so the experience will be least affected
 					</p>
