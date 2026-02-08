@@ -116,8 +116,8 @@ function BlockFontTooltip() {
 					</p>
 
 					<p class="text-warning">
-						Not that, this <strong>WILL</strong> break sites that use icon fonts
-						like <strong>FontAwesome</strong> .
+						Not that, this will break icon fonts like{" "}
+						<strong>FontAwesome</strong> .
 					</p>
 				</div>
 			}
