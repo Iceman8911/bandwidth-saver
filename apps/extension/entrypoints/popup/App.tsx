@@ -15,11 +15,12 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
 import { convertStorageItemToReactiveSignal } from "@/utils/reactivity";
-import { getActiveTabUrl } from "@/utils/tabs";
+import { getActiveTabUrlString } from "@/utils/tabs";
+import { getUrlSchemaOrigin } from "@/utils/url";
 
 export default function App() {
 	const activeTabUrl = createAsync(
-		async () => (await getActiveTabUrl()).origin as UrlSchema,
+		async () => getUrlSchemaOrigin(await getActiveTabUrlString()),
 		{
 			initialValue: DUMMY_TAB_URL,
 		},

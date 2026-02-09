@@ -4,7 +4,8 @@ import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
 } from "@/shared/storage";
-import { getActiveTabUrl } from "@/utils/tabs";
+import { getActiveTabUrlString } from "@/utils/tabs";
+import { getUrlSchemaOrigin } from "@/utils/url";
 import { runContentScriptDomManipulations } from "./combined-dom-manip";
 import { injectMainWorldScriptsViaContentScript } from "./script-injectors";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
@@ -19,7 +20,7 @@ export default defineContentScript({
 	async main() {
 		monitorBandwidthUsageViaContentScript();
 
-		const PAGE_ORIGIN = (await getActiveTabUrl()).origin as UrlSchema;
+		const PAGE_ORIGIN = getUrlSchemaOrigin(await getActiveTabUrlString());
 
 		const [defaultSettings, siteSettings] =
 			await getDefaultAndSiteGeneralSettings(PAGE_ORIGIN);
