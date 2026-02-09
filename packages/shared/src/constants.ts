@@ -77,3 +77,6 @@ export enum ProxyCustomHeaders {
 
 // Ensure that all the headers are lowercase
 ProxyCustomHeaders satisfies Record<string, Lowercase<ProxyCustomHeaders>>;
+
+/** Matches any extension preceded by a "." that is not in a query string / hash fragemnt but is at the end of the url string / right before a query string / has fragment */
+export const URL_EXTENSION_REGEX = /(?<![?#].+)(?<=\.)\w+(?=[?#]|$)/g;

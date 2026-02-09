@@ -1,45 +1,63 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import { URL_EXTENSION_REGEX, type UrlSchema } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
 import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { generateDeterministicNumericIdsFromString } from "./id";
 
-const IMAGE_EXTS = [
-	"png",
-	"jpg",
-	"jpeg",
-	"webp",
-	"gif",
-	"svg",
-	"ico",
-	"avif",
-	"jxl",
-];
-const STYLE_EXTS = ["css"];
-const SCRIPT_EXTS = ["js", "mjs", "cjs", "wasm"];
-const HTML_EXTS = ["html", "htm"];
-const FONT_EXTS = ["woff", "woff2", "ttf", "otf", "eot"];
-const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
-const AUDIO_EXTS = ["mp3", "wav", "flac", "aac", "ogg"];
-
 export function detectAssetTypeFromUrl(
-	url: URL,
+	url: UrlSchema,
 ): keyof SingleAssetStatisticsSchema {
-	try {
-		const { pathname } = url;
-		const ext = pathname.split(".").pop()?.toLowerCase() ?? "";
+	const ext = url.match(URL_EXTENSION_REGEX)?.[0];
 
-		if (IMAGE_EXTS.includes(ext)) return "image";
-		if (STYLE_EXTS.includes(ext)) return "style";
-		if (SCRIPT_EXTS.includes(ext)) return "script";
-		if (HTML_EXTS.includes(ext)) return "html";
-		if (FONT_EXTS.includes(ext)) return "font";
-		if (VIDEO_EXTS.includes(ext)) return "video";
-		if (AUDIO_EXTS.includes(ext)) return "audio";
+	if (!ext) return "other";
 
-		return "other";
-	} catch {
-		return "other";
+	switch (ext) {
+		case "png":
+		case "jpg":
+		case "jpeg":
+		case "webp":
+		case "gif":
+		case "svg":
+		case "ico":
+		case "avif":
+		case "jxl":
+			return "image";
+
+		case "css":
+			return "style";
+
+		case "js":
+		case "mjs":
+		case "cjs":
+		case "wasm":
+			return "script";
+
+		case "html":
+		case "htm":
+			return "html";
+
+		case "woff":
+		case "woff2":
+		case "ttf":
+		case "otf":
+		case "eot":
+			return "font";
+
+		case "mp4":
+		case "webm":
+		case "mov":
+		case "mkv":
+			return "video";
+
+		case "mp3":
+		case "wav":
+		case "flac":
+		case "aac":
+		case "ogg":
+			return "audio";
+
+		default:
+			return "other";
 	}
 }
 

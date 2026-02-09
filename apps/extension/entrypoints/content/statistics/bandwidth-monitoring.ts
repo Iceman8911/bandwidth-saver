@@ -19,7 +19,12 @@ const pendingPerformanceResourceTimingPayloadBatchQueue =
 	});
 
 pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
-	for (const { hostOrigin, initiatorType, name, transferSize } of details) {
+	for (const {
+		hostOrigin,
+		initiatorType,
+		name: assetUrl,
+		transferSize,
+	} of details) {
 		// 0 transferSize usually means it came from Cache or the request was missing a header
 		if (transferSize > 0) {
 			//@ts-expect-error No need to parse since this will always be true unless the web breaks or smth
@@ -66,15 +71,14 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 					assetType = "html";
 					break;
 				default:
-					assetType = detectAssetTypeFromUrl(new URL(name));
+					assetType = detectAssetTypeFromUrl(assetUrl as UrlSchema);
 					break;
 			}
 
 			assetSize += transferSize;
 
-			//@ts-expect-error `name` will always be a url here
 			sendExtensionMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
-				assetUrl: name,
+				assetUrl: assetUrl as UrlSchema,
 				bytes: assetSize,
 				// No way to get the bytesSaved header via Performance Metrics
 				bytesSaved: 0,

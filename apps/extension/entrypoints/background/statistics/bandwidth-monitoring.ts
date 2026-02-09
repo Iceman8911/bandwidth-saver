@@ -24,25 +24,23 @@ const pendingWebRequestPayloadBatchQueue =
 	});
 
 function detectAssetTypeFromContentTypeOrUrl(
-	url: string | URL,
+	url: UrlSchema,
 	contentType?: string,
 ): keyof SingleAssetStatisticsSchema {
-	const parsedUrl = url instanceof URL ? url : new URL(url);
-
-	if (!contentType) return detectAssetTypeFromUrl(parsedUrl);
+	if (!contentType) return detectAssetTypeFromUrl(url);
 
 	if (contentType.startsWith("image/")) return "image";
+	if (contentType.startsWith("video/")) return "video";
+	if (contentType.startsWith("audio/")) return "audio";
 	if (contentType.includes("css")) return "style";
+	if (contentType.includes("html") || contentType.includes("text/html"))
+		return "html";
 	if (
 		contentType.includes("javascript") ||
 		contentType.includes("application/ecmascript") ||
 		contentType === "application/wasm"
 	)
 		return "script";
-	if (contentType.includes("html") || contentType.includes("text/html"))
-		return "html";
-	if (contentType.startsWith("video/")) return "video";
-	if (contentType.startsWith("audio/")) return "audio";
 	if (
 		contentType.startsWith("font/") ||
 		contentType.includes("woff") ||
@@ -50,7 +48,7 @@ function detectAssetTypeFromContentTypeOrUrl(
 	)
 		return "font";
 
-	return detectAssetTypeFromUrl(parsedUrl);
+	return detectAssetTypeFromUrl(url);
 }
 
 function parsedNumber(numberish: unknown): number {
@@ -64,15 +62,13 @@ function webRequestOnCompletedListener({
 	initiator,
 	responseHeaders,
 	type,
-	url,
+	url: assetUrl,
 }: RelevantPropsFromOnCompletedEventPayload) {
 	// No need to bother ourselves if the asset is cached
 	if (fromCache) return;
 
-	const parsedUrl = new URL(url);
-
 	// Don't count injected scripts
-	if (parsedUrl.protocol.includes("extension")) return;
+	if (assetUrl.includes("extension://")) return;
 
 	let contentLength = 0;
 	let contentType = "other";
@@ -111,12 +107,12 @@ function webRequestOnCompletedListener({
 			assetType = "font";
 			break;
 		default:
-			assetType = detectAssetTypeFromContentTypeOrUrl(parsedUrl, contentType);
+			assetType = detectAssetTypeFromContentTypeOrUrl(assetUrl, contentType);
 			break;
 	}
 
 	cacheBandwidthDataFromWebRequest({
-		assetUrl: `${parsedUrl}` as UrlSchema,
+		assetUrl,
 		bytes: contentLength,
 		bytesSaved,
 		hostOrigin: getUrlSchemaOrigin(initiator),

@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { URL_EXTENSION_REGEX } from "../constants";
 
 const IMAGE_MIME_TYPES = [
 	"image/jpeg",
@@ -16,9 +17,6 @@ const IMAGE_MIME_TYPES = [
 const ImageMimeType = v.picklist(IMAGE_MIME_TYPES);
 export type ImageMimeType = v.InferOutput<typeof ImageMimeType>;
 
-/** Matches any extension preceded by a "." that is not in a query string / hash fragemnt but is at the end of the url string / right before a query string / has fragment */
-const IMAGE_EXTENSION_REGEX = /(?<![?#].+)(?<=\.)\w+(?=[?#]|$)/g;
-
 export function getLikelyImageUrlMimeType(
 	imgUrl: string,
 	srcMimeType?: string | undefined | null,
@@ -30,7 +28,7 @@ export function getLikelyImageUrlMimeType(
 	}
 
 	// Fall back to extension sniffing
-	const possibleExt = imgUrl.match(IMAGE_EXTENSION_REGEX)?.[0];
+	const possibleExt = imgUrl.match(URL_EXTENSION_REGEX)?.[0];
 
 	switch (possibleExt) {
 		case "png":
