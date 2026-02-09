@@ -75,6 +75,36 @@ function xxHash32(input: string, seed = 0): number {
 }
 
 /**
+ * Generate a deterministic, DNR-safe rule id from a string.
+ *
+ * @remarks
+ * Chrome's `declarativeNetRequest` rule ids are effectively constrained to a
+ * positive signed 32-bit integer range in practice, and `0` is not a valid id.
+ *
+ * Rather than mapping invalid output to a constant (which introduces a tiny bias),
+ * we deterministically retry hashing with a suffix until we get a non-zero id.
+ */
+function dnrRuleIdFromString(input: string): number {
+	// This should never need more than 0 attempts; retries are just a deterministic safety net.
+	const MAX_RETRIES = 8;
+
+	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+		const attemptedInput = attempt === 0 ? input : `${input}:retry=${attempt}`;
+
+		const u32 = xxHash32(attemptedInput);
+
+		// Keep only the low 31 bits => range 0..2147483647
+		const i31 = (u32 >>> 0) & 0x7fffffff;
+
+		// Avoid 0 (invalid rule id)
+		if (i31 !== 0) return i31;
+	}
+
+	// Practically unreachable, but we must return a valid id.
+	return 1;
+}
+
+/**
  * Helper to generate a tuple of length N
  */
 type Tuple<T, N extends number, R extends T[] = []> = R["length"] extends N
@@ -93,7 +123,11 @@ export function generateDeterministicNumericIdsFromString<
 		// Append the index to the origin to get different IDs for the same string
 		const input = `${origin}:${i}`;
 
-		ids.push(xxHash32(input));
+		// Ensure ids are valid for `declarativeNetRequest` rule ids:
+		// - integer
+		// - positive
+		// - within signed 32-bit range (1..2^31-1)
+		ids.push(dnrRuleIdFromString(input));
 	}
 
 	//@ts-expect-error We cast to any then to the Tuple to satisfy the compiler

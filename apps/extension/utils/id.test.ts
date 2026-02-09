@@ -1,3 +1,4 @@
+import { getRandomUUID } from "@bandwidth-saver/shared";
 import { describe, expect, it } from "vitest";
 import { generateDeterministicNumericIdsFromString } from "./id";
 
@@ -39,17 +40,20 @@ describe("generateDeterministicNumericIdsFromString", () => {
 		expect(a).not.toEqual(b);
 	});
 
-	it("all IDs are unsigned 32-bit integers and >= 1", () => {
-		const ids = generateDeterministicNumericIdsFromString(
-			"https://example.com",
-			20,
-		);
+	it("all IDs are DNR-safe positive int32 rule ids (integer, finite, 1..2^31-1)", () => {
+		const ids = Array.from({ length: 20000 }, (_, i) =>
+			generateDeterministicNumericIdsFromString(
+				`https://${getRandomUUID()}${i}.com`,
+				10,
+			),
+		).flat();
 
 		for (const id of ids) {
+			expect(Number.isFinite(id)).toBe(true);
 			expect(Number.isInteger(id)).toBe(true);
 			expect(id).toBeGreaterThanOrEqual(1);
-			// Unsigned 32-bit max
-			expect(id).toBeLessThanOrEqual(0xffffffff);
+			// Signed 32-bit max (Chrome DNR rule ids must fit this range in practice)
+			expect(id).toBeLessThanOrEqual(0x7fffffff);
 		}
 	});
 
