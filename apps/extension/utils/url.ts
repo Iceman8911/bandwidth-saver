@@ -69,10 +69,7 @@ export function isExtensionUrl(url: UrlSchema): boolean {
 }
 
 export type DnrSiteScopeUrlIdPayload = Readonly<{
-	compression: Readonly<{
-		simple: number;
-		proxy: number;
-	}>;
+	compression: number;
 	saveData: number;
 	cspBlock: number;
 	assetTypeBlock: number;
@@ -90,23 +87,19 @@ export function getUrlIdsFromOrigin(
 	if (cachedIds) return cachedIds;
 
 	const [
-		simpleCompressionId,
-		proxyCompressionId,
+		compressionId,
 		saveDataId,
 		cspBlockId,
 		assetTypeBlockId,
 		assetExtBlockId,
 		cacheHtmlBetterId,
-	] = generateDeterministicNumericIdsFromString(origin, 7);
+	] = generateDeterministicNumericIdsFromString(origin, 6);
 
 	const ids: DnrSiteScopeUrlIdPayload = {
 		assetExtBlock: assetExtBlockId,
 		assetTypeBlock: assetTypeBlockId,
 		cacheHtmlBetter: cacheHtmlBetterId,
-		compression: {
-			proxy: proxyCompressionId,
-			simple: simpleCompressionId,
-		},
+		compression: compressionId,
 		cspBlock: cspBlockId,
 		saveData: saveDataId,
 	};

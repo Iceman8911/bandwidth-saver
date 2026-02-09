@@ -83,9 +83,7 @@ export enum DeclarativeNetRequestRuleIds {
 
 	DEFAULT_SAVE_DATA_HEADER = 1,
 
-	DEFAULT_COMPRESSION_MODE_SIMPLE,
-
-	DEFAULT_COMPRESSION_MODE_PROXY,
+	DEFAULT_COMPRESSION_MODE,
 
 	/** CSP removal for sites that block external image sources
 	 *

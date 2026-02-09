@@ -14,13 +14,9 @@ import {
 	applySiteScopedCacheHtmlBetterRules,
 } from "./cache-html-better";
 import {
-	applyDefaultProxyCompressionRules,
-	applySiteScopedProxyCompressionRules,
-} from "./compression/proxy-mode";
-import {
-	applyDefaultSimpleCompressionRules,
-	applySiteScopedSimpleCompressionRules,
-} from "./compression/simple-mode";
+	applyDefaultCompressionRules,
+	applySiteScopedCompressionRules,
+} from "./compression";
 import {
 	applyDefaultCspRules,
 	applySiteScopedCspRules,
@@ -37,8 +33,7 @@ async function applyDefaultDnrRules(
 		applyDefaultSaveDataRules(defaultPayload),
 		applyDefaultCspRules(defaultPayload),
 		applyDefaultBlockRules(defaultPayload),
-		applyDefaultSimpleCompressionRules(defaultPayload),
-		applyDefaultProxyCompressionRules(defaultPayload),
+		applyDefaultCompressionRules(defaultPayload),
 		applyDefaultCacheHtmlBetterRules(defaultPayload),
 	]);
 }
@@ -54,8 +49,7 @@ async function applySiteScopedDnrRules(
 					applySiteScopedSaveDataRules(entry),
 					applySiteScopedCspRules(entry),
 					applySiteScopedBlockRules(entry),
-					applySiteScopedProxyCompressionRules(entry),
-					applySiteScopedSimpleCompressionRules(entry),
+					applySiteScopedCompressionRules(entry),
 					applySiteScopedCacheHtmlBetterRules(entry),
 				]),
 			),
