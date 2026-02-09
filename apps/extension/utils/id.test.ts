@@ -91,9 +91,9 @@ describe("generateDeterministicNumericIdsFromString", () => {
 		).not.toThrow();
 	});
 
-	it("has a near-zero collision rate for a realistic DNR-sized corpus (200 origins, 15 ids each)", () => {
-		const TOTAL_ORIGINS = 200;
-		const IDS_PER_ORIGIN = 15;
+	it("has a near-zero collision rate for a realistic DNR-sized corpus (500 origins, 10 ids each)", () => {
+		const TOTAL_ORIGINS = 500;
+		const IDS_PER_ORIGIN = 10;
 
 		const BASE_DOMAINS = [
 			"google.com",
@@ -158,7 +158,7 @@ describe("generateDeterministicNumericIdsFromString", () => {
 		const collisionRate = collisions / totalDraws;
 		const uniqueRate = seen.size / totalDraws;
 
-		expect(collisionRate).toBeLessThanOrEqual(0.00075);
-		expect(uniqueRate).toBeGreaterThanOrEqual(0.99925);
+		expect(collisionRate).toBeLessThanOrEqual(0.001);
+		expect(uniqueRate).toBeGreaterThanOrEqual(0.999);
 	});
 });
