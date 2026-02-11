@@ -21,6 +21,7 @@
 		"@bandwidth-saver/proxy": "workspace:*",
 		"@biomejs/biome": "^2.3.13",
 		"@iceman8911/unplugin-inline-enum": "^0.6.7",
+		"@playwright/test": "^1.58.2",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/query-selector-shadow-dom": "^1.0.4",
 		"@types/webextension-polyfill": "^0.12.4",
