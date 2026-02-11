@@ -14,6 +14,12 @@ const IMAGE_COMPRESSOR_ENDPOINT_HOSTS = Array.from(
 	(endpoint) => new URL(endpoint).host,
 );
 
+export const LOCALHOST_AND_LOOPBACK_DOMAINS = [
+	"localhost",
+	"127.0.0.1",
+	"0.0.0.0",
+];
+
 /** These rules are basically to prevent useless redirects / redirect looping */
 const STATIC_ISH_RULES = {
 	addRules: [
@@ -24,6 +30,16 @@ const STATIC_ISH_RULES = {
 				urlFilter: `*${REDIRECTED_SEARCH_PARAM_FLAG}|`,
 			},
 			id: DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
+			priority: DeclarativeNetRequestPriority.HIGHEST,
+		},
+
+		// Don't touch localhost / loopback (leave dev stuff unaffected)
+		{
+			action: { type: "allow" },
+			condition: {
+				requestDomains: LOCALHOST_AND_LOOPBACK_DOMAINS,
+			},
+			id: DeclarativeNetRequestRuleIds.EXEMPT_LOCALHOST_AND_LOOPBACK_FROM_COMPRESSION,
 			priority: DeclarativeNetRequestPriority.HIGHEST,
 		},
 
@@ -101,6 +117,7 @@ const STATIC_ISH_RULES = {
 	],
 	removeRuleIds: [
 		DeclarativeNetRequestRuleIds.EXEMPT_FLAGGED_REQUESTS,
+		DeclarativeNetRequestRuleIds.EXEMPT_LOCALHOST_AND_LOOPBACK_FROM_COMPRESSION,
 		DeclarativeNetRequestRuleIds.EXEMPT_FAVICONS_FROM_COMPRESSION,
 		DeclarativeNetRequestRuleIds.EXEMPT_NEXT_JS_OPTIMIZED_IMAGES_FROM_COMPRESSION,
 		DeclarativeNetRequestRuleIds.EXEMPT_SVGS_FROM_COMPRESSION,

@@ -8,6 +8,7 @@ import type {
 	DefaultDnrRuleModifierPayload,
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
+import { LOCALHOST_AND_LOOPBACK_DOMAINS } from "./static-rules";
 
 const IMAGE_EXTENSION_REGEX_PART =
 	"apng|avif|bmp|cur|gif|ico|jfif|jpeg|jpg|png|svg|tif|tiff|webp";
@@ -72,6 +73,7 @@ export async function applyDefaultBlockRules({
 					excludedInitiatorDomains: excludedDomains.length
 						? [...excludedDomains]
 						: undefined,
+					excludedRequestDomains: LOCALHOST_AND_LOOPBACK_DOMAINS,
 					resourceTypes,
 				},
 				id: DeclarativeNetRequestRuleIds.DEFAULT_RESOURCE_TYPE_BLOCKING,
@@ -85,6 +87,7 @@ export async function applyDefaultBlockRules({
 					excludedInitiatorDomains: excludedDomains.length
 						? [...excludedDomains]
 						: undefined,
+					excludedRequestDomains: LOCALHOST_AND_LOOPBACK_DOMAINS,
 					regexFilter: possibleRegex,
 				},
 				id: DeclarativeNetRequestRuleIds.DEFAULT_EXTENSION_BLOCKING,
@@ -122,6 +125,7 @@ export async function applySiteScopedBlockRules([
 			addRules.push({
 				action: BLOCK_RULE_ACTION,
 				condition: {
+					excludedRequestDomains: LOCALHOST_AND_LOOPBACK_DOMAINS,
 					initiatorDomains: [host],
 					resourceTypes,
 				},
@@ -134,6 +138,7 @@ export async function applySiteScopedBlockRules([
 			addRules.push({
 				action: BLOCK_RULE_ACTION,
 				condition: {
+					excludedRequestDomains: LOCALHOST_AND_LOOPBACK_DOMAINS,
 					initiatorDomains: [host],
 					regexFilter: possibleRegex,
 				},
