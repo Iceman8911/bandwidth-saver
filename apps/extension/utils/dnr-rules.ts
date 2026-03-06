@@ -18,6 +18,10 @@ import {
 	getSiteSpecificGeneralSettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
 } from "@/shared/storage";
+import {
+	type BrowserMajorVersion,
+	getBrowserMajorVersion,
+} from "./browser-info";
 import { getSiteUrlOrigins } from "./storage";
 import {
 	type DnrSiteScopeUrlIdPayload,
@@ -77,14 +81,20 @@ interface DnrSettingsDataPayload {
 	proxy: ProxySettingsSchema;
 }
 
+interface DnrSharedDataPayload extends DnrSettingsDataPayload {
+	/** Browser major version */
+	browserMajor: Readonly<BrowserMajorVersion>;
+}
+
 export type DefaultDnrRuleModifierPayload = ReadonlyDeep<
-	DnrSettingsDataPayload & {
+	DnrSharedDataPayload & {
 		excludedDomains: string[];
 	}
 >;
 
-type _SiteScopedDnrRuleModifierPayloadValue = DnrSettingsDataPayload & {
-	/** Unique DNR ids for each site */ ids: DnrSiteScopeUrlIdPayload;
+type _SiteScopedDnrRuleModifierPayloadValue = DnrSharedDataPayload & {
+	/** Unique DNR ids for each site */
+	ids: DnrSiteScopeUrlIdPayload;
 };
 
 export type SiteScopedDnrRuleModifierPayload = Map<
@@ -118,6 +128,7 @@ export async function getDefaultDnrRuleModifierPayload(): Promise<DefaultDnrRule
 
 	const payload: DefaultDnrRuleModifierPayload = {
 		block: defaultBlockSettings,
+		browserMajor: getBrowserMajorVersion(),
 		compression: defaultCompressionSettings,
 		excludedDomains: sitePriorityDomains,
 		general: defaultGeneralSettings,
@@ -129,6 +140,8 @@ export async function getDefaultDnrRuleModifierPayload(): Promise<DefaultDnrRule
 
 /** Gets all the data needed for running the site-scoped dnr rule modifier functions */
 export async function getSiteScopedDnrRuleModifierPayload(): Promise<SiteScopedDnrRuleModifierPayload> {
+	const browserMajor = getBrowserMajorVersion();
+
 	const siteOriginSettingsArray = await getSiteUrlOrigins()
 		.then((origins) =>
 			origins.keys().map(async (origin) => {
@@ -148,6 +161,7 @@ export async function getSiteScopedDnrRuleModifierPayload(): Promise<SiteScopedD
 					getUrlSchemaHost(origin),
 					{
 						block: blockSettings,
+						browserMajor,
 						compression: compressionSettings,
 						general: generalSettings,
 						ids: getUrlIdsFromOrigin(origin),

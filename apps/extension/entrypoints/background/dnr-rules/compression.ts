@@ -11,6 +11,7 @@ import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
 } from "@/shared/constants";
+import type { BrowserMajorVersion } from "@/utils/browser-info";
 import type {
 	DefaultDnrRuleModifierPayload,
 	SiteScopedDnrRuleModifierPayloadEntry,
@@ -71,7 +72,29 @@ function getUrlToRedirectToForChosenEndpoint(
 	}
 }
 
+/** https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/HeaderInfo */
+function doesBrowserSupportResponseHeadersCondition(
+	browserMajor: BrowserMajorVersion,
+): boolean {
+	return browserMajor.chrome >= 128;
+}
+
+function enhanceRuleConditionWithResponseHeadersCondition(
+	browserMajor: BrowserMajorVersion,
+	condition: Browser.declarativeNetRequest.RuleCondition,
+): Browser.declarativeNetRequest.RuleCondition {
+	if (doesBrowserSupportResponseHeadersCondition(browserMajor)) {
+		condition.resourceTypes?.push("xmlhttprequest");
+		condition.responseHeaders = [
+			{ header: "content-type", values: ["image/*"] },
+		];
+	}
+
+	return condition;
+}
+
 type DefaultCompressionRulePayload = Readonly<{
+	browserMajor: DefaultDnrRuleModifierPayload["browserMajor"];
 	compression: DefaultDnrRuleModifierPayload["compression"];
 	general: Pick<
 		DefaultDnrRuleModifierPayload["general"],
@@ -83,6 +106,7 @@ type DefaultCompressionRulePayload = Readonly<{
 
 type SiteScopedCompressionRulePayload = Readonly<{
 	host: string;
+	browserMajor: SiteScopedDnrRuleModifierPayloadEntry[1]["browserMajor"];
 	compression: SiteScopedDnrRuleModifierPayloadEntry[1]["compression"];
 	general: Pick<
 		SiteScopedDnrRuleModifierPayloadEntry[1]["general"],
@@ -93,6 +117,7 @@ type SiteScopedCompressionRulePayload = Readonly<{
 }>;
 
 function buildDefaultCompressionRule({
+	browserMajor,
 	compression: { format, preferredEndpoint, preserveAnim, mode, quality },
 	general: { compression, enabled },
 	proxy: proxySettings,
@@ -131,6 +156,20 @@ function buildDefaultCompressionRule({
 					getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 			});
 
+			let condition: Browser.declarativeNetRequest.RuleCondition = {
+				excludedInitiatorDomains: excludedDomains.concat(
+					preferredEndpointDomain,
+				),
+				excludedRequestDomains: [preferredEndpointDomain],
+				regexFilter: SIMPLE_IMAGE_URL_REGEX,
+				resourceTypes: ["image"],
+			};
+
+			condition = enhanceRuleConditionWithResponseHeadersCondition(
+				browserMajor,
+				condition,
+			);
+
 			return {
 				action: {
 					redirect: {
@@ -138,14 +177,7 @@ function buildDefaultCompressionRule({
 					},
 					type: "redirect",
 				},
-				condition: {
-					excludedInitiatorDomains: excludedDomains.concat(
-						preferredEndpointDomain,
-					),
-					excludedRequestDomains: [preferredEndpointDomain],
-					regexFilter: SIMPLE_IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
+				condition,
 				id: DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE,
 				priority: DeclarativeNetRequestPriority.LOWEST,
 			};
@@ -166,6 +198,18 @@ function buildDefaultCompressionRule({
 
 			const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
+			let condition: Browser.declarativeNetRequest.RuleCondition = {
+				excludedInitiatorDomains: excludedDomains.concat(proxyDomain),
+				excludedRequestDomains: [proxyDomain],
+				regexFilter: PROXY_IMAGE_URL_REGEX,
+				resourceTypes: ["image"],
+			};
+
+			condition = enhanceRuleConditionWithResponseHeadersCondition(
+				browserMajor,
+				condition,
+			);
+
 			return {
 				action: {
 					redirect: {
@@ -173,12 +217,7 @@ function buildDefaultCompressionRule({
 					},
 					type: "redirect",
 				},
-				condition: {
-					excludedInitiatorDomains: excludedDomains.concat(proxyDomain),
-					excludedRequestDomains: [proxyDomain],
-					regexFilter: PROXY_IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
+				condition,
 				id: DeclarativeNetRequestRuleIds.DEFAULT_COMPRESSION_MODE,
 				// High so it can override some static/session exemptions when desired
 				priority: DeclarativeNetRequestPriority.HIGH,
@@ -192,6 +231,7 @@ function buildDefaultCompressionRule({
 
 function buildSiteScopedCompressionRule({
 	host,
+	browserMajor,
 	compression: { format, preferredEndpoint, preserveAnim, mode, quality },
 	general: { compression, enabled, useSiteRule },
 	proxy: proxySettings,
@@ -229,6 +269,18 @@ function buildSiteScopedCompressionRule({
 					getUrlToRedirectToForChosenEndpoint(preferredEndpoint),
 			});
 
+			let condition: Browser.declarativeNetRequest.RuleCondition = {
+				excludedRequestDomains: [preferredEndpointDomain],
+				initiatorDomains: [host],
+				regexFilter: SIMPLE_IMAGE_URL_REGEX,
+				resourceTypes: ["image"],
+			};
+
+			condition = enhanceRuleConditionWithResponseHeadersCondition(
+				browserMajor,
+				condition,
+			);
+
 			return {
 				action: {
 					redirect: {
@@ -236,12 +288,7 @@ function buildSiteScopedCompressionRule({
 					},
 					type: "redirect",
 				},
-				condition: {
-					excludedRequestDomains: [preferredEndpointDomain],
-					initiatorDomains: [host],
-					regexFilter: SIMPLE_IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
+				condition,
 				id: compressionId,
 				priority: DeclarativeNetRequestPriority.LOWEST,
 			};
@@ -262,6 +309,18 @@ function buildSiteScopedCompressionRule({
 
 			const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
+			let condition: Browser.declarativeNetRequest.RuleCondition = {
+				excludedRequestDomains: [proxyDomain],
+				initiatorDomains: [host],
+				regexFilter: PROXY_IMAGE_URL_REGEX,
+				resourceTypes: ["image"],
+			};
+
+			condition = enhanceRuleConditionWithResponseHeadersCondition(
+				browserMajor,
+				condition,
+			);
+
 			return {
 				action: {
 					redirect: {
@@ -269,12 +328,7 @@ function buildSiteScopedCompressionRule({
 					},
 					type: "redirect",
 				},
-				condition: {
-					excludedRequestDomains: [proxyDomain],
-					initiatorDomains: [host],
-					regexFilter: PROXY_IMAGE_URL_REGEX,
-					resourceTypes: ["image"],
-				},
+				condition,
 				id: compressionId,
 				// High so it can override some static/session exemptions when desired
 				priority: DeclarativeNetRequestPriority.HIGH,
@@ -289,12 +343,7 @@ function buildSiteScopedCompressionRule({
 export async function applyDefaultCompressionRules(
 	payload: DefaultDnrRuleModifierPayload,
 ): Promise<void> {
-	const rule = buildDefaultCompressionRule({
-		compression: payload.compression,
-		excludedDomains: payload.excludedDomains,
-		general: payload.general,
-		proxy: payload.proxy,
-	});
+	const rule = buildDefaultCompressionRule(payload);
 
 	await browser.declarativeNetRequest.updateSessionRules({
 		addRules: rule ? [rule] : undefined,
@@ -304,9 +353,10 @@ export async function applyDefaultCompressionRules(
 
 export async function applySiteScopedCompressionRules([
 	host,
-	{ compression, general, ids, proxy },
+	{ compression, general, ids, proxy, browserMajor },
 ]: SiteScopedDnrRuleModifierPayloadEntry): Promise<void> {
 	const rule = buildSiteScopedCompressionRule({
+		browserMajor,
 		compression,
 		general,
 		host,
