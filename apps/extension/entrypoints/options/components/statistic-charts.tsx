@@ -4,7 +4,7 @@ import {
 	LineChart,
 	PieChart,
 } from "chartist";
-import type { DEFAULT_SINGLE_ASSET_STATISTICS } from "@/models/storage";
+import type { SingleAssetStatisticsSchema } from "@/models/storage";
 import type { ComponentAcceptingClassesProps } from "@/shared/types";
 import "chartist/dist/index.css";
 import "./bandwidth-usage.css";
@@ -106,7 +106,7 @@ export function OptionsPageBandwidthUsageOverTimeChart(
 
 type OptionsPageBandwidthUsageBreakdownProps =
 	ComponentAcceptingClassesProps & {
-		usage: Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS>;
+		usage: Readonly<SingleAssetStatisticsSchema>;
 	};
 
 export function OptionsPageBandwidthUsageBreakdownChart(

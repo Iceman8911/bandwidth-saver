@@ -1,9 +1,11 @@
+import { clone } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
 import { createMemo } from "solid-js";
 import {
-	type DEFAULT_COMBINED_ASSET_STATISTICS,
+	type CombinedAssetStatisticsSchema,
 	DEFAULT_SINGLE_ASSET_STATISTICS,
 	DEFAULT_STATISTICS,
+	type SingleAssetStatisticsSchema,
 } from "@/models/storage";
 import { statisticsStorageItem } from "@/shared/storage";
 import {
@@ -21,11 +23,14 @@ import { getDailyStatisticsForWeek } from "../shared/utils";
  * Sum combined daily stats into a single asset statistics object.
  */
 function getTotalBandwidthStatisticsBreakdown(
-	combinedStats: typeof DEFAULT_COMBINED_ASSET_STATISTICS,
-): Readonly<typeof DEFAULT_SINGLE_ASSET_STATISTICS> {
+	combinedStats: CombinedAssetStatisticsSchema,
+): Readonly<SingleAssetStatisticsSchema> {
 	const summedDailyStats = Object.values(combinedStats.dailyStats).reduce(
-		(aggregateStats, dailyStat) => {
-			let key: keyof typeof aggregateStats;
+		(
+			aggregateStats = clone(DEFAULT_SINGLE_ASSET_STATISTICS),
+			dailyStat = clone(DEFAULT_SINGLE_ASSET_STATISTICS),
+		) => {
+			let key: keyof CombinedAssetStatisticsSchema["aggregate"];
 
 			for (key in aggregateStats) {
 				aggregateStats[key] += dailyStat[key];
@@ -33,10 +38,10 @@ function getTotalBandwidthStatisticsBreakdown(
 
 			return aggregateStats;
 		},
-		DEFAULT_SINGLE_ASSET_STATISTICS,
+		clone(DEFAULT_SINGLE_ASSET_STATISTICS),
 	);
 
-	return summedDailyStats;
+	return summedDailyStats || DEFAULT_SINGLE_ASSET_STATISTICS;
 }
 
 export default function OptionsPageOverviewRoute() {

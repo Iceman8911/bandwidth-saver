@@ -44,7 +44,7 @@ export async function trackAndMessageSpoofSlowNetworkChangesViaContentScript() {
 		async ({ data, sender: { tab } }) => {
 			// Content script sent this to background so send back a message telling the content to tell the injected script to make changes (as well as setting up a watcher here to get the changes in synce)
 			if (data.target === "background") {
-				const tabId: number = tab?.id;
+				const tabId: number = tab?.id || 0;
 
 				const siteSpecificGeneralSettingsStorageItem =
 					getSiteSpecificGeneralSettingsStorageItem(data.origin);
