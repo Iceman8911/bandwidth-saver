@@ -48,7 +48,7 @@ async function fetchCompressedAndRegularImage(
 	const url = v.parse(UrlSchema, imgUrl);
 
 	const compressedUrl = new URL(
-		`${proxyBaseUrl}/${ServerAPIEndpoint.COMPRESS_IMAGE}`,
+		`${proxyBaseUrl}/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 	);
 	compressedUrl.searchParams.set("format_bwsvr8911", "auto");
 	compressedUrl.searchParams.set("preserveAnim_bwsvr8911", "true");
