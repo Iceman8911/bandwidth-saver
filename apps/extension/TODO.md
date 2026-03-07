@@ -3,7 +3,7 @@
   - [x] Add more fine grained rules per site.
     - I had an old attempt in this, but the main limitation with MV3 was the fact that each site would have to have it's own rules and the maximum amount of rules is ~30000 as of December, 2025. So this new attempt will allocate a couple thousand rules for each site, and let the user know of it. Once the limits are reached, users can reset rules for older sites or depend on the global / default rules if they don't want to delete any.
       - [ ] I should also add a way of autodeleting the config for older / rarely used sites too.
-- [ ] Enabling the extension causes cloudflare captchas to fail :/
+- [ ] Enabling the extension causes cloudflare captchas, vercel checkpoints to fail :/
 - [x] Figure out why some sites don't have their css properly parsed when the extension is enabled.
   - It was part of the content script that deleted `preload` links which occasionally had crucial css
 - [ ] Add setting exports.
@@ -30,6 +30,7 @@
   - [ ] Videos
     - Perhaps we can just focus on popular sites like Youtube, Vimeo, Reddit?, Facebook, etc.
     - Like for reddit, the quality and format are usually specified in the query string. Perhaps a content script can deal with this?
+      - For reddit, `https://preview.redd.it/d40z1f3s6fng1.gif?width=498&format=mp4&s=d804cebfcaf3fd56c3e6f4688bbcbc32fe9b4316` can be turned to `https://i.redd.it/d40z1f3s6fng1.gif` :D.
   - [ ] Audios
   - [x] Fix ORB / CORB errors on sites like Reddit and discord.
     - Turns out this only happens with `wsrv.nl` when the image url has a query string has hasn't been [properly encoded](https://wsrv.nl/docs/introduction.html#how-it-works), i.e in simple compression mode. ~~So the next best thing, is to use the [`default`](https://wsrv.nl/docs/format.html#default-image) parameter.~~
