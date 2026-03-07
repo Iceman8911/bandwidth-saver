@@ -67,6 +67,8 @@ export const processImageRoute = new Elysia()
 							url: cleanedSrcUrl,
 						});
 
+					if (!bytesSaved) throw Error("Unable to save data. Falling back to a redirect.")
+
 					store.bytesSaved = bytesSaved;
 
 					processedResponse = compressedResponse;
