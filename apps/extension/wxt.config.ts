@@ -20,7 +20,8 @@ export default defineConfig({
 			"storage",
 			"activeTab",
 			"alarms",
-			"downloads",
+      "downloads",
+			"cookies"
 		],
 		short_name: "Bandwidth Saver And Monitor",
 		version: "0.0.1",
