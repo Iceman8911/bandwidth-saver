@@ -73,6 +73,9 @@ export enum ProxyCustomHeaders {
 
 	/** Either the url of a free compression endpoint or "none" or "self" */
 	ENDPOINT_USED = "x-bwsvr8911-endpoint-used",
+
+	/** Cookies for the site's original urls */
+	DNR_COOKIE_STRING = "x-bwsvr8911-dnr-cookies",
 }
 
 // Ensure that all the headers are lowercase

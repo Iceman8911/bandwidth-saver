@@ -1,10 +1,10 @@
 import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
+	getSpoofingFetchHeaders,
 	type ImageFormatSchema,
 	type ImageMimeType,
 	type NumberBetween1and100Inclusively,
-	SPOOFING_FETCH_HEADERS,
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
@@ -60,7 +60,7 @@ const compressImageUsingSharp: ImageCompressorHandler = async ({
 				processedSharpInstance = baseSharpInstance.jpeg({
 					mozjpeg: true,
 					progressive: isProgressive,
-					quality: quality * 0.85,
+					quality: Math.round(quality * 0.85),
 				});
 				actualFormatUsed = "jpeg";
 			} else {
@@ -158,7 +158,7 @@ const compressImage: ImageCompressorHandler = async (payload) => {
 
 	try {
 		return compressImageUsingSharp(payload);
-	} catch (e) {
+	} catch (_e) {
 		console.error(
 			"Sharp couldn't compress the image with mimetype",
 			payload.srcMimeType,
@@ -173,6 +173,7 @@ interface CompressImageFromUrlProps {
 	url: UrlSchema;
 	format: ImageFormatSchema;
 	preserveAnim: boolean;
+	cookieStr?: string;
 	quality: NumberBetween1and100Inclusively;
 }
 
@@ -183,22 +184,35 @@ interface ResponseAndSavings {
 
 export async function compressImagefromUrl({
 	format,
+	cookieStr,
 	preserveAnim,
 	quality,
 	url,
 }: CompressImageFromUrlProps): Promise<ResponseAndSavings> {
+	const headers = getSpoofingFetchHeaders({
+		cookieStr,
+		url,
+	});
+
 	const fetchedUrlResponse = await fetch(url, {
-		headers: SPOOFING_FETCH_HEADERS,
-		signal: getFetchTimeoutSignal(),
+		headers,
+		signal: getFetchTimeoutSignal(3500),
 	});
 
 	const imgBuffer = await fetchedUrlResponse.arrayBuffer();
+
 	const imgMimeType = getLikelyImageUrlMimeType(
 		url,
 		fetchedUrlResponse.headers.get("content-type"),
 	);
 
-	if (!imgMimeType) throw Error(`Url, "${url}", has no valid image mime type.`);
+	if (!imgMimeType) {
+		console.error(
+			"compressImagefromUrl - No valid mime type. Content-Type was:",
+			fetchedUrlResponse.headers.get("content-type"),
+		);
+		throw Error(`Url, "${url}", has no valid image mime type.`);
+	}
 
 	const [compressedImgBuffer, contentType] = await compressImage({
 		format,

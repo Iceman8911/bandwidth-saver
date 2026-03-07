@@ -13,8 +13,8 @@ import type { UrlSchema } from "../../models/shared";
 import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
+	getSpoofingFetchHeaders,
 	type ImageMimeType,
-	SPOOFING_FETCH_HEADERS,
 } from "../fetch";
 
 const isUrlAlreadyRedirectedToCompressionEndpoint = (
@@ -205,10 +205,11 @@ interface ContentLengthAndType {
 
 const getContentLengthAndTypeFromUrl = async (
 	url: UrlSchema,
+	cookieStr?: string,
 ): Promise<ContentLengthAndType> => {
 	try {
 		const { headers } = await fetch(url, {
-			headers: SPOOFING_FETCH_HEADERS,
+			headers: getSpoofingFetchHeaders({ cookieStr, url }),
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(),
 		});
@@ -219,7 +220,8 @@ const getContentLengthAndTypeFromUrl = async (
 			length: Number.isNaN(headersLength) ? null : headersLength,
 			type: getLikelyImageUrlMimeType(url, headers.get("content-type")),
 		};
-	} catch {
+	} catch (e) {
+		console.error("HEAD request failed for", url, ":", e);
 		return {};
 	}
 };
@@ -233,6 +235,7 @@ interface CompressionUrlAndSavings {
 const optimalImageCompressionAdapter = async (
 	payload: ImageCompressionPayloadSchema,
 	urlConstructor: ImageCompressionUrlConstructor,
+	cookieStr?: string,
 ): Promise<CompressionUrlAndSavings | null> => {
 	const originalUrl = payload.zz_url_bwsvr8911;
 	const altUrl = urlConstructor(payload);
@@ -244,7 +247,7 @@ const optimalImageCompressionAdapter = async (
 		{ length: originalUrlSize, type: originalUrlType },
 		{ length: altUrlSize, type: altUrlType },
 	] = await Promise.all([
-		getContentLengthAndTypeFromUrl(originalUrl),
+		getContentLengthAndTypeFromUrl(originalUrl, cookieStr),
 		getContentLengthAndTypeFromUrl(altUrl),
 	]);
 
@@ -289,10 +292,11 @@ const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 async function getFirstUsefulCompressedImageUrl(
 	payload: ImageCompressionPayloadSchema,
 	urlConstructorArray: ImageCompressionUrlConstructor[],
+	cookieStr?: string,
 ): Promise<CompressionUrlAndSavings | null> {
 	return Promise.any(
 		urlConstructorArray.map(async (c) => {
-			const value = await optimalImageCompressionAdapter(payload, c);
+			const value = await optimalImageCompressionAdapter(payload, c, cookieStr);
 
 			if (value) return value;
 
@@ -310,6 +314,7 @@ async function getFirstUsefulCompressedImageUrl(
  */
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
+	cookieStr?: string,
 ): Promise<CompressionUrlAndSavings> {
 	const tryPreserveAnim = payload.preserveAnim_bwsvr8911,
 		originalUrl = payload.zz_url_bwsvr8911;
@@ -319,6 +324,7 @@ export async function getCompressedImageUrlWithFallback(
 		tryPreserveAnim
 			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION
 			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
+		cookieStr,
 	);
 
 	if (firstUseful) return firstUseful;
@@ -329,6 +335,7 @@ export async function getCompressedImageUrlWithFallback(
 		tryPreserveAnim
 			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING
 			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
+		cookieStr,
 	);
 
 	if (secondUseful) return secondUseful;

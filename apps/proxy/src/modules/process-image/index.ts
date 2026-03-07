@@ -1,13 +1,13 @@
 import {
 	getCompressedImageUrlWithFallback,
+	getSpoofingFetchHeaders,
 	ImageCompressionPayloadSchema,
 	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
-	SPOOFING_FETCH_HEADERS,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
-import type { AugumentWithCloudflareContextAndEnv } from "../../utils/cloudflare-type-patch";
+
 import { compressImagefromUrl } from "../../utils/image-optimization/manual-compression";
 import { normaliseRequestByUrl } from "../../utils/request";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../utils/url";
@@ -28,30 +28,30 @@ export const processImageRoute = new Elysia()
 	.state({ bytesSaved: 0, note: "" })
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
-		async ({ query, request, store, redirect }) => {
+		async ({ query, request, store, redirect, headers }) => {
 			const cleanedSrcUrl = cleanlyExtractNestedUrlFromRawRequestUrl(
 				request.url,
 			);
-
-			console.log("raw:", request.url, "\n\ncleaned:", cleanedSrcUrl);
 
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
 
 			const { bytesSaved, url: possiblyRedirectedUrl } =
-				await getCompressedImageUrlWithFallback({
-					...query,
-					zz_url_bwsvr8911: cleanedSrcUrl,
-				});
+				await getCompressedImageUrlWithFallback(
+					{
+						...query,
+						zz_url_bwsvr8911: cleanedSrcUrl,
+					},
+					headers[ProxyCustomHeaders.DNR_COOKIE_STRING],
+				);
 
 			store.bytesSaved = bytesSaved;
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
 					`${possiblyRedirectedUrl}${REDIRECTED_SEARCH_PARAM_FLAG}`,
-
 					{
-						headers: SPOOFING_FETCH_HEADERS,
+						headers: getSpoofingFetchHeaders(),
 					},
 				);
 
@@ -61,13 +61,15 @@ export const processImageRoute = new Elysia()
 					// Compress the image ourselves since none of the endpoints work
 					const { bytesSaved, res: compressedResponse } =
 						await compressImagefromUrl({
+							cookieStr: headers[ProxyCustomHeaders.DNR_COOKIE_STRING],
 							format: query.format_bwsvr8911,
 							preserveAnim: query.preserveAnim_bwsvr8911,
 							quality: query.quality_bwsvr8911,
 							url: cleanedSrcUrl,
 						});
 
-					if (!bytesSaved) throw Error("Unable to save data. Falling back to a redirect.")
+					if (!bytesSaved)
+						throw Error("Unable to save data. Falling back to a redirect.");
 
 					store.bytesSaved = bytesSaved;
 

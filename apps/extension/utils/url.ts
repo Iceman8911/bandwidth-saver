@@ -88,6 +88,7 @@ export function isExtensionUrl(url: UrlSchema): boolean {
 
 export type DnrSiteScopeUrlIdPayload = Readonly<{
 	compression: number;
+	cookieSync: number;
 	saveData: number;
 	cspBlock: number;
 	assetTypeBlock: number;
@@ -111,13 +112,15 @@ export function getUrlIdsFromOrigin(
 		assetTypeBlockId,
 		assetExtBlockId,
 		cacheHtmlBetterId,
-	] = generateDeterministicNumericIdsFromString(origin, 6);
+		cookieSyncId,
+	] = generateDeterministicNumericIdsFromString(origin, 7);
 
 	const ids: DnrSiteScopeUrlIdPayload = {
 		assetExtBlock: assetExtBlockId,
 		assetTypeBlock: assetTypeBlockId,
 		cacheHtmlBetter: cacheHtmlBetterId,
 		compression: compressionId,
+		cookieSync: cookieSyncId,
 		cspBlock: cspBlockId,
 		saveData: saveDataId,
 	};

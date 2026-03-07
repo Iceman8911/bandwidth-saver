@@ -1,6 +1,7 @@
 import {
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
 	ImageCompressorEndpoint,
+	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
 	type UrlSchema,
@@ -93,6 +94,18 @@ function enhanceRuleConditionWithResponseHeadersCondition(
 	return condition;
 }
 
+async function getCookieStringForSiteDomain(
+	domain: string,
+): Promise<string | null> {
+	if (!browser.cookies) return null;
+
+	const cookies = await browser.cookies.getAll({ domain });
+
+	if (!cookies.length) return null;
+
+	return cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+}
+
 type DefaultCompressionRulePayload = Readonly<{
 	browserMajor: DefaultDnrRuleModifierPayload["browserMajor"];
 	compression: DefaultDnrRuleModifierPayload["compression"];
@@ -113,7 +126,7 @@ type SiteScopedCompressionRulePayload = Readonly<{
 		"enabled" | "compression" | "useSiteRule"
 	>;
 	proxy: SiteScopedDnrRuleModifierPayloadEntry[1]["proxy"];
-	ids: Pick<SiteScopedDnrRuleModifierPayloadEntry[1]["ids"], "compression">;
+	ids: SiteScopedDnrRuleModifierPayloadEntry[1]["ids"];
 }>;
 
 function buildDefaultCompressionRule({
@@ -229,17 +242,19 @@ function buildDefaultCompressionRule({
 	}
 }
 
-function buildSiteScopedCompressionRule({
+async function buildSiteScopedCompressionRule({
 	host,
 	browserMajor,
 	compression: { format, preferredEndpoint, preserveAnim, mode, quality },
 	general: { compression, enabled, useSiteRule },
 	proxy: proxySettings,
-	ids: { compression: compressionId },
-}: SiteScopedCompressionRulePayload): Browser.declarativeNetRequest.Rule | null {
+	ids: { compression: compressionId, cookieSync: cookiesSyncId },
+}: SiteScopedCompressionRulePayload): Promise<
+	Browser.declarativeNetRequest.Rule[]
+> {
 	const isCompressionEnabled = enabled && compression && useSiteRule;
 
-	if (!isCompressionEnabled) return null;
+	if (!isCompressionEnabled) return [];
 
 	switch (mode) {
 		case SIMPLE_MODE: {
@@ -281,17 +296,19 @@ function buildSiteScopedCompressionRule({
 				condition,
 			);
 
-			return {
-				action: {
-					redirect: {
-						regexSubstitution: url,
+			return [
+				{
+					action: {
+						redirect: {
+							regexSubstitution: url,
+						},
+						type: "redirect",
 					},
-					type: "redirect",
+					condition,
+					id: compressionId,
+					priority: DeclarativeNetRequestPriority.LOWEST,
 				},
-				condition,
-				id: compressionId,
-				priority: DeclarativeNetRequestPriority.LOWEST,
-			};
+			];
 		}
 
 		case PROXY_MODE: {
@@ -309,34 +326,68 @@ function buildSiteScopedCompressionRule({
 
 			const proxyDomain = getUrlSchemaHost(proxySettings.host);
 
-			let condition: Browser.declarativeNetRequest.RuleCondition = {
-				excludedRequestDomains: [proxyDomain],
-				initiatorDomains: [host],
-				regexFilter: PROXY_IMAGE_URL_REGEX,
-				resourceTypes: ["image"],
-			};
+			const proxyUrlPrefix = proxyUrl.split("zz_url_bwsvr8911=")[0];
 
-			condition = enhanceRuleConditionWithResponseHeadersCondition(
-				browserMajor,
-				condition,
-			);
+			let compressionRuleCondition: Browser.declarativeNetRequest.RuleCondition =
+				{
+					excludedRequestDomains: [proxyDomain],
+					initiatorDomains: [host],
+					regexFilter: PROXY_IMAGE_URL_REGEX,
+					resourceTypes: ["image"],
+				};
 
-			return {
-				action: {
-					redirect: {
-						regexSubstitution: proxyUrl,
+			compressionRuleCondition =
+				enhanceRuleConditionWithResponseHeadersCondition(
+					browserMajor,
+					compressionRuleCondition,
+				);
+
+			const possibleHostCookies = await getCookieStringForSiteDomain(host);
+
+			const rules: Browser.declarativeNetRequest.Rule[] = [
+				{
+					action: {
+						redirect: {
+							regexSubstitution: proxyUrl,
+						},
+						type: "redirect",
 					},
-					type: "redirect",
+					condition: compressionRuleCondition,
+					id: compressionId,
+					// High so it can override some static/session exemptions when desired
+					priority: DeclarativeNetRequestPriority.HIGH,
 				},
-				condition,
-				id: compressionId,
-				// High so it can override some static/session exemptions when desired
-				priority: DeclarativeNetRequestPriority.HIGH,
-			};
+			];
+
+			// Patch the redirected request with the cookies
+			if (possibleHostCookies) {
+				rules.push({
+					action: {
+						requestHeaders: [
+							{
+								header: ProxyCustomHeaders.DNR_COOKIE_STRING,
+								operation: "set",
+								value: possibleHostCookies,
+							},
+						],
+						type: "modifyHeaders",
+					},
+					condition: {
+						initiatorDomains: [host],
+						requestDomains: [proxyDomain],
+						// Target only our proxy endpoint + parameters (and avoid matching other proxy routes).
+						urlFilter: `${proxyUrlPrefix}*`,
+					},
+					id: cookiesSyncId,
+					priority: DeclarativeNetRequestPriority.HIGH,
+				});
+			}
+
+			return rules;
 		}
 
 		default:
-			return null;
+			return [];
 	}
 }
 
@@ -355,7 +406,7 @@ export async function applySiteScopedCompressionRules([
 	host,
 	{ compression, general, ids, proxy, browserMajor },
 ]: SiteScopedDnrRuleModifierPayloadEntry): Promise<void> {
-	const rule = buildSiteScopedCompressionRule({
+	const rule = await buildSiteScopedCompressionRule({
 		browserMajor,
 		compression,
 		general,
@@ -365,7 +416,7 @@ export async function applySiteScopedCompressionRules([
 	});
 
 	await browser.declarativeNetRequest.updateSessionRules({
-		addRules: rule ? [rule] : undefined,
-		removeRuleIds: [ids.compression],
+		addRules: rule.length ? rule : undefined,
+		removeRuleIds: [ids.compression, ids.cookieSync],
 	});
 }
