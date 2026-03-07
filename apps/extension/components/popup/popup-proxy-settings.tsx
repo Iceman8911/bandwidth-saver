@@ -19,27 +19,28 @@ type TempProxySettingsProps = {
 	set: SetStoreFunction<ProxySettingsSchema>;
 };
 
-function ProxyHostInput(props: TempProxySettingsProps) {
+function ProxyEndpointInput(props: TempProxySettingsProps) {
 	return (
 		<>
 			<label class="flex items-center justify-between" for="proxy-host">
 				<div>
-					Host: <span class="text-error">*</span>
+					Endpoint: <span class="text-error">*</span>
 				</div>
 
 				<InformativeTooltip
 					dir="bottom"
 					tip={
 						<div class="max-w-3xs space-y-2 text-xs">
-							<p>
-								The host / domain of the external proxy, without the protocol.
-							</p>
+							<p>The origin of the external proxy, without the ending slash.</p>
 							<p>
 								E.g{" "}
 								<span class="text-info">
-									bandwidth-saver.wuchijss2.workers.dev
+									https://bandwidth-saver.wuchijss2.workers.dev
 								</span>
-								, <span class="text-info">bandwidth-saver.onrender.com</span>
+								,{" "}
+								<span class="text-info">
+									https://bandwidth-saver.onrender.com
+								</span>
 							</p>
 						</div>
 					}
@@ -49,34 +50,10 @@ function ProxyHostInput(props: TempProxySettingsProps) {
 			<input
 				class="input"
 				id="proxy-host"
-				onInput={(e) => props.set("host", e.target.value)}
-				placeholder="localhost"
+				onInput={(e) => props.set("endpoint", e.target.value)}
 				required
 				type="text"
-				value={props.store.host}
-			/>
-		</>
-	);
-}
-
-function ProxyPortInput(props: TempProxySettingsProps) {
-	return (
-		<>
-			<label class="flex items-center justify-between" for="proxy-port">
-				<div>Port:</div>
-
-				<InformativeTooltip tip="Optional if you aren't using a `localhost`" />
-			</label>
-
-			<input
-				class="input"
-				id="proxy-port"
-				max={65536}
-				min={0}
-				onInput={(e) => props.set("port", Number(e.target.value))}
-				placeholder="3001"
-				type="number"
-				value={props.store.port}
+				value={props.store.endpoint}
 			/>
 		</>
 	);
@@ -186,8 +163,10 @@ export default function PopupProxySettings() {
 				class="grid auto-rows-auto grid-cols-[1.75fr_1fr] gap-4 text-sm"
 				onSubmit={handleUpdateProxySettings}
 			>
-				<ProxyHostInput set={setTempProxySettings} store={tempProxySettings} />
-				<ProxyPortInput set={setTempProxySettings} store={tempProxySettings} />
+				<ProxyEndpointInput
+					set={setTempProxySettings}
+					store={tempProxySettings}
+				/>
 				<CloudinaryCloudNameInput
 					set={setTempProxySettings}
 					store={tempProxySettings}

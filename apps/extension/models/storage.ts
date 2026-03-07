@@ -96,8 +96,8 @@ export type BlockSettingsSchema = v.InferOutput<typeof BlockSettingsSchema>;
 export const ProxySettingsSchema = v.object({
 	/** Optional cloudinary cloud name to enable cloudinary-based processing */
 	cloudinary: v.optional(v.string()),
-	host: v.pipe(v.string(), v.minLength(1), v.trim()),
-	port: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(65535)),
+
+	endpoint: UrlSchema,
 });
 export type ProxySettingsSchema = v.InferOutput<typeof ProxySettingsSchema>;
 
@@ -186,8 +186,7 @@ export const DEFAULT_COMPRESSION_SETTINGS = {
 } as const satisfies CompressionSettingsSchema;
 
 export const DEFAULT_PROXY_SETTINGS = {
-	host: VITE_SERVER_HOST,
-	port: VITE_SERVER_PORT,
+	endpoint: `http://${VITE_SERVER_HOST}:${VITE_SERVER_PORT}` as UrlSchema,
 } as const satisfies ProxySettingsSchema;
 
 export const DEFAULT_GENERAL_SETTINGS = {

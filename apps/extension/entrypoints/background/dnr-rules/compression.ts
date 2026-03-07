@@ -198,7 +198,8 @@ function buildDefaultCompressionRule({
 
 		case PROXY_MODE: {
 			const proxyUrl = proxyUrlConstructor({
-				endpoint: ServerAPIEndpoint.PROCESS_IMAGE,
+				endpoint: proxySettings.endpoint,
+				path: ServerAPIEndpoint.PROCESS_IMAGE,
 				payload: {
 					cloudinary_bwsvr8911: proxySettings.cloudinary,
 					format_bwsvr8911: format,
@@ -206,10 +207,9 @@ function buildDefaultCompressionRule({
 					quality_bwsvr8911: quality,
 					zz_url_bwsvr8911: "\\0" as UrlSchema,
 				},
-				proxy: proxySettings,
 			});
 
-			const proxyDomain = getUrlSchemaHost(proxySettings.host);
+			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint);
 
 			let condition: Browser.declarativeNetRequest.RuleCondition = {
 				excludedInitiatorDomains: excludedDomains.concat(proxyDomain),
@@ -313,7 +313,8 @@ async function buildSiteScopedCompressionRule({
 
 		case PROXY_MODE: {
 			const proxyUrl = proxyUrlConstructor({
-				endpoint: ServerAPIEndpoint.PROCESS_IMAGE,
+				endpoint: proxySettings.endpoint,
+				path: ServerAPIEndpoint.PROCESS_IMAGE,
 				payload: {
 					cloudinary_bwsvr8911: proxySettings.cloudinary,
 					format_bwsvr8911: format,
@@ -321,10 +322,9 @@ async function buildSiteScopedCompressionRule({
 					quality_bwsvr8911: quality,
 					zz_url_bwsvr8911: "\\0" as UrlSchema,
 				},
-				proxy: proxySettings,
 			});
 
-			const proxyDomain = getUrlSchemaHost(proxySettings.host);
+			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint);
 
 			const proxyUrlPrefix = proxyUrl.split("zz_url_bwsvr8911=")[0];
 

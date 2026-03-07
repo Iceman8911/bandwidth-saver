@@ -323,7 +323,7 @@ function applyBandwidthMeasurementsToStatistics(
 pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 	async (measurements) => {
 		// TODO: account for proxies set for specific sites too since this only considers the general one
-		let [globalStats, { host: proxyHost }] = await Promise.all([
+		let [globalStats, { endpoint }] = await Promise.all([
 			statisticsStorageItem.getValue(),
 			defaultProxySettingsStorageItem.getValue(),
 		]);
@@ -348,7 +348,7 @@ pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 				measurement,
 				globalStats,
 				siteScopedStats,
-				proxyHost,
+				getUrlSchemaHost(endpoint),
 			);
 
 			globalStats = updatedStats.globalStats;
