@@ -39,7 +39,7 @@
 	"name": "bandwidth-saver-and-monitor",
 	"private": true,
 	"scripts": {
-		"build": "bun run build:chromium & bun run build:firefox",
+		"build": "bun --bun run build:chromium & bun --bun run build:firefox",
 		"build:chromium": "wxt zip --mv3",
 		"build:firefox": "wxt zip -b firefox --mv3",
 		"compile": "tsc --noEmit",
