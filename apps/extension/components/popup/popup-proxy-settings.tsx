@@ -24,7 +24,7 @@ function ProxyMainEndpointInput(props: TempProxySettingsProps) {
 	return (
 		<>
 			<label
-				class="flex items-center justify-between"
+				class="col-span-2 flex items-center gap-4"
 				for="proxy-main-endpoint"
 			>
 				<div>
@@ -55,7 +55,7 @@ function ProxyMainEndpointInput(props: TempProxySettingsProps) {
 			</label>
 
 			<input
-				class="input"
+				class="input col-span-2 row-start-2"
 				id="proxy-main-endpoint"
 				onBlur={(e) =>
 					props.set(
@@ -76,7 +76,7 @@ function ProxyBackupEndpointsInput(props: TempProxySettingsProps) {
 	return (
 		<>
 			<label
-				class="flex items-center justify-between"
+				class="col-span-2 flex items-center gap-4"
 				for="proxy-backup-endpoints"
 			>
 				<div>Backup Endpoints:</div>
@@ -97,7 +97,7 @@ function ProxyBackupEndpointsInput(props: TempProxySettingsProps) {
 			</label>
 
 			<input
-				class="input"
+				class="input col-span-2 row-start-4"
 				id="proxy-backup-endpoints"
 				onBlur={(e) =>
 					props.set(
