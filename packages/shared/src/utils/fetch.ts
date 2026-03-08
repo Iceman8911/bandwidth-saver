@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { URL_EXTENSION_REGEX } from "../constants";
+import { ProxyCustomHeaders, URL_EXTENSION_REGEX } from "../constants";
 
 const IMAGE_MIME_TYPES = [
 	"image/jpeg",
@@ -77,11 +77,18 @@ const SHARED_HEADERS = {
 export function getSpoofingFetchHeaders({
 	cookieStr,
 	url,
-}: Partial<{ cookieStr: string; url: string }> = {}): Record<string, string> {
+	isForBackupProxy,
+}: Partial<{
+	cookieStr: string;
+	url: string;
+	isForBackupProxy: boolean;
+}> = {}): Record<string, string> {
 	const headers: Record<string, string> = { ...SHARED_HEADERS };
 
 	if (cookieStr) {
-		headers["Cookie"] = cookieStr;
+		if (isForBackupProxy)
+			headers[ProxyCustomHeaders.DNR_COOKIE_STRING] = cookieStr;
+		else headers["Cookie"] = cookieStr;
 	}
 
 	if (url) {

@@ -7,7 +7,7 @@ const build = await Bun.build({
 	env: "inline",
 	external: ["cloudflare:workers", "@jsquash/webp"],
 	outdir: "./.output",
-	target: "node",
+	target: "bun",
 });
 
 console.log(

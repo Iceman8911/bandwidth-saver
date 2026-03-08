@@ -5,6 +5,7 @@ import {
 	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
+	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
 
@@ -36,8 +37,13 @@ export const processImageRoute = new Elysia()
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;
 
-			const { bytesSaved, url: possiblyRedirectedUrl } =
-				await getCompressedImageUrlWithFallback(
+			let possiblyRedirectedUrl: UrlSchema;
+
+			if (query.forceManual_bwsvr8911) {
+				// Don't do unnecessary work. if these 2 are the same, self-compression should be used
+				possiblyRedirectedUrl = cleanedSrcUrl;
+			} else {
+				const { bytesSaved, url } = await getCompressedImageUrlWithFallback(
 					{
 						...query,
 						zz_url_bwsvr8911: cleanedSrcUrl,
@@ -45,7 +51,10 @@ export const processImageRoute = new Elysia()
 					headers[ProxyCustomHeaders.DNR_COOKIE_STRING],
 				);
 
-			store.bytesSaved = bytesSaved;
+				store.bytesSaved = bytesSaved;
+
+				possiblyRedirectedUrl = url;
+			}
 
 			if (possiblyRedirectedUrl !== cleanedSrcUrl) {
 				processedResponse = await fetch(
@@ -58,12 +67,12 @@ export const processImageRoute = new Elysia()
 				store.note = possiblyRedirectedUrl;
 			} else {
 				try {
-					// Compress the image ourselves since none of the endpoints work
+					// Compress the image ourselves since none of the endpoints work / manual transformation is preferred
 					const { bytesSaved, res: compressedResponse } =
 						await compressImagefromUrl({
 							cookieStr: headers[ProxyCustomHeaders.DNR_COOKIE_STRING],
 							format: query.format_bwsvr8911,
-							preserveAnim: query.preserveAnim_bwsvr8911,
+							preserveAnim: !!query.preserveAnim_bwsvr8911,
 							quality: query.quality_bwsvr8911,
 							url: cleanedSrcUrl,
 						});
@@ -113,6 +122,8 @@ export const processImageRoute = new Elysia()
 						"cache-control",
 						"public, max-age=2592000, stale-while-revalidate=3600",
 					);
+
+					set.headers["access-control-allow-origin"] = "*";
 
 					set.headers[ProxyCustomHeaders.BYTES_SAVED] = `${bytesSaved}`;
 

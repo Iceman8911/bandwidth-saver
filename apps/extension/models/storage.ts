@@ -97,7 +97,10 @@ export const ProxySettingsSchema = v.object({
 	/** Optional cloudinary cloud name to enable cloudinary-based processing */
 	cloudinary: v.optional(v.string()),
 
-	endpoint: UrlSchema,
+	endpoint: v.object({ backups: v.array(UrlSchema), main: UrlSchema }),
+
+	/** Whether the proxy should manually do the transformations, or attempt to tranfer the load to other public endpoints. */
+	forceManual: v.optional(v.boolean()),
 });
 export type ProxySettingsSchema = v.InferOutput<typeof ProxySettingsSchema>;
 
@@ -186,7 +189,10 @@ export const DEFAULT_COMPRESSION_SETTINGS = {
 } as const satisfies CompressionSettingsSchema;
 
 export const DEFAULT_PROXY_SETTINGS = {
-	endpoint: `http://${VITE_SERVER_HOST}:${VITE_SERVER_PORT}` as UrlSchema,
+	endpoint: {
+		backups: [],
+		main: `http://${VITE_SERVER_HOST}:${VITE_SERVER_PORT}` as UrlSchema,
+	},
 } as const satisfies ProxySettingsSchema;
 
 export const DEFAULT_GENERAL_SETTINGS = {

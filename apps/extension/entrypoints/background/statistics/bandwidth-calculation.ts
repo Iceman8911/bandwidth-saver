@@ -348,7 +348,7 @@ pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 				measurement,
 				globalStats,
 				siteScopedStats,
-				getUrlSchemaHost(endpoint),
+				getUrlSchemaHost(endpoint.main),
 			);
 
 			globalStats = updatedStats.globalStats;

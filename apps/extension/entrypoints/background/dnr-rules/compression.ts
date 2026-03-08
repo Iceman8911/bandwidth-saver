@@ -2,6 +2,7 @@ import {
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS,
 	ImageCompressorEndpoint,
 	ProxyCustomHeaders,
+	proxyUrlConstructor,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
 	type UrlSchema,
@@ -18,7 +19,6 @@ import type {
 	SiteScopedDnrRuleModifierPayloadEntry,
 } from "@/utils/dnr-rules";
 import { getUrlSchemaHost } from "@/utils/url";
-import { proxyUrlConstructor } from "./shared";
 
 const { PROXY: PROXY_MODE, SIMPLE: SIMPLE_MODE } = CompressionMode;
 
@@ -198,10 +198,12 @@ function buildDefaultCompressionRule({
 
 		case PROXY_MODE: {
 			const proxyUrl = proxyUrlConstructor({
-				endpoint: proxySettings.endpoint,
+				mainEndpoint: proxySettings.endpoint.main,
 				path: ServerAPIEndpoint.PROCESS_IMAGE,
 				payload: {
+					backupEndpoints_bwsvr8911: proxySettings.endpoint.backups,
 					cloudinary_bwsvr8911: proxySettings.cloudinary,
+					forceManual_bwsvr8911: proxySettings.forceManual,
 					format_bwsvr8911: format,
 					preserveAnim_bwsvr8911: preserveAnim,
 					quality_bwsvr8911: quality,
@@ -209,7 +211,7 @@ function buildDefaultCompressionRule({
 				},
 			});
 
-			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint);
+			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint.main);
 
 			let condition: Browser.declarativeNetRequest.RuleCondition = {
 				excludedInitiatorDomains: excludedDomains.concat(proxyDomain),
@@ -313,10 +315,12 @@ async function buildSiteScopedCompressionRule({
 
 		case PROXY_MODE: {
 			const proxyUrl = proxyUrlConstructor({
-				endpoint: proxySettings.endpoint,
+				mainEndpoint: proxySettings.endpoint.main,
 				path: ServerAPIEndpoint.PROCESS_IMAGE,
 				payload: {
+					backupEndpoints_bwsvr8911: proxySettings.endpoint.backups,
 					cloudinary_bwsvr8911: proxySettings.cloudinary,
+					forceManual_bwsvr8911: proxySettings.forceManual,
 					format_bwsvr8911: format,
 					preserveAnim_bwsvr8911: preserveAnim,
 					quality_bwsvr8911: quality,
@@ -324,9 +328,7 @@ async function buildSiteScopedCompressionRule({
 				},
 			});
 
-			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint);
-
-			const proxyUrlPrefix = proxyUrl.split("zz_url_bwsvr8911=")[0];
+			const proxyDomain = getUrlSchemaHost(proxySettings.endpoint.main);
 
 			let compressionRuleCondition: Browser.declarativeNetRequest.RuleCondition =
 				{
@@ -375,8 +377,8 @@ async function buildSiteScopedCompressionRule({
 					condition: {
 						initiatorDomains: [host],
 						requestDomains: [proxyDomain],
-						// Target only our proxy endpoint + parameters (and avoid matching other proxy routes).
-						urlFilter: `${proxyUrlPrefix}*`,
+						// Target only our proxy endpoint
+						urlFilter: `|${proxySettings.endpoint.main}/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 					},
 					id: cookiesSyncId,
 					priority: DeclarativeNetRequestPriority.HIGH,

@@ -1,8 +1,9 @@
+import { UrlSchema } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
 import { createEffect, createMemo, Show, useContext } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import * as v from "valibot";
 import { DEFAULT_PROXY_SETTINGS, ProxySettingsSchema } from "@/models/storage";
 import {
@@ -19,19 +20,25 @@ type TempProxySettingsProps = {
 	set: SetStoreFunction<ProxySettingsSchema>;
 };
 
-function ProxyEndpointInput(props: TempProxySettingsProps) {
+function ProxyMainEndpointInput(props: TempProxySettingsProps) {
 	return (
 		<>
-			<label class="flex items-center justify-between" for="proxy-host">
+			<label
+				class="flex items-center justify-between"
+				for="proxy-main-endpoint"
+			>
 				<div>
-					Endpoint: <span class="text-error">*</span>
+					Main Endpoint: <span class="text-error">*</span>
 				</div>
 
 				<InformativeTooltip
 					dir="bottom"
 					tip={
 						<div class="max-w-3xs space-y-2 text-xs">
-							<p>The origin of the external proxy, without the ending slash.</p>
+							<p>
+								The origin of the main external proxy, without the ending slash
+								(/).
+							</p>
 							<p>
 								E.g{" "}
 								<span class="text-info">
@@ -49,11 +56,68 @@ function ProxyEndpointInput(props: TempProxySettingsProps) {
 
 			<input
 				class="input"
-				id="proxy-host"
-				onInput={(e) => props.set("endpoint", e.target.value)}
+				id="proxy-main-endpoint"
+				onBlur={(e) =>
+					props.set(
+						produce((s) => {
+							s.endpoint.main = v.parse(UrlSchema, e.target.value);
+						}),
+					)
+				}
 				required
 				type="text"
-				value={props.store.endpoint}
+				value={props.store.endpoint.main}
+			/>
+		</>
+	);
+}
+
+function ProxyBackupEndpointsInput(props: TempProxySettingsProps) {
+	return (
+		<>
+			<label
+				class="flex items-center justify-between"
+				for="proxy-backup-endpoints"
+			>
+				<div>Backup Endpoints:</div>
+
+				<InformativeTooltip
+					dir="bottom"
+					tip={
+						<div class="max-w-3xs space-y-2 text-xs">
+							<p>
+								Backup origins of other external proxies, without the ending
+								slash (/). Assuming the main one has issues, these will be used
+								to compensate.
+							</p>
+							<p class="text-warning">Comma seperated</p>
+						</div>
+					}
+				/>
+			</label>
+
+			<input
+				class="input"
+				id="proxy-backup-endpoints"
+				onBlur={(e) =>
+					props.set(
+						produce((s) => {
+							s.endpoint.backups = e.target.value
+								.split(",")
+								.reduce<UrlSchema[]>((arr, str) => {
+									const trimmed = str.trim();
+
+									if (v.is(UrlSchema, trimmed)) {
+										arr.push(trimmed as UrlSchema);
+									}
+
+									return arr;
+								}, []);
+						}),
+					)
+				}
+				type="text"
+				value={props.store.endpoint.backups.join(", ")}
 			/>
 		</>
 	);
@@ -106,6 +170,37 @@ function CloudinaryCloudNameInput(props: TempProxySettingsProps) {
 	);
 }
 
+function ForceManualImageTransformationInput(props: TempProxySettingsProps) {
+	return (
+		<>
+			<label class="flex items-center justify-between" for="proxy-force-manual">
+				<div>Force Manual Transformation:</div>
+
+				<InformativeTooltip
+					dir="bottom"
+					tip={
+						<div class="max-w-3xs space-y-2 text-xs">
+							<p>
+								Whether the proxy should manually do the transformations (like
+								compression), or attempt to transfer the load to other public
+								endpoints.
+							</p>
+						</div>
+					}
+				/>
+			</label>
+
+			<input
+				checked={props.store.forceManual}
+				class="toggle"
+				id="proxy-force-manual"
+				onInput={(e) => props.set("forceManual", e.target.checked)}
+				type="checkbox"
+			/>
+		</>
+	);
+}
+
 export default function PopupProxySettings() {
 	const [context] = useContext(PopupContext);
 
@@ -123,14 +218,14 @@ export default function PopupProxySettings() {
 	);
 
 	const [tempProxySettings, setTempProxySettings] = createStore(
-		proxySettings(),
+		structuredClone(proxySettings()),
 	);
 
 	// Sync external changes
-	createEffect(() => setTempProxySettings(proxySettings()));
+	createEffect(() => setTempProxySettings(structuredClone(proxySettings())));
 
 	const isTempProxySettingsUnchanged = createMemo(() =>
-		isEqual(tempProxySettings, proxySettings()),
+		isEqual(tempProxySettings, structuredClone(proxySettings())),
 	);
 
 	const handleUpdateProxySettings = (e: SubmitEvent) => {
@@ -163,11 +258,19 @@ export default function PopupProxySettings() {
 				class="grid auto-rows-auto grid-cols-[1.75fr_1fr] gap-4 text-sm"
 				onSubmit={handleUpdateProxySettings}
 			>
-				<ProxyEndpointInput
+				<ProxyMainEndpointInput
+					set={setTempProxySettings}
+					store={tempProxySettings}
+				/>
+				<ProxyBackupEndpointsInput
 					set={setTempProxySettings}
 					store={tempProxySettings}
 				/>
 				<CloudinaryCloudNameInput
+					set={setTempProxySettings}
+					store={tempProxySettings}
+				/>
+				<ForceManualImageTransformationInput
 					set={setTempProxySettings}
 					store={tempProxySettings}
 				/>

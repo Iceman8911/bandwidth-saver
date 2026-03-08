@@ -3,9 +3,8 @@ import {
 	ImageCompressorEndpoint,
 	ServerAPIEndpoint,
 } from "@bandwidth-saver/shared";
-import * as v from "valibot";
+import type { ReadonlyDeep } from "type-fest";
 import type {
-	ImageCompressionAdapter,
 	ImageCompressionPayloadSchema,
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
@@ -181,6 +180,29 @@ const imageCompressionUrlConstructorCloudinary: ImageCompressionUrlConstructor =
 		return `${ImageCompressorEndpoint.CLOUDINARY}/${cloudName}/image/fetch/${params}/${encodeUrlIfNecessary(url)}` as UrlSchema;
 	};
 
+type ProxyUrlConstructorPayload = ReadonlyDeep<{
+	mainEndpoint: UrlSchema;
+	payload: ImageCompressionPayloadSchema;
+	path: ServerAPIEndpoint.PROCESS_IMAGE;
+}>;
+
+export function proxyUrlConstructor({
+	path,
+	payload,
+	mainEndpoint,
+}: ProxyUrlConstructorPayload): UrlSchema {
+	const urlWithoutQueryString = `${mainEndpoint}/${path}`;
+
+	const queryString = Object.entries(payload)
+		.map(
+			([key, val]) =>
+				`${key}=${Array.isArray(val) ? JSON.stringify(val) : val}`,
+		)
+		.join("&");
+
+	return `${urlWithoutQueryString}?${queryString}` as UrlSchema;
+}
+
 export const IMAGE_COMPRESSION_URL_CONSTRUCTORS = {
 	[ImageCompressorEndpoint.WSRV_NL]: imageCompressionUrlConstructorWsrvNl,
 	[ImageCompressorEndpoint.CLOUDINARY]:
@@ -206,12 +228,13 @@ interface ContentLengthAndType {
 const getContentLengthAndTypeFromUrl = async (
 	url: UrlSchema,
 	cookieStr?: string,
+	isForBackupProxy?: boolean,
 ): Promise<ContentLengthAndType> => {
 	try {
 		const { headers } = await fetch(url, {
-			headers: getSpoofingFetchHeaders({ cookieStr, url }),
+			headers: getSpoofingFetchHeaders({ cookieStr, isForBackupProxy, url }),
 			method: "HEAD",
-			signal: getFetchTimeoutSignal(),
+			signal: getFetchTimeoutSignal(4000),
 		});
 
 		const headersLength = Number(headers.get("content-length"));
@@ -231,14 +254,19 @@ interface CompressionUrlAndSavings {
 	bytesSaved: number;
 }
 
+interface OptimalImageCompressionAdapterProps {
+	payload: ImageCompressionPayloadSchema;
+	urlConstructor: ImageCompressionUrlConstructor;
+	cookieStr?: string;
+	isUsingBackupProxy?: boolean;
+}
+
 /** This intentionally doesn't look for the endpoint with the smallest size, just the one with a smaller size that arrives first for perf */
 const optimalImageCompressionAdapter = async (
-	payload: ImageCompressionPayloadSchema,
-	urlConstructor: ImageCompressionUrlConstructor,
-	cookieStr?: string,
+	props: OptimalImageCompressionAdapterProps,
 ): Promise<CompressionUrlAndSavings | null> => {
-	const originalUrl = payload.zz_url_bwsvr8911;
-	const altUrl = urlConstructor(payload);
+	const originalUrl = props.payload.zz_url_bwsvr8911;
+	const altUrl = props.urlConstructor(props.payload);
 
 	// If both urls are the same, let the call site try another compressor endpoint
 	if (originalUrl === altUrl) return null;
@@ -247,8 +275,16 @@ const optimalImageCompressionAdapter = async (
 		{ length: originalUrlSize, type: originalUrlType },
 		{ length: altUrlSize, type: altUrlType },
 	] = await Promise.all([
-		getContentLengthAndTypeFromUrl(originalUrl, cookieStr),
-		getContentLengthAndTypeFromUrl(altUrl),
+		getContentLengthAndTypeFromUrl(
+			originalUrl,
+			props.cookieStr,
+			props.isUsingBackupProxy,
+		),
+		getContentLengthAndTypeFromUrl(
+			altUrl,
+			props.isUsingBackupProxy ? props.cookieStr : undefined,
+			props.isUsingBackupProxy,
+		),
 	]);
 
 	console.log(
@@ -272,7 +308,7 @@ const optimalImageCompressionAdapter = async (
 		// I'd rather only bother with actual compressed data. At the call site, I could just default to the original url if it's `null` here
 		const bytesSaved = originalUrlSize - altUrlSize;
 
-		return bytesSaved > 0 ? { bytesSaved, url: altUrl } : null;
+		return bytesSaved >= 0 ? { bytesSaved, url: altUrl } : null;
 	}
 
 	return { bytesSaved: 0, url: altUrl };
@@ -293,14 +329,24 @@ const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING = [
 	IMAGE_COMPRESSION_URL_CONSTRUCTORS[ImageCompressorEndpoint.CLOUDINARY],
 ] as const satisfies ImageCompressionUrlConstructor[];
 
+interface GetFirstUsefulCompressedImageUrlProps {
+	payload: ImageCompressionPayloadSchema;
+	urlConstructorArray: ImageCompressionUrlConstructor[];
+	cookieStr?: string;
+	isUsingBackupProxy?: boolean;
+}
+
 async function getFirstUsefulCompressedImageUrl(
-	payload: ImageCompressionPayloadSchema,
-	urlConstructorArray: ImageCompressionUrlConstructor[],
-	cookieStr?: string,
+	props: GetFirstUsefulCompressedImageUrlProps,
 ): Promise<CompressionUrlAndSavings | null> {
 	return Promise.any(
-		urlConstructorArray.map(async (c) => {
-			const value = await optimalImageCompressionAdapter(payload, c, cookieStr);
+		props.urlConstructorArray.map(async (urlConstructor) => {
+			const value = await optimalImageCompressionAdapter({
+				cookieStr: props.cookieStr,
+				isUsingBackupProxy: props.isUsingBackupProxy,
+				payload: props.payload,
+				urlConstructor,
+			});
 
 			if (value) return value;
 
@@ -323,26 +369,52 @@ export async function getCompressedImageUrlWithFallback(
 	const tryPreserveAnim = payload.preserveAnim_bwsvr8911,
 		originalUrl = payload.zz_url_bwsvr8911;
 
-	const firstUseful = await getFirstUsefulCompressedImageUrl(
+	const firstUseful = await getFirstUsefulCompressedImageUrl({
+		cookieStr,
 		payload,
-		tryPreserveAnim
+		urlConstructorArray: tryPreserveAnim
 			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION
 			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
-		cookieStr,
-	);
+	});
 
 	if (firstUseful) return firstUseful;
 
-	// Since the user's preferred choice was a bust, try out the remaining options
-	const secondUseful = await getFirstUsefulCompressedImageUrl(
+	if (payload.backupEndpoints_bwsvr8911?.length) {
+		const newPayload: ImageCompressionPayloadSchema = {
+			...payload,
+			/** To prevent possible smelly recursion */
+			backupEndpoints_bwsvr8911: [],
+			/** The only real reason to use other backup proxies is to do heavy transformation that may fail on some serverless runtimes like cloudflare workers  */
+			forceManual_bwsvr8911: true,
+		};
+
+		const secondUseful = await getFirstUsefulCompressedImageUrl({
+			cookieStr,
+			isUsingBackupProxy: true,
+			payload: newPayload,
+			urlConstructorArray: payload.backupEndpoints_bwsvr8911.map(
+				(endpoint) => (p) =>
+					proxyUrlConstructor({
+						mainEndpoint: endpoint,
+						path: ServerAPIEndpoint.PROCESS_IMAGE,
+						payload: p,
+					}),
+			),
+		});
+
+		if (secondUseful) return secondUseful;
+	}
+
+	// Since the user's preferred choice was a bust, and backup proxies weren't of help, try out the remaining options
+	const thirdUseful = await getFirstUsefulCompressedImageUrl({
+		cookieStr,
 		payload,
-		tryPreserveAnim
+		urlConstructorArray: tryPreserveAnim
 			? URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING
 			: URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
-		cookieStr,
-	);
+	});
 
-	if (secondUseful) return secondUseful;
+	if (thirdUseful) return thirdUseful;
 
 	console.warn(
 		"No valid compression url for '",
