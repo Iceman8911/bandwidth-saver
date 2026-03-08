@@ -214,6 +214,12 @@ export async function compressImagefromUrl({
 		throw Error(`Url, "${url}", has no valid image mime type.`);
 	}
 
+	if (imgMimeType === "image/svg+xml") {
+		throw Error(
+			`Url, "${url}", is an svg. Raster compression will negate it's benefit.`,
+		);
+	}
+
 	const [compressedImgBuffer, contentType] = await compressImage({
 		format,
 		preserveAnim,

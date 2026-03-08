@@ -261,6 +261,10 @@ const optimalImageCompressionAdapter = async (
 	);
 	console.log("Alt Url:", altUrl, "Size:", altUrlSize, "Type:", altUrlType);
 
+	// do not compress svgs
+	if (originalUrlType === "image/svg+xml" || altUrlType === "image/svg+xml")
+		return null;
+
 	// If the compression endpoint can't bother to set the `content-type` or `content-length` header, let the call site try another
 	if (!altUrlSize || !altUrlType) return null;
 

@@ -6,7 +6,7 @@ const IMAGE_MIME_TYPES = [
 	"image/png",
 	"image/gif",
 	"image/webp",
-	// "image/svg+xml",
+	"image/svg+xml",
 	"image/bmp",
 	"image/tiff",
 	"image/x-icon",
@@ -52,6 +52,8 @@ export function getLikelyImageUrlMimeType(
 			return "image/tiff";
 		case "apng":
 			return "image/apng";
+		case "svg":
+			return "image/svg+xml";
 
 		default:
 			return null;
