@@ -4,7 +4,7 @@ import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { healthRoute } from "./modules/health";
 import { processImageRoute } from "./modules/process-image";
 
-const env = getProxyEnv();
+const env = process.env;
 
 const IS_HOSTED_ON_CLOUDFLARE = env.DEPLOYMENT_PLATFORM === "cloudflare";
 

@@ -3,6 +3,7 @@
 		"@bandwidth-saver/shared": "workspace:*",
 		"@cf-wasm/minify-html": "^0.1.3",
 		"@elysiajs/eden": "^1.4.8",
+		"@jsquash/webp": "^1.5.0",
 		"dotenv": "^17.3.1",
 		"elysia": "^1.4.27",
 		"sharp": "^0.34.5",
@@ -19,7 +20,7 @@
 	"module": "src/index.ts",
 	"name": "@bandwidth-saver/proxy",
 	"scripts": {
-		"build": "bun build src/index.ts --outdir .output --target=bun --env=inline --external cloudflare:workers",
+		"build": "bun --bun run ./bun.build.ts",
 		"build:cloudflare": "DEPLOYMENT_PLATFORM=cloudflare bun run build",
 		"build:deno": "DEPLOYMENT_PLATFORM=deno bun run build",
 		"dev": "DEPLOYMENT_PLATFORM=server bun run --watch src/index.ts",

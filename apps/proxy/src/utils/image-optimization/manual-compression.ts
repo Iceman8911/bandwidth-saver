@@ -149,11 +149,34 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 	];
 };
 
+const compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
+	quality,
+	srcImg,
+	srcMimeType,
+}) => {
+	const { encode } = await import("@jsquash/webp");
+
+	const compressedImageBuffer = await encode(srcImg, { quality });
+
+	const smallerImageBuffer =
+		compressedImageBuffer.byteLength <= srcImg.byteLength
+			? compressedImageBuffer
+			: srcImg;
+
+	return [
+		new Uint8Array(smallerImageBuffer),
+		smallerImageBuffer.byteLength === srcImg.byteLength
+			? srcMimeType
+			: "image/webp",
+	];
+};
+
 const compressImage: ImageCompressorHandler = async (payload) => {
-	// Cloudflare workers on the free tier have 10ms limit which is too small to do any meaningful compression.
+	// Cloudflare workers on the free tier have 10ms limit which is too small for most.
 	// Used the raw env for dead code elimination
 	if (process.env.DEPLOYMENT_PLATFORM === "cloudflare") {
 		return [new Uint8Array(payload.srcImg), payload.srcMimeType];
+		// return compressImageUsingJsquashWebp(payload);
 	}
 
 	try {
