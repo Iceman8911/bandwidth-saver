@@ -75,6 +75,7 @@
       "name": "@bandwidth-saver/shared",
       "version": "0.0.0",
       "dependencies": {
+        "@badrap/result": "^0.3.1",
         "valibot": "^1.1.0",
       },
       "devDependencies": {
