@@ -8,7 +8,6 @@ import {
 	type UrlSchema,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
-
 import { compressImagefromUrl } from "../../utils/image-optimization/manual-compression";
 import { normaliseRequestByUrl } from "../../utils/request";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../utils/url";
@@ -33,6 +32,8 @@ export const processImageRoute = new Elysia()
 			const cleanedSrcUrl = cleanlyExtractNestedUrlFromRawRequestUrl(
 				request.url,
 			);
+
+			console.log(query, headers);
 
 			/** The final response at the end of processing that I can cache and do some stuff */
 			let processedResponse: Response;

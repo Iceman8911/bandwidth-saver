@@ -1,3 +1,4 @@
+import { Result } from "@badrap/result";
 import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
@@ -6,6 +7,7 @@ import {
 	type ImageMimeType,
 	type NumberBetween1and100Inclusively,
 	type UrlSchema,
+	wrapErrorMessage,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
 
@@ -21,7 +23,7 @@ interface ImageCompressorHandlerPayload {
 
 type ImageCompressorHandler = (
 	payload: ImageCompressorHandlerPayload,
-) => Promise<[Uint8Array, ImageMimeType]>;
+) => Promise<Result<[Uint8Array, ImageMimeType]>>;
 
 /** May throw on certain serverless setups since it requires native node bindings */
 const compressImageUsingSharp: ImageCompressorHandler = async ({
@@ -98,7 +100,9 @@ const compressImageUsingSharp: ImageCompressorHandler = async ({
 			break;
 
 		default:
-			throw `Didn't account for the format, ${format}, didya?`;
+			return Result.err(
+				wrapErrorMessage(`Didn't account for the format, ${format}, didya?`),
+			);
 	}
 
 	const convertedImageBuffer = await processedSharpInstance.toBuffer();
@@ -108,12 +112,12 @@ const compressImageUsingSharp: ImageCompressorHandler = async ({
 			? convertedImageBuffer
 			: srcImg;
 
-	return [
+	return Result.ok([
 		new Uint8Array(smallerImageBuffer),
 		smallerImageBuffer.byteLength === srcImg.byteLength
 			? srcMimeType || `image/${actualFormatUsed}`
 			: `image/${actualFormatUsed}`,
-	];
+	]);
 };
 
 /** Safer since it's wasm-based but doesn't support preserving animations */
@@ -134,19 +138,20 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 		quality: quality,
 	});
 
-	if (!compressedImageBuffer) throw Error("Wasm image optimization failed :(");
+	if (!compressedImageBuffer)
+		return Result.err(wrapErrorMessage("Wasm image optimization failed :("));
 
 	const smallerImageBuffer =
 		compressedImageBuffer.byteLength <= srcImg.byteLength
 			? compressedImageBuffer
 			: srcImg;
 
-	return [
+	return Result.ok([
 		new Uint8Array(smallerImageBuffer),
 		smallerImageBuffer.byteLength === srcImg.byteLength
 			? srcMimeType || `image/${actualFormatUsed}`
 			: `image/${actualFormatUsed}`,
-	];
+	]);
 };
 
 const compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
@@ -163,12 +168,12 @@ const compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
 			? compressedImageBuffer
 			: srcImg;
 
-	return [
+	return Result.ok([
 		new Uint8Array(smallerImageBuffer),
 		smallerImageBuffer.byteLength === srcImg.byteLength
 			? srcMimeType
 			: "image/webp",
-	];
+	]);
 };
 
 const compressImage: ImageCompressorHandler = async (payload) => {
