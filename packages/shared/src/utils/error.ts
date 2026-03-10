@@ -1,5 +1,7 @@
+import { Result } from "@badrap/result";
+
 type ErrorLikeConstructor<TError extends Error = Error> = new (
-	...args: any
+	message: string,
 ) => TError;
 
 export function wrapErrorMessage<TError extends Error>(
@@ -8,5 +10,22 @@ export function wrapErrorMessage<TError extends Error>(
 ): TError {
 	const message = val instanceof Error ? val.message : String(val);
 
-	return new (errorConstructor ?? Error)(message) as TError;
+	if (errorConstructor) {
+		return new errorConstructor(message);
+	}
+
+	return new Error(message) as TError;
+}
+
+/** For use when integrating with third party / non Result-type code */
+export async function wrapErrorProneCode<TReturnVal>(
+	cb: () => TReturnVal | Promise<TReturnVal>,
+): Promise<Result<TReturnVal>> {
+	try {
+		const cbResult = await cb();
+
+		return Result.ok(cbResult);
+	} catch (e) {
+		return Result.err(wrapErrorMessage(e));
+	}
 }
