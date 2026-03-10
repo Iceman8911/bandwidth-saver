@@ -1,6 +1,8 @@
-import type {
-	ImageCompressionPayloadSchema,
-	UrlSchema,
+import { Result } from "@badrap/result";
+import {
+	type ImageCompressionPayloadSchema,
+	type UrlSchema,
+	wrapErrorMessage,
 } from "@bandwidth-saver/shared";
 
 const RAW_URL_SPLITTER =
@@ -16,22 +18,28 @@ function columnAndCommaReplacer(subStringMatched: string) {
  */
 export function cleanlyExtractNestedUrlFromRawRequestUrl(
 	rawUrl: string,
-): UrlSchema {
+): Result<UrlSchema> {
 	const idx = rawUrl.indexOf(RAW_URL_SPLITTER);
 	if (idx === -1) {
-		throw new Error(`Missing ${RAW_URL_SPLITTER} query param.`);
+		return Result.err(
+			wrapErrorMessage(`Missing ${RAW_URL_SPLITTER} query param.`),
+		);
 	}
 
 	const encoded = rawUrl.slice(idx + RAW_URL_SPLITTER.length);
 	if (!encoded) {
-		throw new Error(`Empty ${RAW_URL_SPLITTER} query param.`);
+		return Result.err(
+			wrapErrorMessage(`Empty ${RAW_URL_SPLITTER} query param.`),
+		);
 	}
 
 	const decoded = decodeURIComponent(encoded);
 
 	// "," and ":" need to be manually encoded (since I can't do that via DNR from the extension side), otherwise, urls that use them within the url end up failing
-	return decoded.replace(
-		COLUMN_AND_COMMA_MATCHER,
-		columnAndCommaReplacer,
-	) as UrlSchema;
+	return Result.ok(
+		decoded.replace(
+			COLUMN_AND_COMMA_MATCHER,
+			columnAndCommaReplacer,
+		) as UrlSchema,
+	);
 }

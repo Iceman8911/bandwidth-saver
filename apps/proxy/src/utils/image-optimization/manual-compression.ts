@@ -8,6 +8,7 @@ import {
 	type NumberBetween1and100Inclusively,
 	type UrlSchema,
 	wrapErrorMessage,
+	wrapErrorProneCode,
 } from "@bandwidth-saver/shared";
 import type { Sharp } from "sharp";
 
@@ -126,61 +127,65 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 	quality,
 	srcImg,
 	srcMimeType,
-}) => {
-	const { optimizeImage } = await import("wasm-image-optimization");
+}) =>
+	wrapErrorProneCode(async () => {
+		const { optimizeImage } = await import("wasm-image-optimization");
 
-	const actualFormatUsed =
-		format === "auto" ? "avif" : format === "jpg" ? "jpeg" : format;
+		const actualFormatUsed =
+			format === "auto" ? "avif" : format === "jpg" ? "jpeg" : format;
 
-	const compressedImageBuffer = await optimizeImage({
-		format: actualFormatUsed,
-		image: srcImg,
-		quality: quality,
+		const compressedImageBuffer = await optimizeImage({
+			format: actualFormatUsed,
+			image: srcImg,
+			quality: quality,
+		});
+
+		if (!compressedImageBuffer) throw "Wasm image optimization failed :(";
+
+		const smallerImageBuffer =
+			compressedImageBuffer.byteLength <= srcImg.byteLength
+				? compressedImageBuffer
+				: srcImg;
+
+		return [
+			new Uint8Array(smallerImageBuffer),
+			smallerImageBuffer.byteLength === srcImg.byteLength
+				? srcMimeType || `image/${actualFormatUsed}`
+				: `image/${actualFormatUsed}`,
+		];
 	});
-
-	if (!compressedImageBuffer)
-		return Result.err(wrapErrorMessage("Wasm image optimization failed :("));
-
-	const smallerImageBuffer =
-		compressedImageBuffer.byteLength <= srcImg.byteLength
-			? compressedImageBuffer
-			: srcImg;
-
-	return Result.ok([
-		new Uint8Array(smallerImageBuffer),
-		smallerImageBuffer.byteLength === srcImg.byteLength
-			? srcMimeType || `image/${actualFormatUsed}`
-			: `image/${actualFormatUsed}`,
-	]);
-};
 
 const compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
 	quality,
 	srcImg,
 	srcMimeType,
 }) => {
-	const { encode } = await import("@jsquash/webp");
+	return wrapErrorProneCode(async () => {
+		const { encode } = await import("@jsquash/webp");
 
-	const compressedImageBuffer = await encode(srcImg, { quality });
+		const compressedImageBuffer = await encode(srcImg, { quality });
 
-	const smallerImageBuffer =
-		compressedImageBuffer.byteLength <= srcImg.byteLength
-			? compressedImageBuffer
-			: srcImg;
+		const smallerImageBuffer =
+			compressedImageBuffer.byteLength <= srcImg.byteLength
+				? compressedImageBuffer
+				: srcImg;
 
-	return Result.ok([
-		new Uint8Array(smallerImageBuffer),
-		smallerImageBuffer.byteLength === srcImg.byteLength
-			? srcMimeType
-			: "image/webp",
-	]);
+		const res = [
+			new Uint8Array(smallerImageBuffer),
+			smallerImageBuffer.byteLength === srcImg.byteLength
+				? srcMimeType
+				: "image/webp",
+		] as [Uint8Array, ImageMimeType];
+
+		return res;
+	});
 };
 
 const compressImage: ImageCompressorHandler = async (payload) => {
 	// Cloudflare workers on the free tier have 10ms limit which is too small for most.
 	// Used the raw env for dead code elimination
 	if (process.env.DEPLOYMENT_PLATFORM === "cloudflare") {
-		return [new Uint8Array(payload.srcImg), payload.srcMimeType];
+		return Result.ok([new Uint8Array(payload.srcImg), payload.srcMimeType]);
 		// return compressImageUsingJsquashWebp(payload);
 	}
 
@@ -216,7 +221,7 @@ export async function compressImagefromUrl({
 	preserveAnim,
 	quality,
 	url,
-}: CompressImageFromUrlProps): Promise<ResponseAndSavings> {
+}: CompressImageFromUrlProps): Promise<Result<ResponseAndSavings>> {
 	const headers = getSpoofingFetchHeaders({
 		cookieStr,
 		url,
@@ -239,16 +244,20 @@ export async function compressImagefromUrl({
 			"compressImagefromUrl - No valid mime type. Content-Type was:",
 			fetchedUrlResponse.headers.get("content-type"),
 		);
-		throw Error(`Url, "${url}", has no valid image mime type.`);
-	}
-
-	if (imgMimeType === "image/svg+xml") {
-		throw Error(
-			`Url, "${url}", is an svg. Raster compression will negate it's benefit.`,
+		return Result.err(
+			wrapErrorMessage(`Url, "${url}", has no valid image mime type.`),
 		);
 	}
 
-	const [compressedImgBuffer, contentType] = await compressImage({
+	if (imgMimeType === "image/svg+xml") {
+		return Result.err(
+			wrapErrorMessage(
+				`Url, "${url}", is an svg. Raster compression will negate it's benefit.`,
+			),
+		);
+	}
+
+	const compressionResult = await compressImage({
 		format,
 		preserveAnim,
 		quality,
@@ -256,19 +265,21 @@ export async function compressImagefromUrl({
 		srcMimeType: imgMimeType,
 	});
 
-	const response = new Response(compressedImgBuffer, {
-		headers: {
-			"content-length": `${compressedImgBuffer.byteLength}`,
-			"content-type": contentType,
-			vary: "Accept",
-		},
-	});
+	return compressionResult.map(([compressedImgBuffer, contentType]) => {
+		const response = new Response(compressedImgBuffer, {
+			headers: {
+				"content-length": `${compressedImgBuffer.byteLength}`,
+				"content-type": contentType,
+				vary: "Accept",
+			},
+		});
 
-	return {
-		bytesSaved: Math.max(
-			imgBuffer.byteLength - compressedImgBuffer.byteLength,
-			0,
-		),
-		res: response,
-	};
+		return {
+			bytesSaved: Math.max(
+				imgBuffer.byteLength - compressedImgBuffer.byteLength,
+				0,
+			),
+			res: response,
+		};
+	});
 }
