@@ -45,26 +45,32 @@ const getContentLengthAndTypeFromUrl = async (
 	return wrapErrorProneCode(async () => {
 		const cacheKey = getContentLengthAndTypeFromUrlCacheKey(props);
 
-		const possibleCachedRes = getContentLengthAndTypeFromUrlCache.get(cacheKey);
+		const possibleCachedReturnVal =
+			getContentLengthAndTypeFromUrlCache.get(cacheKey);
 
-		if (possibleCachedRes) return possibleCachedRes;
+		if (possibleCachedReturnVal) return possibleCachedReturnVal;
 
-		const { headers } = await fetch(props.url, {
+		const res = await fetch(props.url, {
 			headers: getSpoofingFetchHeaders(props),
 			method: "HEAD",
 			signal: getFetchTimeoutSignal(4000),
 		});
 
-		const headersLength = Number(headers.get("content-length"));
+		if (!res.ok) return {};
 
-		const res: ContentLengthAndType = {
+		const headersLength = Number(res.headers.get("content-length"));
+
+		const returnVal: ContentLengthAndType = {
 			length: Number.isNaN(headersLength) ? null : headersLength,
-			type: getLikelyImageUrlMimeType(props.url, headers.get("content-type")),
+			type: getLikelyImageUrlMimeType(
+				props.url,
+				res.headers.get("content-type"),
+			),
 		};
 
-		getContentLengthAndTypeFromUrlCache.set(cacheKey, res);
+		getContentLengthAndTypeFromUrlCache.set(cacheKey, returnVal);
 
-		return res;
+		return returnVal;
 	});
 };
 
