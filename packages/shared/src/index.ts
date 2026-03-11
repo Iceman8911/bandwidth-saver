@@ -6,9 +6,10 @@ export * from "./utils/array";
 export * from "./utils/batch";
 export * from "./utils/clone";
 export * from "./utils/date";
+export * from "./utils/error";
 export * from "./utils/fetch";
 export * from "./utils/image-optimization/adapter";
+export * from "./utils/image-optimization/get-optimal-url";
 export * from "./utils/random";
 export * from "./utils/string";
 export * from "./utils/type";
-export * from "./utils/error"
