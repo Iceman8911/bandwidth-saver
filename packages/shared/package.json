@@ -1,6 +1,7 @@
 {
 	"dependencies": {
 		"@badrap/result": "^0.3.1",
+		"tiny-lru": "^11.4.7",
 		"valibot": "^1.1.0"
 	},
 	"devDependencies": {
