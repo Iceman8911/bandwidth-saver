@@ -181,6 +181,12 @@ export const processImageRoute = new Elysia()
 				} = args;
 
 				const oldResponse = args.response as Response;
+
+				// Do not re-wrap redirects, otherwise we may lose status/headers (Location) and cause blank navigations.
+				if (oldResponse.status >= 300 && oldResponse.status < 400) {
+					return oldResponse;
+				}
+
 				const response = new Response(oldResponse.body, {
 					headers: oldResponse.headers,
 				});
