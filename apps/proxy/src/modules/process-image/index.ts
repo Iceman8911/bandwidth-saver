@@ -126,7 +126,14 @@ export const processImageRoute = new Elysia()
 						.chain(
 							(res) => {
 								store.bytesSaved = bytesSavedFromCompressedImageUrl;
-								store.note = `compressed with ${compressedImageUrl}`;
+								store.note = `compressed externally with ${compressedImageUrl}`;
+
+								console.log(
+									"Image at url",
+									cleanedSrcUrl,
+									"was successfully ",
+									store.note,
+								);
 
 								return Result.ok(res);
 							},
@@ -155,6 +162,12 @@ export const processImageRoute = new Elysia()
 					({ compressed, state }) => {
 						store.bytesSaved = state.bytesSaved;
 						store.note = state.note;
+
+						console.log(
+							"Image at url",
+							cleanedSrcUrl,
+							"was successfully compressed manually",
+						);
 
 						return Result.ok(compressed);
 					},
