@@ -11,6 +11,7 @@ import {
 	wrapErrorProneCode,
 } from "@bandwidth-saver/shared";
 import Elysia from "elysia";
+import { CAN_PERFORM_MANUAL_COMPRESSION } from "../../shared/constants";
 import { compressImagefromUrl } from "../../utils/image-optimization/manual-compression";
 import { normaliseRequestByUrl } from "../../utils/request";
 import { cleanlyExtractNestedUrlFromRawRequestUrl } from "../../utils/url";
@@ -112,7 +113,8 @@ export const processImageRoute = new Elysia()
 						...query,
 						zz_url_bwsvr8911: cleanedSrcUrl,
 					},
-					headers[ProxyCustomHeaders.DNR_COOKIE_STRING],
+					cookieStr,
+					CAN_PERFORM_MANUAL_COMPRESSION,
 				);
 
 				if (compressedImageUrl !== cleanedSrcUrl) {
@@ -152,6 +154,7 @@ export const processImageRoute = new Elysia()
 						.unwrap();
 				}
 			}
+			//
 
 			// Fallback to manual compression
 			const props = { cookieStr, query, url: cleanedSrcUrl };

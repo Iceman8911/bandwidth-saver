@@ -1,6 +1,7 @@
 import { Result } from "@badrap/result";
 import { lru } from "tiny-lru";
 import { ImageCompressorEndpoint, ServerAPIEndpoint } from "../../constants";
+import { getProxyEnv } from "../../models/env";
 import type {
 	ImageCompressionPayloadSchema,
 	ImageCompressionUrlConstructor,
@@ -222,6 +223,7 @@ async function getFirstUsefulCompressedImageUrl(
 export async function getCompressedImageUrlWithFallback(
 	payload: ImageCompressionPayloadSchema,
 	cookieStr?: string,
+	canManualCompress?: boolean,
 ): Promise<CompressionUrlAndSavings> {
 	const tryPreserveAnim = payload.preserveAnim_bwsvr8911,
 		originalUrl = payload.zz_url_bwsvr8911;
@@ -283,31 +285,33 @@ export async function getCompressedImageUrlWithFallback(
 		console.log("No viable compression endpoint found in the backup batch");
 	}
 
-	const lastResortEndpointBatch = tryPreserveAnim
-		? ([
-				URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
-				URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
-			] as const)
-		: ([
-				URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
-				URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
-			] as const);
+	if (!canManualCompress) {
+		const lastResortEndpointBatch = tryPreserveAnim
+			? ([
+					URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
+					URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
+				] as const)
+			: ([
+					URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
+					URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
+				] as const);
 
-	console.log(
-		"Since animation preservation is set to",
-		tryPreserveAnim,
-		". Trying last resort endpoints:",
-		lastResortEndpointBatch[0],
-	);
+		console.log(
+			"Since animation preservation is set to",
+			tryPreserveAnim,
+			". Trying last resort endpoints:",
+			lastResortEndpointBatch[0],
+		);
 
-	// Since the user's preferred choice was a bust, and backup proxies weren't of help, try out the remaining options
-	const lastResortResult = await getFirstUsefulCompressedImageUrl({
-		cookieStr,
-		payload,
-		urlConstructorArray: lastResortEndpointBatch[1],
-	});
+		// Since the user's preferred choice was a bust, and backup proxies weren't of help, try out the remaining options
+		const lastResortResult = await getFirstUsefulCompressedImageUrl({
+			cookieStr,
+			payload,
+			urlConstructorArray: lastResortEndpointBatch[1],
+		});
 
-	if (lastResortResult) return lastResortResult;
+		if (lastResortResult) return lastResortResult;
+	}
 
 	console.log(
 		"No viable compression endpoint found in the last-resort endpoints batch",
