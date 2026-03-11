@@ -54,7 +54,7 @@ const getContentLengthAndTypeFromUrl = async (
 		const res = await fetch(props.url, {
 			headers: getSpoofingFetchHeaders(props),
 			method: "HEAD",
-			signal: getFetchTimeoutSignal(4000),
+			signal: getFetchTimeoutSignal(5000),
 		});
 
 		if (!res.ok) return {};

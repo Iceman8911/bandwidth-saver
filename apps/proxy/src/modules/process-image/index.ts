@@ -118,10 +118,18 @@ export const processImageRoute = new Elysia()
 				);
 
 				if (compressedImageUrl !== cleanedSrcUrl) {
+					const isUsingBackupProxy = query.backupEndpoints_bwsvr8911?.some(
+						(endpoint) => compressedImageUrl.startsWith(endpoint),
+					);
+
 					return (
 						await wrapErrorProneCode(() =>
 							fetch(compressedImageUrl, {
-								headers: getSpoofingFetchHeaders(),
+								headers: getSpoofingFetchHeaders({
+									cookieStr: isUsingBackupProxy ? cookieStr : undefined,
+									isForBackupProxy: isUsingBackupProxy,
+									url: compressedImageUrl,
+								}),
 							}),
 						)
 					)
