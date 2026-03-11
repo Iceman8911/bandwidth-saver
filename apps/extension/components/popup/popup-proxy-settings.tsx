@@ -107,7 +107,10 @@ function ProxyBackupEndpointsInput(props: TempProxySettingsProps) {
 								.reduce<UrlSchema[]>((arr, str) => {
 									const trimmed = str.trim();
 
-									if (v.is(UrlSchema, trimmed)) {
+									if (
+										v.is(UrlSchema, trimmed) &&
+										trimmed !== props.store.endpoint.main
+									) {
 										arr.push(trimmed as UrlSchema);
 									}
 
