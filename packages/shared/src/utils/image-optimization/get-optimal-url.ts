@@ -1,4 +1,5 @@
 import { Result } from "@badrap/result";
+import { lru } from "tiny-lru";
 import { ImageCompressorEndpoint, ServerAPIEndpoint } from "../../constants";
 import type {
 	ImageCompressionPayloadSchema,
@@ -28,10 +29,26 @@ interface ContentLengthAndType {
 	type?: ImageMimeType | null;
 }
 
+const getContentLengthAndTypeFromUrlCache = lru<ContentLengthAndType>(
+	1000,
+	30 * 1000,
+);
+
+const getContentLengthAndTypeFromUrlCacheKey = (
+	props: GetContentLengthAndTypeFromUrlProps,
+): string =>
+	`${props.url}-${props.isForBackupProxy}-${props.cookieStr ? "cookie :D" : "no cookie :p"}`;
+
 const getContentLengthAndTypeFromUrl = async (
 	props: GetContentLengthAndTypeFromUrlProps,
 ): Promise<Result<ContentLengthAndType>> => {
 	return wrapErrorProneCode(async () => {
+		const cacheKey = getContentLengthAndTypeFromUrlCacheKey(props);
+
+		const possibleCachedRes = getContentLengthAndTypeFromUrlCache.get(cacheKey);
+
+		if (possibleCachedRes) return possibleCachedRes;
+
 		const { headers } = await fetch(props.url, {
 			headers: getSpoofingFetchHeaders(props),
 			method: "HEAD",
@@ -40,10 +57,14 @@ const getContentLengthAndTypeFromUrl = async (
 
 		const headersLength = Number(headers.get("content-length"));
 
-		return {
+		const res: ContentLengthAndType = {
 			length: Number.isNaN(headersLength) ? null : headersLength,
 			type: getLikelyImageUrlMimeType(props.url, headers.get("content-type")),
 		};
+
+		getContentLengthAndTypeFromUrlCache.set(cacheKey, res);
+
+		return res;
 	});
 };
 
