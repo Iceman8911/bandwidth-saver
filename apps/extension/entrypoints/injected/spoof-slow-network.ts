@@ -1,4 +1,3 @@
-import { defineUnlistedScript } from "wxt/utils/define-unlisted-script";
 import type { GeneralSettingsOutput } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { onWindowMessage } from "@/shared/messaging/injected";
@@ -41,7 +40,7 @@ function spoofSlowNetwork({
 	});
 }
 
-export default defineUnlistedScript(() => {
+export default function runSpoofSlowNetworkCode() {
 	if (!("connection" in navigator)) return;
 
 	const connection = navigator.connection as OriginalConnectionData;
@@ -62,4 +61,4 @@ export default defineUnlistedScript(() => {
 			});
 		}
 	});
-});
+}

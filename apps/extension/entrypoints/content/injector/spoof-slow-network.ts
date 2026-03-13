@@ -10,7 +10,7 @@ import type { ContentScriptTogglerPayload } from "../shared";
 export async function injectScriptForSpoofingSlowNetwork({
 	origin,
 }: ContentScriptTogglerPayload) {
-	await injectScript("/spoof-slow-network.js", {
+	await injectScript("/injected.js", {
 		keepInDom: true,
 	});
 

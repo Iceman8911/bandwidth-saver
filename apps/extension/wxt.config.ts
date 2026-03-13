@@ -20,15 +20,15 @@ export default defineConfig({
 			"storage",
 			"activeTab",
 			"alarms",
-      "downloads",
-			"cookies"
+			"downloads",
+			"cookies",
 		],
 		short_name: "Bandwidth Saver And Monitor",
 		version: "0.0.1",
 		web_accessible_resources: [
 			{
 				matches: ["<all_urls>"],
-				resources: ["/spoof-slow-network.js"],
+				resources: ["/injected.js"],
 			},
 		],
 	},
