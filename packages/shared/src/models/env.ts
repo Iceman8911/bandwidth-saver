@@ -44,7 +44,10 @@ export const ExtensionEnvSchema = v.looseObject({
 	VITE_PROD: v.optional(v.boolean(), false),
 });
 
+export type ProxyEnvInput = v.InferInput<typeof ProxyEnvSchema>;
 export type ProxyEnv = v.InferOutput<typeof ProxyEnvSchema>;
+
+export type ExtensionEnvInput = v.InferInput<typeof ExtensionEnvSchema>;
 export type ExtensionEnv = v.InferOutput<typeof ExtensionEnvSchema>;
 
 export function getProxyEnv(): ProxyEnv {

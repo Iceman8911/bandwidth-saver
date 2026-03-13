@@ -7,6 +7,7 @@ import {
 } from "./shared";
 
 export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"]);
+export type ImageFormatInput = v.InferInput<typeof ImageFormatSchema>;
 export type ImageFormatOutput = v.InferOutput<typeof ImageFormatSchema>;
 
 const CoercedToBooleanOptionalSchema = v.optional(
@@ -57,6 +58,9 @@ export const ImageCompressionPayloadSchema = v.looseObject({
 	/** Ensure that this is at the end, alphabetically, so I can do a simple regex match to get the url in one sweep */
 	zz_url_bwsvr8911: NormalizedUrlSchema,
 });
+export type ImageCompressionPayloadInput = v.InferInput<
+	typeof ImageCompressionPayloadSchema
+>;
 export type ImageCompressionPayloadOutput = v.InferOutput<
 	typeof ImageCompressionPayloadSchema
 >;

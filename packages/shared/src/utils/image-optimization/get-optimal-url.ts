@@ -3,10 +3,10 @@ import { lru } from "tiny-lru";
 import { ImageCompressorEndpoint, ServerAPIEndpoint } from "../../constants";
 import { getProxyEnv } from "../../models/env";
 import type {
-	ImageCompressionPayloadSchema,
+	ImageCompressionPayloadOutput,
 	ImageCompressionUrlConstructor,
 } from "../../models/image-optimization";
-import type { UrlSchema } from "../../models/shared";
+import type { UrlOutput } from "../../models/shared";
 import { wrapErrorProneCode } from "../error";
 import {
 	getFetchTimeoutSignal,
@@ -20,7 +20,7 @@ import {
 } from "./adapter";
 
 interface GetContentLengthAndTypeFromUrlProps {
-	url: UrlSchema;
+	url: UrlOutput;
 	cookieStr?: string;
 	isForBackupProxy?: boolean;
 }
@@ -76,12 +76,12 @@ const getContentLengthAndTypeFromUrl = async (
 };
 
 interface CompressionUrlAndSavings {
-	url: UrlSchema;
+	url: UrlOutput;
 	bytesSaved: number;
 }
 
 interface OptimalImageCompressionAdapterProps {
-	payload: ImageCompressionPayloadSchema;
+	payload: ImageCompressionPayloadOutput;
 	urlConstructor: ImageCompressionUrlConstructor;
 	cookieStr?: string;
 	isUsingBackupProxy?: boolean;
@@ -178,17 +178,13 @@ const URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING = [
 	ImageCompressorEndpoint.CLOUDINARY,
 ] as const satisfies ImageCompressorEndpoint[];
 
-const getEndpointConstructor = (endpoint: ImageCompressorEndpoint) =>
-	IMAGE_COMPRESSION_URL_CONSTRUCTORS[endpoint];
-
-const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION: ReadonlyArray<ImageCompressionUrlConstructor> =
-	URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION.map(getEndpointConstructor);
-
-const URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING: ReadonlyArray<ImageCompressionUrlConstructor> =
-	URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING.map(getEndpointConstructor);
+const getEndpointConstructorArray = (
+	endpoints: ReadonlyArray<ImageCompressorEndpoint>,
+): ReadonlyArray<ImageCompressionUrlConstructor> =>
+	endpoints.map((endpoint) => IMAGE_COMPRESSION_URL_CONSTRUCTORS[endpoint]);
 
 interface GetFirstUsefulCompressedImageUrlProps {
-	payload: ImageCompressionPayloadSchema;
+	payload: ImageCompressionPayloadOutput;
 	urlConstructorArray: ReadonlyArray<ImageCompressionUrlConstructor>;
 	cookieStr?: string;
 	isUsingBackupProxy?: boolean;
@@ -221,7 +217,7 @@ async function getFirstUsefulCompressedImageUrl(
  * @returns Compressed image's url or the original image url if all adapters fail
  */
 export async function getCompressedImageUrlWithFallback(
-	payload: ImageCompressionPayloadSchema,
+	payload: ImageCompressionPayloadOutput,
 	cookieStr?: string,
 	canManualCompress?: boolean,
 ): Promise<CompressionUrlAndSavings> {
@@ -231,11 +227,15 @@ export async function getCompressedImageUrlWithFallback(
 	const mostIdealEndpointBatch = tryPreserveAnim
 		? ([
 				URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
-				URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
+				getEndpointConstructorArray(
+					URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
+				),
 			] as const)
 		: ([
 				URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
-				URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
+				getEndpointConstructorArray(
+					URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
+				),
 			] as const);
 
 	console.log(
@@ -258,7 +258,7 @@ export async function getCompressedImageUrlWithFallback(
 	if (payload.backupEndpoints_bwsvr8911?.length) {
 		console.log("Trying backup endpoints:", payload.backupEndpoints_bwsvr8911);
 
-		const newPayload: ImageCompressionPayloadSchema = {
+		const newPayload: ImageCompressionPayloadOutput = {
 			...payload,
 			/** To prevent possible smelly recursion */
 			backupEndpoints_bwsvr8911: [],
@@ -271,7 +271,7 @@ export async function getCompressedImageUrlWithFallback(
 			isUsingBackupProxy: true,
 			payload: newPayload,
 			urlConstructorArray: payload.backupEndpoints_bwsvr8911.map(
-				(endpoint) => (p) =>
+				(endpoint: UrlOutput) => (p: ImageCompressionPayloadOutput) =>
 					proxyUrlConstructor({
 						mainEndpoint: endpoint,
 						path: ServerAPIEndpoint.PROCESS_IMAGE,
@@ -289,11 +289,15 @@ export async function getCompressedImageUrlWithFallback(
 		const lastResortEndpointBatch = tryPreserveAnim
 			? ([
 					URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
-					URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_DISABLING,
+					getEndpointConstructorArray(
+						URL_ENDPOINT_ARRAY_WITH_ANIMATION_DISABLING,
+					),
 				] as const)
 			: ([
 					URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
-					URL_CONSTRUCTOR_ARRAY_WITH_ANIMATION_PRESERVATION,
+					getEndpointConstructorArray(
+						URL_ENDPOINT_ARRAY_WITH_ANIMATION_PRESERVATION,
+					),
 				] as const);
 
 		console.log(
