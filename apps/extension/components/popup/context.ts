@@ -1,9 +1,9 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { UrlOutput } from "@bandwidth-saver/shared";
 import { createContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	DEFAULT_GENERAL_SETTINGS,
-	type GeneralSettingsSchema,
+	type GeneralSettingsOutput,
 } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { defaultGeneralSettingsStorageItem } from "@/shared/storage";
@@ -12,11 +12,11 @@ type PopupContextProps = {
 	scope: "default" | "site";
 
 	/** Tab origin for the active tab, only used for site specifc settings */
-	tabOrigin: UrlSchema;
+	tabOrigin: UrlOutput;
 
 	generalSettings: {
 		item: typeof defaultGeneralSettingsStorageItem;
-		val: GeneralSettingsSchema;
+		val: GeneralSettingsOutput;
 	};
 };
 

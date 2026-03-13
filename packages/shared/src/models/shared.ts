@@ -5,12 +5,12 @@ export const NumberBetween1and100Inclusively = v.pipe(
 	v.toMinValue(1),
 	v.toMaxValue(100),
 );
-export type NumberBetween1and100Inclusively = v.InferOutput<
+export type NumberBetween1and100InclusivelyOutput = v.InferOutput<
 	typeof NumberBetween1and100Inclusively
 >;
 
 export const UrlSchema = v.pipe(v.string(), v.url(), v.brand("url"));
-export type UrlSchema = v.InferOutput<typeof UrlSchema>;
+export type UrlOutput = v.InferOutput<typeof UrlSchema>;
 
 export const DataUrlSchema = v.pipe(
 	v.string(),
@@ -18,7 +18,7 @@ export const DataUrlSchema = v.pipe(
 	v.brand("dataUrl"),
 );
 
-export type DataUrlSchema = v.InferOutput<typeof DataUrlSchema>;
+export type DataUrlOutput = v.InferOutput<typeof DataUrlSchema>;
 
 export type AnyValibotSchema = v.BaseSchema<
 	unknown,

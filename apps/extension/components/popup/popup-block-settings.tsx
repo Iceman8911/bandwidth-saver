@@ -3,7 +3,7 @@ import { Save } from "lucide-solid";
 import { createEffect, createMemo, Show, useContext } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import {
-	type BlockSettingsSchema,
+	type BlockSettingsOutput,
 	DEFAULT_BLOCK_SETTINGS,
 } from "@/models/storage";
 import {
@@ -16,8 +16,8 @@ import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type TempBlockSettingsProps = {
-	store: BlockSettingsSchema;
-	set: SetStoreFunction<BlockSettingsSchema>;
+	store: BlockSettingsOutput;
+	set: SetStoreFunction<BlockSettingsOutput>;
 };
 
 function BlockStyleTooltip() {

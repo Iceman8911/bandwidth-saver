@@ -1,5 +1,6 @@
 import {
 	REDIRECTED_SEARCH_PARAM_FLAG,
+	type UrlOutput,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
@@ -16,7 +17,7 @@ function isHtmlOrSvgImageElement(node: Node): node is HTMLOrSVGImageElement {
 	return node instanceof HTMLImageElement || node instanceof SVGImageElement;
 }
 
-async function isCompressionEnabled(url: UrlSchema): Promise<boolean> {
+async function isCompressionEnabled(url: UrlOutput): Promise<boolean> {
 	const [defaultSettings, siteSpecificSettings] = await Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),
@@ -32,7 +33,7 @@ let compressionCache: boolean | undefined;
 
 async function repairImageElement(
 	img: HTMLOrSVGImageElement,
-	url: UrlSchema,
+	url: UrlOutput,
 ): Promise<void> {
 	if (repairedImgElements.has(img)) return;
 
@@ -68,7 +69,7 @@ async function repairImageElement(
 /**
  * Install a single delegated error handler to repair images when they error.
  */
-export function fixImageElementsBrokenFromFailedCompression(url: UrlSchema) {
+export function fixImageElementsBrokenFromFailedCompression(url: UrlOutput) {
 	// Capture phase listener; resource error events don't reliably bubble, so capture is required.
 	document.addEventListener(
 		"error",

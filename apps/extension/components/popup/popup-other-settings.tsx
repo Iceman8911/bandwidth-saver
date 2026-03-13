@@ -13,6 +13,7 @@ import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import {
 	DEFAULT_GENERAL_SETTINGS,
+	type GeneralSettingsOutput,
 	GeneralSettingsSchema,
 } from "@/models/storage";
 import {
@@ -25,8 +26,8 @@ import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type TempGeneralSettingsProps = {
-	store: GeneralSettingsSchema;
-	set: SetStoreFunction<GeneralSettingsSchema>;
+	store: GeneralSettingsOutput;
+	set: SetStoreFunction<GeneralSettingsOutput>;
 };
 
 function CspBypassTooltip() {
@@ -190,7 +191,7 @@ function SpoofSlowNetworkToggle(props: TempGeneralSettingsProps) {
 		"3g",
 		"2g",
 		"slow-2g",
-	] as const satisfies GeneralSettingsSchema["spoofSlowNetwork"][];
+	] as const satisfies GeneralSettingsOutput["spoofSlowNetwork"][];
 
 	const isOptionSelected = createSelector(() => props.store.spoofSlowNetwork);
 

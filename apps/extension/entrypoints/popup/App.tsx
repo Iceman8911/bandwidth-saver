@@ -1,4 +1,4 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { UrlOutput } from "@bandwidth-saver/shared";
 import { createAsync } from "@solidjs/router";
 import { createEffect, createMemo } from "solid-js";
 import { produce } from "solid-js/store";

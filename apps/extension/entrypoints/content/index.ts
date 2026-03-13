@@ -1,4 +1,4 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { UrlOutput } from "@bandwidth-saver/shared";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import {
 	defaultGeneralSettingsStorageItem,
@@ -10,7 +10,7 @@ import { runContentScriptDomManipulations } from "./combined-dom-manip";
 import { injectMainWorldScriptsViaContentScript } from "./script-injectors";
 import { monitorBandwidthUsageViaContentScript } from "./statistics/bandwidth-monitoring";
 
-const getDefaultAndSiteGeneralSettings = (url: UrlSchema) =>
+const getDefaultAndSiteGeneralSettings = (url: UrlOutput) =>
 	Promise.all([
 		defaultGeneralSettingsStorageItem.getValue(),
 		getSiteSpecificGeneralSettingsStorageItem(url).getValue(),

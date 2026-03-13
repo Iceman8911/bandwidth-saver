@@ -1,6 +1,6 @@
-import { BatchQueue, type UrlSchema } from "@bandwidth-saver/shared";
-import type { PerformanceResourceTimingIntiatorTypeSchema } from "@/models/native-types";
-import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import { BatchQueue, type UrlOutput } from "@bandwidth-saver/shared";
+import type { PerformanceResourceTimingIntiatorTypeOutput } from "@/models/native-types";
+import type { SingleAssetStatisticsOutput } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { sendExtensionMessage } from "@/shared/messaging/extension";
 import { detectAssetTypeFromUrl, getUrlSchemaOrigin } from "@/utils/url";
@@ -9,7 +9,7 @@ type PerformanceResourceTimingPayload = {
 	initiatorType: string;
 	name: string;
 	transferSize: number;
-	hostOrigin: UrlSchema;
+	hostOrigin: UrlOutput;
 };
 
 const pendingPerformanceResourceTimingPayloadBatchQueue =
@@ -28,13 +28,13 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 		// 0 transferSize usually means it came from Cache or the request was missing a header
 		if (transferSize > 0) {
 			//@ts-expect-error No need to parse since this will always be true unless the web breaks or smth
-			const parsedInitiatorType: PerformanceResourceTimingIntiatorTypeSchema =
+			const parsedInitiatorType: PerformanceResourceTimingIntiatorTypeOutput =
 				initiatorType;
 
 			let assetSize = 0;
 
 			// determine which asset key to increment
-			let assetType: keyof SingleAssetStatisticsSchema = "other";
+			let assetType: keyof SingleAssetStatisticsOutput = "other";
 
 			switch (parsedInitiatorType) {
 				case "audio":
@@ -71,14 +71,14 @@ pendingPerformanceResourceTimingPayloadBatchQueue.addCallbacks((details) => {
 					assetType = "html";
 					break;
 				default:
-					assetType = detectAssetTypeFromUrl(assetUrl as UrlSchema);
+					assetType = detectAssetTypeFromUrl(assetUrl as UrlOutput);
 					break;
 			}
 
 			assetSize += transferSize;
 
 			sendExtensionMessage(MessageType.MONITOR_BANDWIDTH_WITH_PERFORMANCE_API, {
-				assetUrl: assetUrl as UrlSchema,
+				assetUrl: assetUrl as UrlOutput,
 				bytes: assetSize,
 				// No way to get the bytesSaved header via Performance Metrics
 				bytesSaved: 0,

@@ -2,11 +2,12 @@ import { Result } from "@badrap/result";
 import {
 	getCompressedImageUrlWithFallback,
 	getSpoofingFetchHeaders,
+	type ImageCompressionPayloadOutput,
 	ImageCompressionPayloadSchema,
 	ProxyCustomHeaders,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
-	type UrlSchema,
+	type UrlOutput,
 	wrapErrorMessage,
 	wrapErrorProneCode,
 } from "@bandwidth-saver/shared";
@@ -30,8 +31,8 @@ const IS_HOSTED_ON_CLOUDFLARE =
 
 interface PerformManualImageCompressionProps {
 	cookieStr?: string | undefined;
-	query: ImageCompressionPayloadSchema;
-	url: UrlSchema;
+	query: ImageCompressionPayloadOutput;
+	url: UrlOutput;
 }
 
 type PerformManualImageCompressionResult = Result<{
@@ -79,7 +80,7 @@ export const processImageRoute = new Elysia()
 	.get(
 		`/${ServerAPIEndpoint.PROCESS_IMAGE}`,
 		async ({ query, request, store, redirect, headers, status }) => {
-			function fallbackToRedirect(backupUrl: UrlSchema): Response {
+			function fallbackToRedirect(backupUrl: UrlOutput): Response {
 				const urlToUse = query.default_bwsvr8911 || backupUrl;
 
 				store.note = urlToUse;

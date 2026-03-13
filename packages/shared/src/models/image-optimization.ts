@@ -2,11 +2,12 @@ import * as v from "valibot";
 import {
 	NormalizedUrlSchema,
 	NumberBetween1and100Inclusively,
+	type UrlOutput,
 	UrlSchema,
 } from "./shared";
 
 export const ImageFormatSchema = v.picklist(["auto", "webp", "avif", "jpg"]);
-export type ImageFormatSchema = v.InferOutput<typeof ImageFormatSchema>;
+export type ImageFormatOutput = v.InferOutput<typeof ImageFormatSchema>;
 
 const CoercedToBooleanOptionalSchema = v.optional(
 	v.union([
@@ -56,17 +57,17 @@ export const ImageCompressionPayloadSchema = v.looseObject({
 	/** Ensure that this is at the end, alphabetically, so I can do a simple regex match to get the url in one sweep */
 	zz_url_bwsvr8911: NormalizedUrlSchema,
 });
-export type ImageCompressionPayloadSchema = v.InferOutput<
+export type ImageCompressionPayloadOutput = v.InferOutput<
 	typeof ImageCompressionPayloadSchema
 >;
 
 /** Simply constructs a url to the compression service for possible compression */
 export type ImageCompressionUrlConstructor = (
-	payload: ImageCompressionPayloadSchema,
-) => UrlSchema;
+	payload: ImageCompressionPayloadOutput,
+) => UrlOutput;
 
 /** Validates the url provided by `ImageCompressionUrlConstructor` so that only a valid url or null is returned */
 export type ImageCompressionAdapter = (
-	payload: ImageCompressionPayloadSchema,
+	payload: ImageCompressionPayloadOutput,
 	urlConstructor: ImageCompressionUrlConstructor,
-) => Promise<UrlSchema | null>;
+) => Promise<UrlOutput | null>;

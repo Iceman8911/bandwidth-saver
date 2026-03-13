@@ -13,6 +13,7 @@ import {
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import * as v from "valibot";
 import {
+	type CompressionSettingsOutput,
 	CompressionSettingsSchema,
 	DEFAULT_COMPRESSION_SETTINGS,
 } from "@/models/storage";
@@ -31,11 +32,11 @@ const COMPRESSION_FORMATS = [
 	"avif",
 	"jpg",
 	"webp",
-] as const satisfies CompressionSettingsSchema["format"][];
+] as const satisfies CompressionSettingsOutput["format"][];
 
 type TempCompressionSettingsProps = {
-	store: CompressionSettingsSchema;
-	set: SetStoreFunction<CompressionSettingsSchema>;
+	store: CompressionSettingsOutput;
+	set: SetStoreFunction<CompressionSettingsOutput>;
 };
 
 function CompressionFormatSelect(props: TempCompressionSettingsProps) {

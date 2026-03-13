@@ -1,6 +1,6 @@
-import type { UrlSchema } from "@bandwidth-saver/shared";
+import type { UrlOutput } from "@bandwidth-saver/shared";
 import type { ReadonlyDeep } from "type-fest";
-import type { GeneralSettingsSchema } from "@/models/storage";
+import type { GeneralSettingsOutput } from "@/models/storage";
 
 export type ContentScriptSettingsApplyCallback = (arg: {
 	ele: Readonly<HTMLElement>;
@@ -8,9 +8,9 @@ export type ContentScriptSettingsApplyCallback = (arg: {
 }) => void;
 
 export type ContentScriptTogglerPayload = ReadonlyDeep<{
-	origin: UrlSchema;
+	origin: UrlOutput;
 	settings: {
-		default: GeneralSettingsSchema;
-		site: GeneralSettingsSchema;
+		default: GeneralSettingsOutput;
+		site: GeneralSettingsOutput;
 	};
 }>;

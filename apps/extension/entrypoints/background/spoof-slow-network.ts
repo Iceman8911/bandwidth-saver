@@ -1,5 +1,5 @@
 import { type Browser, browser } from "wxt/browser";
-import type { GeneralSettingsSchema } from "@/models/storage";
+import type { GeneralSettingsOutput } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import {
 	onExtensionMessage,
@@ -22,7 +22,7 @@ async function sendModeValue({
 	site: siteSettings,
 	tabId,
 }: SendModeValuePayload) {
-	let mode: GeneralSettingsSchema["spoofSlowNetwork"] = "default";
+	let mode: GeneralSettingsOutput["spoofSlowNetwork"] = "default";
 
 	if (siteSettings.enabled && siteSettings.useSiteRule) {
 		mode = siteSettings.spoofSlowNetwork;

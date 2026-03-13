@@ -14,7 +14,7 @@ export const StorageAreaSchema = v.picklist([
 	"managed",
 	"session",
 ]);
-export type StorageAreaSchema = v.InferOutput<typeof StorageAreaSchema>;
+export type StorageAreaOutput = v.InferOutput<typeof StorageAreaSchema>;
 
 export const GeneralSettingsSchema = v.object({
 	/** Whether the csp headers should be removed.
@@ -52,7 +52,7 @@ export const GeneralSettingsSchema = v.object({
 	 */
 	useSiteRule: v.boolean(),
 });
-export type GeneralSettingsSchema = v.InferOutput<typeof GeneralSettingsSchema>;
+export type GeneralSettingsOutput = v.InferOutput<typeof GeneralSettingsSchema>;
 
 export const CompressionSettingsSchema = v.object({
 	/** `auto` results in default behaviour and is the fallback if a chosen format does not exist on a compression endpoint */
@@ -70,7 +70,7 @@ export const CompressionSettingsSchema = v.object({
 	preserveAnim: v.boolean(),
 	quality: NumberBetween1and100Inclusively,
 });
-export type CompressionSettingsSchema = v.InferOutput<
+export type CompressionSettingsOutput = v.InferOutput<
 	typeof CompressionSettingsSchema
 >;
 
@@ -91,7 +91,7 @@ export const BlockSettingsSchema = v.object({
 	/** Uglifies sites */
 	style: v.boolean(),
 });
-export type BlockSettingsSchema = v.InferOutput<typeof BlockSettingsSchema>;
+export type BlockSettingsOutput = v.InferOutput<typeof BlockSettingsSchema>;
 
 export const ProxySettingsSchema = v.object({
 	/** Optional cloudinary cloud name to enable cloudinary-based processing */
@@ -102,7 +102,7 @@ export const ProxySettingsSchema = v.object({
 	/** Whether the proxy should manually do the transformations, or attempt to tranfer the load to other public endpoints. */
 	forceManual: v.optional(v.boolean()),
 });
-export type ProxySettingsSchema = v.InferOutput<typeof ProxySettingsSchema>;
+export type ProxySettingsOutput = v.InferOutput<typeof ProxySettingsSchema>;
 
 const IntegerFromAtLeastZeroSchema = v.pipe(
 	v.number(),
@@ -120,7 +120,7 @@ export const SingleAssetStatisticsSchema = v.object({
 	style: IntegerFromAtLeastZeroSchema,
 	video: IntegerFromAtLeastZeroSchema,
 });
-export type SingleAssetStatisticsSchema = v.InferOutput<
+export type SingleAssetStatisticsOutput = v.InferOutput<
 	typeof SingleAssetStatisticsSchema
 >;
 
@@ -134,7 +134,7 @@ export const CombinedAssetStatisticsSchema = v.object({
 		v.optional(SingleAssetStatisticsSchema),
 	),
 });
-export type CombinedAssetStatisticsSchema = v.InferOutput<
+export type CombinedAssetStatisticsOutput = v.InferOutput<
 	typeof CombinedAssetStatisticsSchema
 >;
 
@@ -153,7 +153,7 @@ export const StatisticsSchema = v.object({
 	/** Amount of non-cached requests made by site(s) in total */
 	requestsMade: CombinedAssetStatisticsSchema,
 });
-export type StatisticsSchema = v.InferOutput<typeof StatisticsSchema>;
+export type StatisticsOutput = v.InferOutput<typeof StatisticsSchema>;
 
 export const DetailedStatisticsSchema = v.object({
 	...StatisticsSchema.entries,
@@ -164,7 +164,7 @@ export const DetailedStatisticsSchema = v.object({
 	 */
 	crossOrigin: v.record(UrlSchema, CombinedAssetStatisticsSchema),
 });
-export type DetailedStatisticsSchema = v.InferOutput<
+export type DetailedStatisticsOutput = v.InferOutput<
 	typeof DetailedStatisticsSchema
 >;
 
@@ -173,10 +173,10 @@ export const SchemaVersionSchema = v.pipe(
 	v.integer(),
 	v.minValue(1),
 );
-export type SchemaVersionSchema = v.InferOutput<typeof SchemaVersionSchema>;
+export type SchemaVersionOutput = v.InferOutput<typeof SchemaVersionSchema>;
 
 export const SiteUrlOriginsSchema = v.array(UrlSchema);
-export type SiteUrlOriginsSchema = v.InferOutput<typeof SiteUrlOriginsSchema>;
+export type SiteUrlOriginsOutput = v.InferOutput<typeof SiteUrlOriginsSchema>;
 
 const { VITE_SERVER_HOST, VITE_SERVER_PORT } = getExtensionEnv();
 
@@ -186,14 +186,14 @@ export const DEFAULT_COMPRESSION_SETTINGS = {
 	preferredEndpoint: ImageCompressorEndpoint.WSRV_NL,
 	preserveAnim: false,
 	quality: 60,
-} as const satisfies CompressionSettingsSchema;
+} as const satisfies CompressionSettingsOutput;
 
 export const DEFAULT_PROXY_SETTINGS = {
 	endpoint: {
 		backups: [],
 		main: `http://${VITE_SERVER_HOST}:${VITE_SERVER_PORT}` as UrlSchema,
 	},
-} as const satisfies ProxySettingsSchema;
+} as const satisfies ProxySettingsOutput;
 
 export const DEFAULT_GENERAL_SETTINGS = {
 	bypassCsp: false,
@@ -205,7 +205,7 @@ export const DEFAULT_GENERAL_SETTINGS = {
 	saveData: true,
 	spoofSlowNetwork: "default",
 	useSiteRule: false,
-} as const satisfies GeneralSettingsSchema;
+} as const satisfies GeneralSettingsOutput;
 
 export const DEFAULT_BLOCK_SETTINGS = {
 	font: false,
@@ -213,7 +213,7 @@ export const DEFAULT_BLOCK_SETTINGS = {
 	media: false,
 	script: false,
 	style: false,
-} as const satisfies BlockSettingsSchema;
+} as const satisfies BlockSettingsOutput;
 
 export const DEFAULT_SINGLE_ASSET_STATISTICS = {
 	audio: 0,
@@ -224,27 +224,27 @@ export const DEFAULT_SINGLE_ASSET_STATISTICS = {
 	script: 0,
 	style: 0,
 	video: 0,
-} as const satisfies SingleAssetStatisticsSchema;
+} as const satisfies SingleAssetStatisticsOutput;
 
 export const DEFAULT_COMBINED_ASSET_STATISTICS = {
 	aggregate: DEFAULT_SINGLE_ASSET_STATISTICS,
 	dailyStats: {},
-} as const satisfies CombinedAssetStatisticsSchema;
+} as const satisfies CombinedAssetStatisticsOutput;
 
 export const DEFAULT_STATISTICS = {
 	bytesSaved: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	bytesUsed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsCompressed: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
 	requestsMade: { ...DEFAULT_COMBINED_ASSET_STATISTICS },
-} as const satisfies StatisticsSchema;
+} as const satisfies StatisticsOutput;
 
 export const DEFAULT_SITE_SPECIFIC_STATISTICS = {
 	...DEFAULT_STATISTICS,
 	crossOrigin: {},
-} as const satisfies DetailedStatisticsSchema;
+} as const satisfies DetailedStatisticsOutput;
 
 export const DEFAULT_SCHEMA_VERSION =
-	ExtensionData.VERSION as const satisfies SchemaVersionSchema;
+	ExtensionData.VERSION as const satisfies SchemaVersionOutput;
 
 export const DEFAULT_SITE_URL_ORIGINS =
-	[] as const satisfies SiteUrlOriginsSchema;
+	[] as const satisfies SiteUrlOriginsOutput;

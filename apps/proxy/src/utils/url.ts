@@ -1,12 +1,12 @@
 import { Result } from "@badrap/result";
 import {
-	type ImageCompressionPayloadSchema,
-	type UrlSchema,
+	type ImageCompressionPayloadOutput,
+	type UrlOutput,
 	wrapErrorMessage,
 } from "@bandwidth-saver/shared";
 
 const RAW_URL_SPLITTER =
-	"zz_url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadSchema.entries}=`;
+	"zz_url_bwsvr8911=" satisfies `${keyof typeof ImageCompressionPayloadOutput.entries}=`;
 
 const COLUMN_AND_COMMA_MATCHER = /(?<=https?:\/\/.*):|,/g;
 function columnAndCommaReplacer(subStringMatched: string) {
@@ -18,7 +18,7 @@ function columnAndCommaReplacer(subStringMatched: string) {
  */
 export function cleanlyExtractNestedUrlFromRawRequestUrl(
 	rawUrl: string,
-): Result<UrlSchema> {
+): Result<UrlOutput> {
 	const idx = rawUrl.indexOf(RAW_URL_SPLITTER);
 	if (idx === -1) {
 		return Result.err(
@@ -40,6 +40,6 @@ export function cleanlyExtractNestedUrlFromRawRequestUrl(
 		decoded.replace(
 			COLUMN_AND_COMMA_MATCHER,
 			columnAndCommaReplacer,
-		) as UrlSchema,
+		) as UrlOutput,
 	);
 }

@@ -1,6 +1,9 @@
 import * as v from "valibot";
 import { storage } from "wxt/utils/storage";
-import { SettingsExportDataSchema } from "@/models/import-and-export";
+import {
+	type SettingsExportDataOutput,
+	SettingsExportDataSchema,
+} from "@/models/import-and-export";
 import { StorageKey } from "@/shared/constants";
 import {
 	defaultCompressionSettingsStorageItem,
@@ -24,7 +27,7 @@ const {
 	SCHEMA_VERSION,
 } = StorageKey;
 
-async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
+async function exportExtensionSettings(): Promise<SettingsExportDataOutput> {
 	const [
 		defaultGeneralSettings,
 		defaultCompressionSettings,
@@ -39,7 +42,7 @@ async function exportExtensionSettings(): Promise<SettingsExportDataSchema> {
 		siteUrlOriginsStorageItem.getValue(),
 	]);
 
-	const exported: SettingsExportDataSchema = {
+	const exported: SettingsExportDataOutput = {
 		[DEFAULT_SETTINGS_GENERAL]: defaultGeneralSettings,
 		[DEFAULT_SETTINGS_COMPRESSION]: defaultCompressionSettings,
 		[DEFAULT_SETTINGS_PROXY]: defaultProxySettings,
@@ -75,12 +78,12 @@ export async function exportExtensionSettingsAsString(): Promise<string> {
 
 /** Returns true or false depending on whether the import was succesful or not */
 async function importExtensionSettings(
-	settings: SettingsExportDataSchema,
+	settings: SettingsExportDataOutput,
 ): Promise<boolean> {
 	try {
 		const promises: Promise<void>[] = [];
 
-		let settingsKey: keyof SettingsExportDataSchema;
+		let settingsKey: keyof SettingsExportDataOutput;
 
 		for (settingsKey in settings) {
 			switch (settingsKey) {

@@ -3,7 +3,7 @@ import {
 	clone,
 	getDayStartInMillisecondsUTC,
 	IMAGE_COMPRESSOR_ENDPOINT_SET,
-	type UrlSchema,
+	type UrlOutput,
 } from "@bandwidth-saver/shared";
 import * as immer from "immer";
 import { type Browser, browser } from "wxt/browser";
@@ -13,12 +13,12 @@ import {
 	type WxtStorageItem,
 } from "wxt/utils/storage";
 import {
-	type CombinedAssetStatisticsSchema,
+	type CombinedAssetStatisticsOutput,
 	DEFAULT_COMBINED_ASSET_STATISTICS,
 	DEFAULT_SINGLE_ASSET_STATISTICS,
-	type DetailedStatisticsSchema,
-	type SingleAssetStatisticsSchema,
-	type StatisticsSchema,
+	type DetailedStatisticsOutput,
+	type SingleAssetStatisticsOutput,
+	type StatisticsOutput,
 } from "@/models/storage";
 import {
 	ALARM_NAME,
@@ -70,8 +70,8 @@ type PendingBandwidthMeasurementMapClassOptions = {
 };
 
 class PendingBandwidthMeasurementMap {
-	private _map = new Map<UrlSchema, BandwidthMonitioringRawDataPayload>();
-	private _timers = new Map<UrlSchema, ReturnType<typeof setTimeout>>();
+	private _map = new Map<UrlOutput, BandwidthMonitioringRawDataPayload>();
+	private _timers = new Map<UrlOutput, ReturnType<typeof setTimeout>>();
 
 	constructor(private _options: PendingBandwidthMeasurementMapClassOptions) {}
 
@@ -92,14 +92,15 @@ class PendingBandwidthMeasurementMap {
 		);
 	}
 
-	private _clearTimer(url: UrlSchema): void {
+	private _clearTimer(url: UrlOutput): void {
 		const t = this._timers.get(url);
 		if (!t) return;
+
 		clearTimeout(t);
 		this._timers.delete(url);
 	}
 
-	private _schedule(url: UrlSchema): void {
+	private _schedule(url: UrlOutput): void {
 		// If there is already a scheduled check, don’t stack another.
 		if (this._timers.has(url)) return;
 
@@ -112,7 +113,7 @@ class PendingBandwidthMeasurementMap {
 		this._timers.set(url, t);
 	}
 
-	private _tryToEnqueuePayload(url: UrlSchema): void {
+	private _tryToEnqueuePayload(url: UrlOutput): void {
 		const payload = this._map.get(url);
 
 		// Entry may have been flushed/deleted already.
@@ -149,14 +150,13 @@ class PendingBandwidthMeasurementMap {
 		this._schedule(url);
 	}
 
-	get(url: UrlSchema): BandwidthMonitioringRawDataPayload | undefined {
+	get(url: UrlOutput): BandwidthMonitioringRawDataPayload | undefined {
 		return this._map.get(url);
 	}
 
-	set(url: UrlSchema, payload: BandwidthMonitioringRawDataPayload): void {
+	set(url: UrlOutput, payload: BandwidthMonitioringRawDataPayload): void {
 		this._map.set(url, payload);
 
-		// Ensure there will be a check, but don’t create duplicates.
 		this._schedule(url);
 	}
 }
@@ -225,11 +225,11 @@ export function cacheBandwidthDataFromWebRequest(
 
 /** Mutates and returns the same given `combinedStats` */
 function updateDailyStatsInCombinedStats(arg: {
-	combinedStats: CombinedAssetStatisticsSchema;
+	combinedStats: CombinedAssetStatisticsOutput;
 	day: number;
-	type: keyof SingleAssetStatisticsSchema;
+	type: keyof SingleAssetStatisticsOutput;
 	valueToAdd: number;
-}): CombinedAssetStatisticsSchema {
+}): CombinedAssetStatisticsOutput {
 	const { valueToAdd, combinedStats, day, type } = arg;
 
 	const { dailyStats } = combinedStats;
@@ -244,12 +244,12 @@ function updateDailyStatsInCombinedStats(arg: {
 
 function applyBandwidthMeasurementsToStatistics(
 	data: BandwidthMonitoringMessagePayload,
-	globalStats: StatisticsSchema,
-	siteScopedStats: DetailedStatisticsSchema,
+	globalStats: StatisticsOutput,
+	siteScopedStats: DetailedStatisticsOutput,
 	proxyHost: string,
 ): {
-	globalStats: StatisticsSchema;
-	siteScopedStats: DetailedStatisticsSchema;
+	globalStats: StatisticsOutput;
+	siteScopedStats: DetailedStatisticsOutput;
 } {
 	const { bytes: assetSize, type, assetUrl, hostOrigin, bytesSaved } = data;
 
@@ -261,7 +261,7 @@ function applyBandwidthMeasurementsToStatistics(
 	const assetUrlHost = getUrlSchemaHost(assetUrl);
 
 	const applyToCombinedStats = (
-		combinedStats: CombinedAssetStatisticsSchema,
+		combinedStats: CombinedAssetStatisticsOutput,
 		valueToAdd: number,
 	) =>
 		updateDailyStatsInCombinedStats({
@@ -330,8 +330,8 @@ pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 
 		/** String keys are used over the storage item instances so it'll be easy for updated stats with the same storage entry to override older ones */
 		const siteScopedStorageKeysAndUpdatedValuesMap = new Map<
-			WxtStorageItem<DetailedStatisticsSchema, Record<string, unknown>>["key"],
-			DetailedStatisticsSchema
+			WxtStorageItem<DetailedStatisticsOutput, Record<string, unknown>>["key"],
+			DetailedStatisticsOutput
 		>();
 
 		for (const measurement of measurements) {
@@ -376,7 +376,7 @@ pendingMergedBandwidthMeasurementBatchQueue.addCallbacks(
 
 /** Returns the overload of keys that don't fit within the limit */
 function getOverloadDailyStatsKeys(
-	dailyStats: CombinedAssetStatisticsSchema["dailyStats"],
+	dailyStats: CombinedAssetStatisticsOutput["dailyStats"],
 ): number[] {
 	const rawDays: string[] = [];
 
@@ -402,8 +402,8 @@ function getOverloadDailyStatsKeys(
  * Can be rather expensive
  */
 function aggregateOldDailyStats(
-	combinedStats: CombinedAssetStatisticsSchema,
-): CombinedAssetStatisticsSchema {
+	combinedStats: CombinedAssetStatisticsOutput,
+): CombinedAssetStatisticsOutput {
 	return immer.produce(combinedStats, (draft) => {
 		for (const overloadKey of getOverloadDailyStatsKeys(draft.dailyStats)) {
 			const overloadStats =
@@ -427,8 +427,8 @@ function aggregateOldDailyStatsInStatsObject({
 	requestsCompressed,
 	requestsMade,
 	lastReset,
-}: StatisticsSchema): StatisticsSchema {
-	const converted: StatisticsSchema = {
+}: StatisticsOutput): StatisticsOutput {
+	const converted: StatisticsOutput = {
 		bytesSaved: aggregateOldDailyStats(bytesSaved),
 		bytesUsed: aggregateOldDailyStats(bytesUsed),
 		lastReset,
@@ -446,11 +446,11 @@ function aggregateOldDailyStatsInDetailedStatsObject({
 	requestsMade,
 	lastReset,
 	crossOrigin,
-}: DetailedStatisticsSchema): DetailedStatisticsSchema {
-	const convertedCrossOrigin: Record<UrlSchema, CombinedAssetStatisticsSchema> =
+}: DetailedStatisticsOutput): DetailedStatisticsOutput {
+	const convertedCrossOrigin: Record<UrlOutput, CombinedAssetStatisticsOutput> =
 		{};
 
-	let key: UrlSchema;
+	let key: UrlOutput;
 	for (key in crossOrigin) {
 		const val = crossOrigin[key];
 
@@ -459,7 +459,7 @@ function aggregateOldDailyStatsInDetailedStatsObject({
 		convertedCrossOrigin[key] = aggregateOldDailyStats(val);
 	}
 
-	const converted: DetailedStatisticsSchema = {
+	const converted: DetailedStatisticsOutput = {
 		bytesSaved: aggregateOldDailyStats(bytesSaved),
 		bytesUsed: aggregateOldDailyStats(bytesUsed),
 		crossOrigin: convertedCrossOrigin,
@@ -481,8 +481,8 @@ async function oldDailyStatsAggregatorListener(alarm: Browser.alarms.Alarm) {
 
 	/** String keys are used over the storage item instances so it'll be easy for updated stats with the same storage entry to override older ones */
 	const siteScopedStorageKeysAndUpdatedValuesMap = new Map<
-		WxtStorageItem<DetailedStatisticsSchema, Record<string, unknown>>["key"],
-		DetailedStatisticsSchema
+		WxtStorageItem<DetailedStatisticsOutput, Record<string, unknown>>["key"],
+		DetailedStatisticsOutput
 	>();
 
 	for (const siteScopedOrigin of await getSiteUrlOrigins()) {

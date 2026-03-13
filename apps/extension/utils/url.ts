@@ -1,12 +1,12 @@
-import { URL_EXTENSION_REGEX, type UrlSchema } from "@bandwidth-saver/shared";
+import { URL_EXTENSION_REGEX, type UrlOutput } from "@bandwidth-saver/shared";
 import { lru } from "tiny-lru";
-import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import type { SingleAssetStatisticsOutput } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { generateDeterministicNumericIdsFromString } from "./id";
 
 export function detectAssetTypeFromUrl(
-	url: UrlSchema,
-): keyof SingleAssetStatisticsSchema {
+	url: UrlOutput,
+): keyof SingleAssetStatisticsOutput {
 	const ext = url.match(URL_EXTENSION_REGEX)?.[0];
 
 	if (!ext) return "other";
@@ -63,7 +63,7 @@ export function detectAssetTypeFromUrl(
 
 const URL_SCHEMA_ORIGIN_MATCHER = /^\w+:\/\/[^/]+/;
 
-export function getUrlSchemaOrigin(url: UrlSchema): UrlSchema {
+export function getUrlSchemaOrigin(url: UrlOutput): UrlOutput {
 	const match = url.match(URL_SCHEMA_ORIGIN_MATCHER);
 
 	//@ts-expect-error This will always be a valid url
@@ -82,7 +82,7 @@ export function getUrlSchemaHost(url: string): string {
 
 const URL_SCHEMA_EXTENSION_CHECKER_MATCHER = /^.*extension.*:\/\//;
 
-export function isExtensionUrl(url: UrlSchema): boolean {
+export function isExtensionUrl(url: UrlOutput): boolean {
 	return URL_SCHEMA_EXTENSION_CHECKER_MATCHER.test(url);
 }
 
@@ -99,7 +99,7 @@ export type DnrSiteScopeUrlIdPayload = Readonly<{
 const urlIdCache = lru<DnrSiteScopeUrlIdPayload>(200);
 
 export function getUrlIdsFromOrigin(
-	origin: UrlSchema,
+	origin: UrlOutput,
 ): DnrSiteScopeUrlIdPayload {
 	const cachedIds = urlIdCache.get(origin);
 

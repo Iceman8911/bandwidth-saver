@@ -3,10 +3,10 @@ import {
 	getFetchTimeoutSignal,
 	getLikelyImageUrlMimeType,
 	getSpoofingFetchHeaders,
-	type ImageFormatSchema,
+	type ImageFormatOutput,
 	type ImageMimeType,
-	type NumberBetween1and100Inclusively,
-	type UrlSchema,
+	type NumberBetween1and100InclusivelyOutput,
+	type UrlOutput,
 	wrapErrorMessage,
 	wrapErrorProneCode,
 } from "@bandwidth-saver/shared";
@@ -15,9 +15,9 @@ import type { Sharp } from "sharp";
 const EFFORT_LEVEL = 5;
 
 interface ImageCompressorHandlerPayload {
-	format: ImageFormatSchema;
+	format: ImageFormatOutput;
 	preserveAnim: boolean;
-	quality: NumberBetween1and100Inclusively;
+	quality: NumberBetween1and100InclusivelyOutput;
 	srcImg: ArrayBuffer;
 	srcMimeType: ImageMimeType;
 }
@@ -155,7 +155,7 @@ const compressImageUsingWasmImageOptimizer: ImageCompressorHandler = async ({
 		];
 	});
 
-const compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
+const _compressImageUsingJsquashWebp: ImageCompressorHandler = async ({
 	quality,
 	srcImg,
 	srcMimeType,
@@ -203,11 +203,11 @@ const compressImage: ImageCompressorHandler = async (payload) => {
 };
 
 interface CompressImageFromUrlProps {
-	url: UrlSchema;
-	format: ImageFormatSchema;
+	url: UrlOutput;
+	format: ImageFormatOutput;
 	preserveAnim: boolean;
 	cookieStr?: string;
-	quality: NumberBetween1and100Inclusively;
+	quality: NumberBetween1and100InclusivelyOutput;
 }
 
 interface ResponseAndSavings {

@@ -5,7 +5,7 @@ import {
 	proxyUrlConstructor,
 	REDIRECTED_SEARCH_PARAM_FLAG,
 	ServerAPIEndpoint,
-	type UrlSchema,
+	type UrlOutput,
 } from "@bandwidth-saver/shared";
 import { type Browser, browser } from "wxt/browser";
 import {
@@ -40,19 +40,19 @@ const SIMPLE_IMAGE_URL_REGEX = `^(https?://)(.+?)(\\?.*)?$`;
  */
 const PROXY_IMAGE_URL_REGEX = `^(https?://.+)`;
 
-const PROTOCOL_OF_BASE_URL = "\\1" as UrlSchema;
+const PROTOCOL_OF_BASE_URL = "\\1" as UrlOutput;
 
-const BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL = "\\2" as UrlSchema;
+const BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL = "\\2" as UrlOutput;
 
 const BASE_URL_WITHOUT_QUERY_STRING =
-	`${PROTOCOL_OF_BASE_URL}${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}` as UrlSchema;
+	`${PROTOCOL_OF_BASE_URL}${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}` as UrlOutput;
 
 /** The captured query string (including leading '?') — may be empty when the original URL had no query */
-const CAPTURED_QUERY_STRING = "\\3" as UrlSchema;
+const CAPTURED_QUERY_STRING = "\\3" as UrlOutput;
 
 /** When we add our redirect-exemption flag, it must come after any original query string */
 const BASE_URL_WITH_FLAG =
-	`${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlSchema;
+	`${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}${REDIRECTED_SEARCH_PARAM_FLAG}` as UrlOutput;
 
 function getFallbackEndpoint(preferredEndpoint: ImageCompressorEndpoint) {
 	return preferredEndpoint === ImageCompressorEndpoint.DEFAULT
@@ -66,10 +66,10 @@ function getUrlToRedirectToForChosenEndpoint(
 	switch (endpoint) {
 		case ImageCompressorEndpoint.WORDPRESS:
 			// Wordpress endpoint expects the URL without protocol; preserve query string
-			return `${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}${CAPTURED_QUERY_STRING}` as UrlSchema;
+			return `${BASE_URL_WITHOUT_QUERY_STRING_OR_PROTOCOL}${CAPTURED_QUERY_STRING}` as UrlOutput;
 		default:
 			// Preserve protocol + path + query string
-			return `${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}` as UrlSchema;
+			return `${BASE_URL_WITHOUT_QUERY_STRING}${CAPTURED_QUERY_STRING}` as UrlOutput;
 	}
 }
 
@@ -207,7 +207,7 @@ function buildDefaultCompressionRule({
 					format_bwsvr8911: format,
 					preserveAnim_bwsvr8911: preserveAnim,
 					quality_bwsvr8911: quality,
-					zz_url_bwsvr8911: "\\0" as UrlSchema,
+					zz_url_bwsvr8911: "\\0" as UrlOutput,
 				},
 			});
 
@@ -324,7 +324,7 @@ async function buildSiteScopedCompressionRule({
 					format_bwsvr8911: format,
 					preserveAnim_bwsvr8911: preserveAnim,
 					quality_bwsvr8911: quality,
-					zz_url_bwsvr8911: "\\0" as UrlSchema,
+					zz_url_bwsvr8911: "\\0" as UrlOutput,
 				},
 			});
 

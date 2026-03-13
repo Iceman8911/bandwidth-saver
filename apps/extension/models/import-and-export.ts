@@ -1,11 +1,16 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
+import { type UrlOutput, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { StorageKey } from "@/shared/constants";
 import {
+	type CompressionSettingsOutput,
 	CompressionSettingsSchema,
+	type GeneralSettingsOutput,
 	GeneralSettingsSchema,
+	type ProxySettingsOutput,
 	ProxySettingsSchema,
+	type SchemaVersionOutput,
 	SchemaVersionSchema,
+	type SiteUrlOriginsOutput,
 	SiteUrlOriginsSchema,
 } from "./storage";
 
@@ -36,11 +41,12 @@ const pipeCheckToString = <TStringType extends string = string>(
 	v.pipe(
 		v.string(),
 		v.check(checker),
+		//@ts-expect-error Valibot transform can't express the refined string template type here
 		v.transform((input) => input as TStringType),
 	);
 
 const SiteScopedGeneralSettingsSchema = v.record(
-	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${UrlSchema}`>(
+	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${UrlOutput}`>(
 		(input) => {
 			const [_, possibleSiteOrigin] = input.split(
 				SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX,
@@ -53,7 +59,7 @@ const SiteScopedGeneralSettingsSchema = v.record(
 );
 
 const SiteScopedCompressionSettingsSchema = v.record(
-	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX}${UrlSchema}`>(
+	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX}${UrlOutput}`>(
 		(input) => {
 			const [_, possibleSiteOrigin] = input.split(
 				SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX,
@@ -66,7 +72,7 @@ const SiteScopedCompressionSettingsSchema = v.record(
 );
 
 const SiteScopedProxySettingsSchema = v.record(
-	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${UrlSchema}`>(
+	pipeCheckToString<`${typeof SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${UrlOutput}`>(
 		(input) => {
 			const [_, possibleSiteOrigin] = input.split(
 				SITE_SPECIFIC_SETTINGS_PROXY_PREFIX,
@@ -100,6 +106,37 @@ export const SettingsExportDataSchema = v.object({
 		proxy: SiteScopedProxySettingsSchema,
 	}),
 });
-export type SettingsExportDataSchema = v.InferOutput<
+export type SettingsExportDataOutput = v.InferOutput<
 	typeof SettingsExportDataSchema
 >;
+
+export type SettingsExportDataInput = v.InferInput<
+	typeof SettingsExportDataSchema
+>;
+
+export type DefaultSettingsGeneralKey = typeof DEFAULT_SETTINGS_GENERAL;
+export type DefaultSettingsCompressionKey = typeof DEFAULT_SETTINGS_COMPRESSION;
+export type DefaultSettingsProxyKey = typeof DEFAULT_SETTINGS_PROXY;
+
+export type SiteSpecificSettingsGeneralKey =
+	`${typeof SITE_SPECIFIC_SETTINGS_GENERAL_PREFIX}${UrlOutput}`;
+export type SiteSpecificSettingsCompressionKey =
+	`${typeof SITE_SPECIFIC_SETTINGS_COMPRESSION_PREFIX}${UrlOutput}`;
+export type SiteSpecificSettingsProxyKey =
+	`${typeof SITE_SPECIFIC_SETTINGS_PROXY_PREFIX}${UrlOutput}`;
+
+export type SettingsExportDataShape = Readonly<{
+	[DEFAULT_SETTINGS_GENERAL]: GeneralSettingsOutput;
+	[DEFAULT_SETTINGS_COMPRESSION]: CompressionSettingsOutput;
+	[DEFAULT_SETTINGS_PROXY]: ProxySettingsOutput;
+	[SITE_URL_ORIGINS]: SiteUrlOriginsOutput;
+	[SCHEMA_VERSION]: SchemaVersionOutput;
+	site: Readonly<{
+		compression: Record<
+			SiteSpecificSettingsCompressionKey,
+			CompressionSettingsOutput
+		>;
+		general: Record<SiteSpecificSettingsGeneralKey, GeneralSettingsOutput>;
+		proxy: Record<SiteSpecificSettingsProxyKey, ProxySettingsOutput>;
+	}>;
+}>;

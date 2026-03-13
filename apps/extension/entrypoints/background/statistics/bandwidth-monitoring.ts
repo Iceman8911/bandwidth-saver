@@ -1,10 +1,10 @@
 import {
 	BatchQueue,
 	ProxyCustomHeaders,
-	type UrlSchema,
+	type UrlOutput,
 } from "@bandwidth-saver/shared";
 import { type Browser, browser } from "wxt/browser";
-import type { SingleAssetStatisticsSchema } from "@/models/storage";
+import type { SingleAssetStatisticsOutput } from "@/models/storage";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 import { detectAssetTypeFromUrl, getUrlSchemaOrigin } from "@/utils/url";
 import { cacheBandwidthDataFromWebRequest } from "./bandwidth-calculation";
@@ -12,9 +12,9 @@ import { cacheBandwidthDataFromWebRequest } from "./bandwidth-calculation";
 type RelevantPropsFromOnCompletedEventPayload = {
 	responseHeaders: Browser.webRequest.HttpHeader[];
 	type: Browser.webRequest.OnCompletedDetails["type"];
-	url: UrlSchema;
+	url: UrlOutput;
 	fromCache: boolean;
-	initiator: UrlSchema;
+	initiator: UrlOutput;
 };
 
 const pendingWebRequestPayloadBatchQueue =
@@ -24,9 +24,9 @@ const pendingWebRequestPayloadBatchQueue =
 	});
 
 function detectAssetTypeFromContentTypeOrUrl(
-	url: UrlSchema,
+	url: UrlOutput,
 	contentType?: string,
-): keyof SingleAssetStatisticsSchema {
+): keyof SingleAssetStatisticsOutput {
 	if (!contentType) return detectAssetTypeFromUrl(url);
 
 	if (contentType.startsWith("image/")) return "image";
@@ -91,7 +91,7 @@ function webRequestOnCompletedListener({
 		}
 	}
 
-	let assetType: keyof SingleAssetStatisticsSchema = "other";
+	let assetType: keyof SingleAssetStatisticsOutput = "other";
 
 	switch (type) {
 		case "stylesheet":

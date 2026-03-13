@@ -14,4 +14,4 @@ const ValidateCompressedUrlMessageSchema = v.pipe(
 export const RuntimeMessageSchema = v.variant("type", [
 	ValidateCompressedUrlMessageSchema,
 ]);
-export type RuntimeMessageSchema = v.InferOutput<typeof RuntimeMessageSchema>;
+export type RuntimeMessageOutput = v.InferOutput<typeof RuntimeMessageSchema>;

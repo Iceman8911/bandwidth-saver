@@ -1,11 +1,15 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
+import { type UrlOutput, UrlSchema } from "@bandwidth-saver/shared";
 import { isEqual } from "@ver0/deep-equal";
 import { Save } from "lucide-solid";
 import { createEffect, createMemo, Show, useContext } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore, produce } from "solid-js/store";
 import * as v from "valibot";
-import { DEFAULT_PROXY_SETTINGS, ProxySettingsSchema } from "@/models/storage";
+import {
+	DEFAULT_PROXY_SETTINGS,
+	type ProxySettingsOutput,
+	ProxySettingsSchema,
+} from "@/models/storage";
 import {
 	defaultProxySettingsStorageItem,
 	getSiteSpecificProxySettingsStorageItem,
@@ -16,8 +20,8 @@ import { InformativeTooltip } from "../tooltip";
 import { PopupContext } from "./context";
 
 type TempProxySettingsProps = {
-	store: ProxySettingsSchema;
-	set: SetStoreFunction<ProxySettingsSchema>;
+	store: ProxySettingsOutput;
+	set: SetStoreFunction<ProxySettingsOutput>;
 };
 
 function ProxyMainEndpointInput(props: TempProxySettingsProps) {
@@ -104,14 +108,14 @@ function ProxyBackupEndpointsInput(props: TempProxySettingsProps) {
 						produce((s) => {
 							s.endpoint.backups = e.target.value
 								.split(",")
-								.reduce<UrlSchema[]>((arr, str) => {
+								.reduce<UrlOutput[]>((arr, str) => {
 									const trimmed = str.trim();
 
 									if (
 										v.is(UrlSchema, trimmed) &&
 										trimmed !== props.store.endpoint.main
 									) {
-										arr.push(trimmed as UrlSchema);
+										arr.push(trimmed as UrlOutput);
 									}
 
 									return arr;

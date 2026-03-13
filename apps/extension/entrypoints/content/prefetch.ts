@@ -1,4 +1,4 @@
-import type { GeneralSettingsSchema } from "@/models/storage";
+import type { GeneralSettingsOutput } from "@/models/storage";
 import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 export const PREFETCHABLE_ELEMENT_SELECTOR = "link";
@@ -16,8 +16,8 @@ function disablePrefetch(el: HTMLLinkElement) {
 }
 
 export function shouldDisablePrefetchForSite(
-	defaultSettings: GeneralSettingsSchema,
-	siteSettings: GeneralSettingsSchema,
+	defaultSettings: GeneralSettingsOutput,
+	siteSettings: GeneralSettingsOutput,
 ): boolean {
 	if (siteSettings.useSiteRule) {
 		return siteSettings.enabled && siteSettings.lazyLoad;

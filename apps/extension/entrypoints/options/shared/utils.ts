@@ -1,9 +1,9 @@
-import type { CombinedAssetStatisticsSchema } from "@/models/storage";
+import type { CombinedAssetStatisticsOutput } from "@/models/storage";
 import { getSumOfValuesInObject } from "@/utils/object";
 import type { OptionsPageUsageOverTimeProps } from "../components/statistic-charts";
 
 export function getDailyStatisticsForWeek(
-	dailyStats: Readonly<CombinedAssetStatisticsSchema["dailyStats"]>,
+	dailyStats: Readonly<CombinedAssetStatisticsOutput["dailyStats"]>,
 ): OptionsPageUsageOverTimeProps["usage"] {
 	const dailyStatsAsArray = Object.entries(dailyStats);
 

@@ -1,7 +1,10 @@
 import * as v from "valibot";
 import { type Browser, browser } from "wxt/browser";
 import DEFAULT_COMPRESSION_WHITELISTED_DOMAIN_JSON from "@/data/compression-whilelisted-domains.json";
-import { CompressionWhitelistedDomainSchema } from "@/models/external-data";
+import {
+	type CompressionWhitelistedDomainOutput,
+	CompressionWhitelistedDomainSchema,
+} from "@/models/external-data";
 import { ALARM_NAME, UPDATE_INTERVAL_IN_MINUTES } from "@/shared/constants";
 
 const REMOTE_COMPRESSION_WHITELISTED_DOMAIN_URL =

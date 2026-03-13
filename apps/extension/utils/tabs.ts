@@ -1,9 +1,9 @@
-import { UrlSchema } from "@bandwidth-saver/shared";
+import { type UrlOutput, UrlSchema } from "@bandwidth-saver/shared";
 import * as v from "valibot";
 import { browser } from "wxt/browser";
 import { DUMMY_TAB_URL } from "@/shared/constants";
 
-export async function getActiveTabUrlString(): Promise<UrlSchema> {
+export async function getActiveTabUrlString(): Promise<UrlOutput> {
 	try {
 		const tabs = await browser.tabs.query({
 			active: true,

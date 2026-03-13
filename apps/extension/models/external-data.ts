@@ -4,6 +4,6 @@ export const CompressionWhitelistedDomainSchema = v.object({
 	domains: v.array(v.string()),
 	version: v.number(),
 });
-export type CompressionWhitelistedDomainSchema = v.InferOutput<
+export type CompressionWhitelistedDomainOutput = v.InferOutput<
 	typeof CompressionWhitelistedDomainSchema
 >;

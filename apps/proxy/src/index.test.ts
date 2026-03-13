@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
 	getProxyEnv,
 	ServerAPIEndpoint,
+	type UrlOutput,
 	UrlSchema,
 } from "@bandwidth-saver/shared";
 import * as v from "valibot";
@@ -14,7 +15,7 @@ type ImageSizeAndType = {
 type TestImageResponse = {
 	compressed: ImageSizeAndType;
 	regular: ImageSizeAndType;
-	url: UrlSchema;
+	url: UrlOutput;
 };
 
 const env = getProxyEnv();

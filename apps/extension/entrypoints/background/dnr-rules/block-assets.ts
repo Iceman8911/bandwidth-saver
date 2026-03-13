@@ -1,5 +1,5 @@
 import { type Browser, browser } from "wxt/browser";
-import type { BlockSettingsSchema } from "@/models/storage";
+import type { BlockSettingsOutput } from "@/models/storage";
 import {
 	DeclarativeNetRequestPriority,
 	DeclarativeNetRequestRuleIds,
@@ -28,7 +28,7 @@ function getResourceTypesToBlockFromBlockSettings({
 	media,
 	script,
 	style,
-}: BlockSettingsSchema): `${Browser.declarativeNetRequest.ResourceType}`[] {
+}: BlockSettingsOutput): `${Browser.declarativeNetRequest.ResourceType}`[] {
 	const resourceTypes: `${Browser.declarativeNetRequest.ResourceType}`[] = [];
 
 	if (font) resourceTypes.push("font");
@@ -44,7 +44,7 @@ function getXhrRegexFromBlockSettings({
 	font,
 	image,
 	media,
-}: BlockSettingsSchema): string | null {
+}: BlockSettingsOutput): string | null {
 	const extGroups: string[] = [];
 	if (image) extGroups.push(IMAGE_EXTENSION_REGEX_PART);
 	if (media) extGroups.push(MEDIA_EXTENSION_REGEX_PART);

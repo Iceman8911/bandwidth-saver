@@ -26,6 +26,6 @@ export const PerformanceResourceTimingIntiatorTypeSchema = v.picklist([
 	"other",
 	"use",
 ]);
-export type PerformanceResourceTimingIntiatorTypeSchema = v.InferOutput<
+export type PerformanceResourceTimingIntiatorTypeOutput = v.InferOutput<
 	typeof PerformanceResourceTimingIntiatorTypeSchema
 >;

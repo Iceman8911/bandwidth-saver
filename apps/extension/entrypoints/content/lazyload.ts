@@ -1,4 +1,4 @@
-import type { GeneralSettingsSchema } from "@/models/storage";
+import type { GeneralSettingsOutput } from "@/models/storage";
 import type { ContentScriptSettingsApplyCallback } from "./shared";
 
 // Lazyload images and iframes
@@ -16,8 +16,8 @@ function forceLazyLoading(el: HTMLImageOrIframeElement) {
 }
 
 export function shouldLazyLoadOnSite(
-	defaultSettings: GeneralSettingsSchema,
-	siteSettings: GeneralSettingsSchema,
+	defaultSettings: GeneralSettingsOutput,
+	siteSettings: GeneralSettingsOutput,
 ): boolean {
 	if (siteSettings.useSiteRule) {
 		return siteSettings.enabled && siteSettings.lazyLoad;

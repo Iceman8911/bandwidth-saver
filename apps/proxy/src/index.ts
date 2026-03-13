@@ -1,4 +1,3 @@
-import { getProxyEnv } from "@bandwidth-saver/shared";
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { healthRoute } from "./modules/health";

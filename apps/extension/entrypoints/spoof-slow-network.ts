@@ -1,16 +1,16 @@
 import { defineUnlistedScript } from "wxt/utils/define-unlisted-script";
-import type { GeneralSettingsSchema } from "@/models/storage";
+import type { GeneralSettingsOutput } from "@/models/storage";
 import { MessageType } from "@/shared/constants";
 import { onWindowMessage } from "@/shared/messaging/injected";
 
 interface OriginalConnectionData {
-	readonly type: GeneralSettingsSchema["spoofSlowNetwork"];
+	readonly type: GeneralSettingsOutput["spoofSlowNetwork"];
 	readonly saveData: boolean;
 	readonly downlink: number;
 }
 
 interface SpoofSlowNetworkPayload {
-	newMode: GeneralSettingsSchema["spoofSlowNetwork"];
+	newMode: GeneralSettingsOutput["spoofSlowNetwork"];
 	originals: OriginalConnectionData;
 	connection: OriginalConnectionData;
 }
