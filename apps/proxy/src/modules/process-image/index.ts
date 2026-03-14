@@ -225,6 +225,10 @@ export const processImageRoute = new Elysia()
 
 					set.headers["access-control-allow-origin"] = "*";
 
+					set.headers["cross-origin-resource-policy"] = "cross-origin";
+
+					set.headers["timing-allow-origin"] = "*";
+
 					set.headers[ProxyCustomHeaders.BYTES_SAVED] = `${bytesSaved}`;
 
 					set.headers[ProxyCustomHeaders.ENDPOINT_USED] =
