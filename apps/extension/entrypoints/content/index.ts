@@ -1,5 +1,6 @@
 import type { UrlOutput } from "@bandwidth-saver/shared";
 import { defineContentScript } from "wxt/utils/define-content-script";
+import { CHALLENGE_URL_MATCH_PATTERNS_TO_EXCLUDE } from "@/shared/constants";
 import {
 	defaultGeneralSettingsStorageItem,
 	getSiteSpecificGeneralSettingsStorageItem,
@@ -17,6 +18,7 @@ const getDefaultAndSiteGeneralSettings = (url: UrlOutput) =>
 	]);
 
 export default defineContentScript({
+	excludeMatches: [...CHALLENGE_URL_MATCH_PATTERNS_TO_EXCLUDE],
 	async main() {
 		monitorBandwidthUsageViaContentScript();
 

@@ -129,3 +129,10 @@ export enum ALARM_NAME {
 	AGGREGATE_OLD_DAILY_STATS = "a",
 	WHITELISTED_DOMAIN_SYNC = "b",
 }
+
+export const CHALLENGE_URL_MATCH_PATTERNS_TO_EXCLUDE = [
+	"*://challenges.cloudflare.com/*",
+	"*://*/cdn-cgi/challenge-platform/*",
+	"*://*/cdn-cgi/challenges/*",
+	"*://*/*?*__cf_chl_*tk*=*",
+] as const;
