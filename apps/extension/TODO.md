@@ -2,7 +2,7 @@
 
 > **Note:** This TODO was reorganized by Claude to keep it from getting messy :p
 
-**Organization:** HIGH → MEDIUM → LOW → NEEDS RESEARCH → COMPLETED
+**Organization:** HIGH → MEDIUM → LOW → NEEDS RESEARCH → COMPLETED → NEW RESEARCH (2026-09)
 
 ---
 
@@ -13,6 +13,22 @@
   - Cannot be bypassed/completed without disabling the extension
   - Blocks major sites and services
   - High impact on usability
+
+### Bandwidth Wins — Tier 1 (high ROI, low risk, free) — RESEARCHED 2026-09
+- [ ] **Client-Hint spoofing via DNR** (stack on existing `Save-Data` injection)
+  - Send `Sec-CH-DPR: 1` + `Viewport-Width`/`Width` so Accept-CH CDNs (Cloudinary, imgix, Cloudflare) serve smaller media variants
+  - ~30–80% off images/media on top of Save-Data
+  - Needs `declarativeNetRequestWithHostAccess` for critical headers in Chrome
+- [ ] **Curated tracker/analytics/telemetry origin blocklist via DNR** — the single highest free win
+  - Curate ≤5000-rule "core" ruleset from EasyPrivacy / Peter Lowe (analytics, fingerprinting, session-replay, beacons, tracking pixels)
+  - Firefox: keep dyn/session ≤5000, avoid regex (prefer `urlFilter`); Chrome: 1000 regex cap, 5k modifyHeaders cap
+  - 15–55% page-weight cut on ad-heavy sites, zero CPU; add cosmetic-hide overlay so blocked elements collapse (Firefox gap)
+- [ ] **`srcset`/DPR/`src` rewriting in content script** — biggest untapped image lever
+  - Keep only matching srcset candidates, replace `@2x`/`dpr=2` with 1x when `devicePixelRatio<2`, reorder `<picture>` source to prefer AVIF→WebP
+  - 10–40% image bytes without a proxy hop; guard on `navigator.connection.saveData`/DPR
+- [ ] **Font reduction — swap webfonts for system fonts**
+  - Strip Google Fonts `<link>` + `@font-face`, inject `font-family: system-ui`, DNR-block `fonts.googleapis.com`/`fonts.gstatic.com`/CDN hosts
+  - ~100% of font bytes (~150–400KB/page); keep per-origin allowlist for branded/news sites
 
 ### Core Compression Features
 - [ ] Allow multiple proxies to be enabled (with a preferred one that'll reroute to others if it fails to resolve)
@@ -76,13 +92,22 @@
   - [ ] Handle authentication cookies where needed
   - [ ] Test on pixiv, imgur, and other protected image hosts
   - Status: Partially done, needs completion and testing
-- [ ] Compress / reduce resolution of Videos
-  - Focus on popular sites: Youtube, Vimeo, Reddit, Facebook
-  - [ ] Reddit: Strip quality params (e.g., `https://preview.redd.it/xyz.gif?width=498&format=mp4` → `https://i.redd.it/xyz.gif`)
-  - [ ] Youtube: Investigate quality parameter manipulation
-  - [ ] Consider content script approach for query string manipulation
 - [ ] Allow individual image extensions to be compressed (granular control per extension type)
 - [ ] In simple mode, patch globals so that failed requests get retried with other endpoints
+
+#### Per-site image param stripping via DNR redirects (sign-free, server-honored) — RESEARCHED 2026-09
+- [ ] **Reddit**: strip/reduce `width=`/`height=` on `preview.redd.it`/`i.redd.it` → serve small thumbnail (40–80%)
+- [ ] **X/Twitter**: `pbs.twimg.com/...&name=large` → `name=medium|small` (50–80%)
+- [ ] **Instagram**: `cdninstagram.com` image query → prefer `_d` (default) vs `_hd` (40–60%)
+- [ ] Keep existing exemption for Next.js optimized images
+
+#### Video quality lowering (content script / page-context) — RESEARCHED 2026-09
+- [ ] **Reddit**: rewrite `<video>` to `DASH_360`/`DASH_480` variants, block 720/1080 `<source>` (50–75%)
+- [ ] **Meta (FB/IG)**: rewrite to `sd_src` and strip `hd_src` from page JS blob (60–75%)
+- [ ] **TikTok**: page JSON exposes `720p`/`540p`/`360p` — point `<video>` at 540p/360p (40–70%)
+- [ ] **X/Vimeo/Twitch**: needs HLS manifest filtering (see NEEDS RESEARCH) (40–75%)
+- [ ] **YouTube**: OLD params (`gcr`, `ratebypass`, `&vdn`, `belowcon`, `videosource`, raw `itag=`) are DEAD — signed since ~2021. Use h264ify-style codec forcing + player-API quality bridge instead (fragile/experimental)
+- [ ] **Netflix/EME/DRM**: NOT feasible without breaking DRM — document as unsupported
 
 ### Bandwidth Tracking & Monitoring
 - [ ] Add better bandwidth tracking by patching JS DOM globals (see NetMeter extension for ideas)
@@ -106,6 +131,12 @@
   - [ ] Add UI to view/manage archived data
 - [ ] 'Requests Compressed' sometimes ends up as N/A whilist the other statistics update :p
 
+#### Bandwidth monitor correctness — RESEARCHED 2026-09
+- [ ] Skip `fromCache` responses (don't count cache hits as bandwidth)
+- [ ] Handle HTTP `206` Range responses — count only the requested range, don't double-count video seeking; sum ranges
+- [ ] Cross-validate `webRequest.onHeadersReceived` `content-length` with in-page `PerformanceResourceTiming` `encodedBodySize`/`transferSize`; run off/on A/B
+- [ ] Patch fetch/XHR/WS/Beacon/SSE in content script to catch non-webRequest traffic (NetMeter parity)
+
 ---
 
 ## 🟢 LOW PRIORITY - Nice-to-Haves & Optimizations
@@ -125,6 +156,12 @@
 - [ ] Combine host and proxy into a single url endpoint field for simplicity
   - Simplify configuration
   - Reduce user confusion
+
+### Proxy Refinements (bandwidth-hero-proxy tricks) — RESEARCHED 2026-09
+- [ ] Add `optimizerScans`/`progressive: true` JPEG params (free ~5–8% JPEG, no quality hit)
+- [ ] Optional grayscale mode (Bandwidth Hero's `bw=1`) for extra savings on B&W-prone content
+- [ ] Add `shouldCompress` gates: skip tracking-pixel/1×1 beacons + localhost/private IPs to avoid wasted proxy round-trips
+- [ ] EXIF/metadata strip via proxy (1–5% image bytes, cheap)
 
 ### Site-Specific Optimizations
 - [ ] Focus on commonly used sites (Youtube, Facebook, Reddit, Discord, Twitter, Instagram, etc)
@@ -158,6 +195,9 @@
   - Based on last-accessed timestamp
   - Configurable retention period
   - Helps with storage limits
+- [ ] `iframe loading="lazy"` (you force images; confirm iframes)
+- [ ] `content-visibility: auto` CSS injection for offscreen subtrees
+- [ ] `upgradeScheme` http→https baseline rule (tiny win, trivial)
 
 ---
 
@@ -169,6 +209,7 @@
   - **Concern:** PWAs rely heavily on service workers
   - **Research needed:** Can we cleanly patch service workers to let the extension reach images?
   - **Priority:** Low until research shows feasibility without breaking PWAs
+- [ ] **RESEARCHED 2026-09:** MV3 extension SW is NOT a fetch handler for arbitrary web pages → service-worker CacheStorage caching of foreign content is architecturally impossible. Rely on native HTTP cache + existing cache re-writer instead.
 
 ### Monitoring
 - [ ] Add extra accurate network monitoring mode using debugger API
@@ -176,6 +217,20 @@
   - May cause performance issues
   - Compare accuracy vs patched globals approach
   - Determine if worth the complexity/performance cost
+
+### HLS/DASH Manifest Filtering (biggest video win) — RESEARCHED 2026-09
+- [ ] **Firefox**: `webRequest.filterResponseData()` + StreamFilter to strip renditions above a cap from `.m3u8`/`.mpd` (real savings; FF keeps webRequestBlocking)
+  - Cap 1080p→480p ≈ 70–85% video byte reduction
+- [ ] **Chrome MV3**: no response-body access → MAIN-world `fetch` hook filters manifest text before the player gets it
+  - Works for hls.js-based players (Twitch, Vimeo, X) — NOT native `<video src="master.m3u8">`
+- [ ] Tune audio rendition to low bitrate (64–96kbps) in DASH/HLS
+
+### MAIN-world network chatter suppression — RESEARCHED 2026-09
+- [ ] Patch `navigator.sendBeacon` (no-op for disallowed origins), `window.fetch`/`XMLHttpRequest`, and `WebSocket` constructor in MAIN world
+  - Kills telemetry, beacons, keepalives, heartbeats — few % bytes but big connection/battery savings
+  - DNR can't touch WebSockets; must be page-context patch (need `browser.userScripts`/`world:"MAIN"`)
+  - **Conservative on Cloudflare-fronted SPAs** (see captcha mitigation)
+- [ ] NetInfo-gated auto-aggression: read `navigator.connection.effectiveType`/`saveData` → auto-escalate on 2G/slow links (text-only/script-off mode, crank compression, force low DPR)
 
 ### Cache Rate Storage
 - [ ] Maybe store the cache rate too (???)
@@ -251,19 +306,38 @@
 
 **Focus on first:**
 1. Fix captcha/checkpoint failures (critical blocker)
-2. Multi-proxy support with failover
-3. Fast/efficient compression modes
-4. Resource size blocking
-5. Settings export/import
+2. Client-Hint spoofing + tracker blocklist + srcset/DPR rewrite + font reduction (Tier 1 gains)
+3. Multi-proxy support with failover
+4. Fast/efficient compression modes
+5. Resource size blocking
+6. Settings export/import
 
 **Then move to:**
-1. UI improvements (overview page, warnings)
-2. Site-specific fixes (pixiv, imgur)
-3. Video compression
-4. Better bandwidth tracking with patched globals
+1. Per-site image param stripping + video quality lowering
+2. HLS/DASH manifest filtering (Firefox first)
+3. UI improvements (overview page, warnings)
+4. Site-specific fixes (pixiv, imgur)
+5. Better bandwidth tracking + monitor correctness
 
 **Eventually:**
-1. Performance tweaks
-2. Site-specific optimizations
-3. Advanced statistics features
-4. Experimental features (service worker patching, debugger API)
+1. MAIN-world chatter suppression + NetInfo auto-aggression
+2. Proxy refinements (optimizeScans, grayscale)
+3. Performance tweaks
+4. Advanced statistics features
+5. Experimental features (service worker patching, debugger API)
+
+---
+
+## 🔬 NEW RESEARCH (2026-09) — Roadmap sourced from web research
+
+Distilled from a 5-agent research fleet. Feasible, free, cross-browser (Chrome+Firefox MV3) additions NOT yet implemented. Detailed writeup lives in the "Bandwidth Saver — Full Data-Reduction Expansion Report" shared in chat. Sources: Chrome declarativeNetRequest docs, MDN, h264ify, watch-dash, NetMeter FAQ, Bandwidth Hero DeepWiki, EasyPrivacy/Peter Lowe.
+
+**Researched dead-ends (do NOT build):**
+- `accept-encoding` renegotiation (append-only in Chrome; browsers already advertise br/zstd)
+- ETag / If-None-Match forcing (~0 savings, non-functional)
+- Forcing cacheability via response `Cache-Control` on Chrome (post-cache quirk — does nothing)
+- MV3 SW fetch-caching of foreign pages (architecturally impossible)
+- Brotli via `CompressionStream` encoder (not shipped)
+- HTTP/2-3 direct control (not exposed to extensions)
+- Netflix/EME quality forcing (breaks DRM)
+- Opera-Turbo-style HTTPS proxy HTML recompression (dead on HTTPS)
